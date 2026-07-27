@@ -24,7 +24,7 @@
     "build": "nuxt build playground",
     "generate": "nuxt generate playground",
     "typecheck": "nuxt typecheck playground",
-    "postinstall": "nuxt prepare playground"
+    "dev:prepare": "nuxt prepare playground"
   },
   "dependencies": {
     "@comark/cms": "^0.1.0",

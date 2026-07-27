@@ -34,7 +34,12 @@ export default defineNuxtConfig({
   },
   vite: {
     optimizeDeps: {
-      include: ['beautiful-mermaid', 'motion-v'],
+      // CJS deps that must be pre-bundled. When the layer is installed as a
+      // package they are nested deps, so Vite needs the `comark-docs > x`
+      // resolution chain; when extended from a local path they resolve plainly.
+      include: ['beautiful-mermaid', 'motion-v'].map((id) =>
+        import.meta.url.includes('node_modules') ? `comark-docs > ${id}` : id
+      ),
     },
   },
   nitro: {
