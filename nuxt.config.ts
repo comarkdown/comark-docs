@@ -1,3 +1,4 @@
+import { defineNuxtConfig } from 'nuxt/config'
 import { createResolver } from '@nuxt/kit'
 
 const { resolve } = createResolver(import.meta.url)
@@ -16,22 +17,11 @@ export default defineNuxtConfig({
     'nuxt-og-image',
     '@nuxtjs/mcp-toolkit',
   ],
-  ui: {
-    content: true,
-    prose: true,
-  },
-  sitemap: {
-    sources: ['/api/__sitemap__/urls'],
-    exclude: ['/tree/**', '/blob/**'],
-  },
-  // Fonts for the Satori template come from @nuxt/fonts (bundled with Nuxt UI),
-  // resolved from the Geist families declared in theme.css.
-  ogImage: {
-    zeroRuntime: false,
-  },
-  icon: {
-    provider: 'iconify',
-  },
+  // Module-augmented option keys (`ui`, `sitemap`, `ogImage`, `icon`) are
+  // seeded by modules/config.ts: their NuxtConfig augmentations aren't visible
+  // when typechecking the layer's own nuxt.config against `nuxt/config`.
+  // (Satori fonts come from @nuxt/fonts, bundled with Nuxt UI, resolved from
+  // the Geist families declared in theme.css.)
   vite: {
     optimizeDeps: {
       // CJS deps that must be pre-bundled. When the layer is installed as a

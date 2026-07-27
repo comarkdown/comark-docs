@@ -32,13 +32,38 @@ export default defineNuxtModule<ComarkDocsOptions>({
   },
   async setup(options, nuxt) {
     const rootDir = nuxt.options.rootDir
+    // `site` comes from nuxt-site-config (via SEO modules) and `appConfig`
+    // values are loosely typed until the consumer's app.config is generated,
+    // so the seeding below goes through an untyped view of the options.
+    const nuxtOptions = nuxt.options as typeof nuxt.options & {
+      site?: { url?: string; name?: string }
+      ui?: { content?: boolean; prose?: boolean }
+      sitemap?: { sources?: string[]; exclude?: string[] }
+      ogImage?: { zeroRuntime?: boolean }
+      icon?: { provider?: string }
+      appConfig: Record<string, any>
+    }
+
+    nuxtOptions.icon = defu(nuxtOptions.icon, { provider: 'iconify' }) as typeof nuxtOptions.icon
+
+    // Render OG images at runtime (Satori) rather than prerendering them.
+    nuxtOptions.ogImage = defu(nuxtOptions.ogImage, { zeroRuntime: false }) as typeof nuxtOptions.ogImage
+
+    // @nuxt/ui content components + prose styles (this module runs before
+    // @nuxt/ui's setup, see the layer's modules order).
+    nuxtOptions.ui = defu(nuxtOptions.ui, { content: true, prose: true }) as typeof nuxtOptions.ui
+
+    // Sitemap URLs come from the CMS navigation; previews are never indexed.
+    nuxtOptions.sitemap = defu(nuxtOptions.sitemap, {
+      sources: ['/api/__sitemap__/urls'],
+      exclude: ['/tree/**', '/blob/**'],
+    }) as typeof nuxtOptions.sitemap
 
     const url = inferSiteURL()
     const meta = await getPackageJsonMetadata(rootDir)
     const gitInfo = getLocalGitInfo(rootDir) || getGitEnv()
     const branch = getGitBranch(rootDir)
-    const siteName =
-      (typeof nuxt.options.site === 'object' && nuxt.options.site?.name) || meta.name || gitInfo?.name || ''
+    const siteName = nuxtOptions.site?.name || meta.name || gitInfo?.name || ''
 
     // The consumer's content dir, expressed both absolutely (dev fs source)
     // and relative to the git root (GitHub source path, edit links, webhook).
@@ -46,20 +71,20 @@ export default defineNuxtModule<ComarkDocsOptions>({
     const contentPath = join(rootDir, 'content')
     const contentDir = relative(repoRoot, contentPath) || 'content'
 
-    nuxt.options.site = defu(nuxt.options.site, {
+    nuxtOptions.site = defu(nuxtOptions.site, {
       url,
       name: siteName,
-    }) as typeof nuxt.options.site
+    }) as typeof nuxtOptions.site
 
-    nuxt.options.appConfig.seo = defu(nuxt.options.appConfig.seo, {
+    nuxtOptions.appConfig.seo = defu(nuxtOptions.appConfig.seo, {
       siteName,
     })
 
-    nuxt.options.appConfig.header = defu(nuxt.options.appConfig.header, {
+    nuxtOptions.appConfig.header = defu(nuxtOptions.appConfig.header, {
       title: siteName,
     })
 
-    nuxt.options.appConfig.github = defu(nuxt.options.appConfig.github, {
+    nuxtOptions.appConfig.github = defu(nuxtOptions.appConfig.github, {
       owner: gitInfo?.owner || '',
       name: gitInfo?.name || '',
       url: gitInfo?.url || '',
@@ -133,7 +158,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
       }
 
       // Consumer-declared rules win per route.
-      nuxt.options.routeRules = defu(nuxt.options.routeRules, rules)
+      nuxt.options.routeRules = defu(nuxt.options.routeRules, rules) as typeof nuxt.options.routeRules
     }
   },
 })

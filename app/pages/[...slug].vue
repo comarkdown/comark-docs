@@ -125,7 +125,7 @@ if (cms.value.mode === 'prod') {
       />
 
       <UContentSurround
-        :surround="surroundLinks"
+        :surround="surroundLinks as any"
         :ui="{ root: !surroundLinks[0] ? 'sm:grid-cols-1' : 'sm:grid-cols-2' }"
       />
     </UPageBody>

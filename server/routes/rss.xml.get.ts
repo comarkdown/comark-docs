@@ -1,4 +1,5 @@
 import type { NavigationItem } from '@comark/cms'
+import { useAppConfig } from 'nitropack/runtime'
 import { joinURL } from 'ufo'
 
 /**
