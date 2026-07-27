@@ -1,0 +1,107 @@
+import type { NavigationItem } from '@comark/cms'
+
+const prefetchedPaths = new Set<string>()
+let nuxtApp: ReturnType<typeof useNuxtApp>
+
+function prefetchPath(path?: string) {
+  if (!path || prefetchedPaths.has(path)) {
+    return
+  }
+  nuxtApp = nuxtApp ?? useNuxtApp()
+  prefetchedPaths.add(path)
+  nuxtApp.hooks.callHook('link:prefetch', path)
+}
+
+export function observeNavigation(navigationRef: Ref<HTMLElement | null>, observer?: IntersectionObserver) {
+  if (!navigationRef.value || !window.IntersectionObserver) {
+    return
+  }
+  if (observer) {
+    observer.disconnect()
+  }
+
+  const prefetchObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) {
+        continue
+      }
+
+      prefetchPath((entry.target as HTMLAnchorElement).href.replace(window.location.origin, ''))
+      prefetchObserver?.unobserve(entry.target)
+    }
+  })
+  navigationRef.value.querySelectorAll<HTMLElement>('a').forEach((element) => prefetchObserver?.observe(element))
+  return prefetchObserver
+}
+
+export function findPageHeadline(
+  navigation: NavigationItem[] | undefined | null,
+  path: string | undefined
+): string | undefined {
+  if (!navigation?.length || !path) return undefined
+  for (const item of navigation) {
+    if (item.children?.length) {
+      const found = walk(item.children, path)
+      if (found) return item.title
+    }
+  }
+  return undefined
+}
+
+function walk(items: NavigationItem[], path: string): boolean {
+  for (const item of items) {
+    if (item.path === path) return true
+    if (item.children?.length && walk(item.children, path)) return true
+  }
+  return false
+}
+
+export interface BreadcrumbItem {
+  title: string
+  path?: string
+}
+
+/** Trail of navigation items leading to `path`, including the page itself. */
+export function findBreadcrumb(
+  navigation: NavigationItem[] | undefined | null,
+  path: string | undefined
+): BreadcrumbItem[] {
+  if (!navigation?.length || !path) return []
+  const trail: BreadcrumbItem[] = []
+  const visit = (items: NavigationItem[]): boolean => {
+    for (const item of items) {
+      trail.push({ title: item.title, path: item.page !== false ? item.path : undefined })
+      if (item.path === path && item.page !== false) return true
+      if (item.children?.length && visit(item.children)) return true
+      trail.pop()
+    }
+    return false
+  }
+  return visit(navigation) ? trail : []
+}
+
+export interface SurroundLink {
+  title: string
+  description?: string
+  path: string
+}
+
+export function findSurroundLinks(
+  navigation: NavigationItem[] | undefined | null,
+  path: string | undefined
+): Array<SurroundLink | null> {
+  if (!navigation?.length || !path) return []
+
+  const flat: SurroundLink[] = []
+  const collect = (items: NavigationItem[]) => {
+    for (const item of items) {
+      if (item.page !== false) flat.push({ title: item.title, description: item.description, path: item.path })
+      if (item.children?.length) collect(item.children)
+    }
+  }
+  collect(navigation)
+
+  const index = flat.findIndex((item) => item.path === path)
+  if (index === -1) return []
+  return [flat[index - 1] || null, flat[index + 1] || null]
+}

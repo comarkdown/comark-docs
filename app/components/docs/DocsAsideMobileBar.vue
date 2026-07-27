@@ -1,0 +1,108 @@
+<script setup lang="ts">
+import type { ContentTocLink } from '@nuxt/ui'
+
+defineProps<{
+  tocLinks?: ContentTocLink[]
+}>()
+
+const appConfig = useAppConfig()
+const mainNavigation = useMainNavigation()
+const sidebarNavigation = useFilteredNavigation()
+const title = computed(() => mainNavigation.value.find((item) => item.active)?.label)
+
+const menuDrawerOpen = ref(false)
+const tocDrawerOpen = ref(false)
+const navigationRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | undefined
+
+watch(menuDrawerOpen, (open) => {
+  // wait for the DOM to update before observing
+  nextTick(() => {
+    if (open) {
+      observer = observeNavigation(navigationRef)
+    } else {
+      observer?.disconnect()
+    }
+  })
+})
+</script>
+
+<template>
+  <div
+    class="lg:hidden sticky top-(--ui-header-height) z-10 bg-default -mx-6 p-2 px-6 border-b border-muted flex justify-between"
+  >
+    <UDrawer
+      v-model:open="menuDrawerOpen"
+      direction="left"
+      :title="title"
+      :handle="false"
+      inset
+      side="left"
+      :ui="{ content: 'w-full max-w-2/3' }"
+    >
+      <UButton
+        label="Menu"
+        icon="i-lucide-menu"
+        color="neutral"
+        variant="link"
+        size="md"
+        aria-label="Open menu"
+        class="text-highlighted font-normal text-md gap-2 -ms-2.5"
+        :ui="{ leadingIcon: 'size-4.5' }"
+      />
+
+      <template #body>
+        <div ref="navigationRef">
+          <UContentNavigation
+            :navigation="sidebarNavigation"
+            variant="link"
+            :collapsible="false"
+          />
+        </div>
+      </template>
+    </UDrawer>
+
+    <UDrawer
+      v-if="tocLinks?.length"
+      v-model:open="tocDrawerOpen"
+      direction="right"
+      :handle="false"
+      inset
+      side="right"
+      no-body-styles
+      :ui="{ content: 'w-full max-w-2/3' }"
+    >
+      <UButton
+        icon="i-lucide-file-text"
+        color="neutral"
+        variant="outline"
+        square
+        :aria-label="appConfig.toc.title"
+        class="p-1 px-2 -me-1.5"
+        :ui="{ leadingIcon: 'size-[17px]' }"
+      />
+
+      <template #body>
+        <UContentToc
+          v-if="tocLinks?.length"
+          :title="appConfig.toc?.title"
+          :links="tocLinks"
+          :open="true"
+          default-open
+          :ui="{
+            root: '!mx-0 !px-1 top-0 overflow-visible bg-default',
+            container: '!pt-0 border-b-0',
+            trailingIcon: 'hidden',
+            bottom: 'flex flex-col',
+            title: 'text-highlighted font-medium',
+            item: 'py-1',
+          }"
+        >
+          <template #bottom>
+            <slot name="bottom" />
+          </template>
+        </UContentToc>
+      </template>
+    </UDrawer>
+  </div>
+</template>

@@ -1,0 +1,15 @@
+{
+  "name": "comark-docs-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "comark-docs": "workspace:../",
+    "nuxt": "^4.5.0"
+  }
+}

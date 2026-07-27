@@ -1,0 +1,11 @@
+.nuxt
+.output
+.vercel
+.data
+.cache
+node_modules
+*.log*
+.env*
+!.env.example
+dist
+.DS_Store

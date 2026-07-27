@@ -1,0 +1,10 @@
+packages:
+  - playground
+
+allowBuilds:
+  esbuild: false
+  vue-demi: false
+
+overrides:
+  # Keep the workspace on a single h3 major (v1), matching comark-cms.
+  h3: ^1.10.15
