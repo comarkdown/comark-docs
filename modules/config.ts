@@ -16,6 +16,17 @@ export interface ComarkDocsOptions {
    * @default 300
    */
   isr?: number | false
+  /**
+   * Content directory, relative to the **repository** root — not the app root.
+   *
+   * Normally derived by relativising `<rootDir>/content` against the git root, so
+   * an app in `docs/` yields `docs/content`. Set this when the build has no `.git`
+   * to inspect (a shallow or context-limited Docker build, an exported tarball) and
+   * the app isn't at the repository root, otherwise it can only be assumed to be
+   * `content` and the GitHub source, edit links and push webhook will all point at
+   * a directory that doesn't exist. Also settable as `NUXT_DOCS_CONTENT_DIR`.
+   */
+  contentDir?: string
   codeExplorer?: {
     /**
      * GitHub repos (`owner/name`) the `/api/code-explorer` endpoint is allowed
@@ -57,9 +68,36 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
     // The consumer's content dir, expressed both absolutely (dev fs source)
     // and relative to the git root (GitHub source path, edit links, webhook).
-    const repoRoot = getGitRoot(rootDir) || rootDir
-    const contentPath = join(rootDir, 'content')
-    const contentDir = relative(repoRoot, contentPath) || 'content'
+    const gitRoot = getGitRoot(rootDir)
+    const repoRoot = gitRoot || rootDir
+    const { contentPath, contentDir, source: contentDirSource } = resolveContentDir({
+      rootDir,
+      gitRoot,
+      explicit: options.contentDir || process.env.NUXT_DOCS_CONTENT_DIR,
+    })
+
+    /*
+     * Say so when the content dir had to be assumed.
+     *
+     * Without a git root there's no way to tell an app that *is* the repository root
+     * (where `content` is right) from one in a subdirectory (where it should be
+     * `docs/content`) — the filesystem looks identical. Guessing wrong doesn't fail
+     * the build or show up in dev, because dev reads `contentPath` absolutely; it
+     * surfaces only in production, as every GitHub content read missing at once.
+     *
+     * Not escalated to a hard error: for a single-app repo the assumption is correct,
+     * and that's the common shape, so failing would reject far more working builds
+     * than broken ones. A warning that names the fix is the honest middle.
+     */
+    if (contentDirSource === 'assumed') {
+      logger.warn(
+        `No git repository found above ${rootDir}, so the content directory is assumed to be ` +
+          `"content" at the repository root.\n` +
+          `  If this app lives in a subdirectory of its repo, the GitHub content source, "Edit this page" links ` +
+          `and the push webhook will all resolve to a path that does not exist in production.\n` +
+          `  Set \`comarkDocs.contentDir\` (or NUXT_DOCS_CONTENT_DIR) to the repo-relative path, e.g. "docs/content".`
+      )
+    }
 
     nuxtOptions.site = defu(nuxtOptions.site, {
       url,

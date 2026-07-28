@@ -58,7 +58,9 @@ export default defineAppConfig({
 
 > Nuxt merges `app.config.ts` across layers with [defu](https://github.com/unjs/defu), which **concatenates arrays**. A consumer's list is *appended to* the layer's, not substituted for it — which is why every array default in the layer is empty. Keep it that way.
 
-`comarkDocs` in `nuxt.config.ts` covers `isr` (`false` disables the generated ISR route rules) and `codeExplorer.allowRepos`. The GitHub repo, branch and content directory are inferred from the local git checkout and `VERCEL_GIT_*`; override them at runtime with `NUXT_DOCS_*` env vars (`NUXT_DOCS_GITHUB_OWNER`, `NUXT_DOCS_GITHUB_REPO`, `NUXT_DOCS_GITHUB_BRANCH`, …).
+`comarkDocs` in `nuxt.config.ts` covers `isr` (`false` disables the generated ISR route rules), `codeExplorer.allowRepos`, and `contentDir`. The GitHub repo, branch and content directory are inferred from the local git checkout and `VERCEL_GIT_*`; override them at runtime with `NUXT_DOCS_*` env vars (`NUXT_DOCS_GITHUB_OWNER`, `NUXT_DOCS_GITHUB_REPO`, `NUXT_DOCS_GITHUB_BRANCH`, …).
+
+> **Builds without `.git`.** The content directory is stored relative to the *repository* root, since that's what the GitHub source, the edit links and the push webhook all need — an app in `docs/` becomes `docs/content`. That's derived by relativising against the git root, so a build that can't see `.git` (a shallow or context-limited Docker build, an exported tarball) can only assume the app *is* the repository root. For a single-app repo that's correct; for an app in a subdirectory it silently points every production content read at a path that doesn't exist, and dev won't show it because dev reads the absolute path. The build warns when it has to assume. Set `comarkDocs.contentDir` (or `NUXT_DOCS_CONTENT_DIR`) to silence it authoritatively.
 
 Branding is config, not components — the header cluster, footer credit and OG template all live in the layer:
 
