@@ -175,7 +175,7 @@ export default defineAppConfig({
     links: [],
   },
   footer: {
-    // Full credits line; empty = `© ${year} ${owner}. All rights reserved.`
+    // Full credits line; empty = `© ${year} ${owner}.`
     credits: '',
     // Copyright holder when it isn't the site itself; empty = `seo.siteName`.
     owner: '',
