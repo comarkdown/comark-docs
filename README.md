@@ -14,8 +14,11 @@ Content lives as Markdown in your repo and is served **at request time** — par
 ## Usage
 
 ```bash
-pnpm add comark-docs
+pnpm add comark-docs@github:comarkdown/comark-docs
 ```
+
+> Not published to npm yet — install from git. pnpm pins the resolved commit in your lockfile;
+> `pnpm update comark-docs` moves it forward.
 
 ```ts
 // nuxt.config.ts
@@ -46,14 +49,31 @@ export default defineAppConfig({
   },
   footer: {
     credits: `Copyright © ${new Date().getFullYear()}`,
-    links: [],
+    links: [{ icon: 'i-lucide-rss', to: '/rss.xml', target: '_blank', 'aria-label': 'RSS Feed' }],
   },
 })
 ```
 
-The GitHub repo, branch and content directory are inferred from the local git repo (and `VERCEL_GIT_*` env in production). Override via `comarkDocs` in `nuxt.config.ts` or `NUXT_DOCS_*` env vars.
+> Nuxt merges `app.config.ts` across layers with [defu](https://github.com/unjs/defu), which **concatenates arrays**. A consumer's list is *appended to* the layer's, not substituted for it — which is why every array default in the layer is empty. Keep it that way.
 
-Components like `AppHeaderLogo`, `AppHeader`, `AppFooter` or `OgImageDocs.satori.vue` can be overridden by shipping a same-named component in your app.
+`comarkDocs` in `nuxt.config.ts` covers `isr` (`false` disables the generated ISR route rules) and `codeExplorer.allowRepos`. The GitHub repo, branch and content directory are inferred from the local git checkout and `VERCEL_GIT_*`; override them at runtime with `NUXT_DOCS_*` env vars (`NUXT_DOCS_GITHUB_OWNER`, `NUXT_DOCS_GITHUB_REPO`, `NUXT_DOCS_GITHUB_BRANCH`, …).
+
+Branding is config, not components — the header cluster, footer credit and OG template all live in the layer:
+
+```ts
+export default defineAppConfig({
+  header: {
+    logo: { mark: 'comark-cms' },                                          // a wordmark shipped with the layer
+    ecosystem: [{ mark: 'comark', to: 'https://comark.dev', label: 'Comark' }],
+  },
+  footer: { icon: 'i-simple-icons-vercel', owner: 'Vercel' },
+  docs: { ogImage: { mark: 'comark-cms', tagline: 'The content layer for Markdown' } },
+})
+```
+
+The wordmarks (`LogoComark`, `LogoComarkCms`) live in the layer because each site needs both: its own in the header, its sibling's in the ecosystem popover. Add a new one as `LogoX.vue` plus a branch in `LogoMark.vue` — and in `OgImageDocs.satori.vue`, which has to inline them (nuxt-og-image's island renderer can't resolve nested components).
+
+Components can still be replaced by shipping a same-named one (`AppHeader`, `AppFooter`, `AppHeaderBrand`, `OgImage/OgImageDocs.satori.vue`), but neither site needs to.
 
 ### Environment variables
 
@@ -76,6 +96,12 @@ To develop the layer against a consumer app in a sibling checkout:
 ```bash
 COMARK_DOCS_LAYER=../../comark-docs pnpm dev
 ```
+
+> **Known issue:** in dev, hydration intermittently dies with
+> `elkjs ... does not provide an export named 'default'`, showing a 500 page. SSR output is correct —
+> the failure is client-side only. `elkjs` is `beautiful-mermaid`'s CommonJS dependency and doesn't
+> reliably get pre-bundled; the `optimizeDeps.include` entries below help but don't fully fix it.
+> Reproduces in the layer's own playground too. Reload usually clears it. Not yet root-caused.
 
 ## License
 

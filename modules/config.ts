@@ -37,27 +37,14 @@ export default defineNuxtModule<ComarkDocsOptions>({
     // so the seeding below goes through an untyped view of the options.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
       site?: { url?: string; name?: string }
-      ui?: { content?: boolean; prose?: boolean }
-      sitemap?: { sources?: string[]; exclude?: string[] }
-      ogImage?: { zeroRuntime?: boolean }
-      icon?: { provider?: string }
       appConfig: Record<string, any>
     }
 
-    nuxtOptions.icon = defu(nuxtOptions.icon, { provider: 'iconify' }) as typeof nuxtOptions.icon
-
-    // Render OG images at runtime (Satori) rather than prerendering them.
-    nuxtOptions.ogImage = defu(nuxtOptions.ogImage, { zeroRuntime: false }) as typeof nuxtOptions.ogImage
-
-    // @nuxt/ui content components + prose styles (this module runs before
-    // @nuxt/ui's setup, see the layer's modules order).
-    nuxtOptions.ui = defu(nuxtOptions.ui, { content: true, prose: true }) as typeof nuxtOptions.ui
-
-    // Sitemap URLs come from the CMS navigation; previews are never indexed.
-    nuxtOptions.sitemap = defu(nuxtOptions.sitemap, {
-      sources: ['/api/__sitemap__/urls'],
-      exclude: ['/tree/**', '/blob/**'],
-    }) as typeof nuxtOptions.sitemap
+    // Static module defaults (`ui`, `sitemap`, `ogImage`, `icon`) live in the
+    // layer's nuxt.config instead: nothing about them is computed, and seeding
+    // them from a module makes module order load-bearing. Everything below has
+    // to be discovered at build time — from git, the environment, or the
+    // consuming site's content directory.
 
     const url = inferSiteURL()
     const meta = await getPackageJsonMetadata(rootDir)

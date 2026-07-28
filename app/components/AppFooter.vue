@@ -1,12 +1,21 @@
 <script setup lang="ts">
 const { footer, seo } = useAppConfig()
+// Computed here rather than in app.config so the year can't go stale between
+// deploys — this site publishes content without rebuilding.
 const year = new Date().getFullYear()
-const credits = computed(() => footer?.credits || `Copyright © ${seo?.siteName} ${year}. All rights reserved.`)
+const credits = computed(
+  () => footer?.credits || `Copyright © ${footer?.owner || seo?.siteName} ${year}. All rights reserved.`
+)
 </script>
 
 <template>
   <UFooter>
     <template #left>
+      <UIcon
+        v-if="footer?.icon"
+        :name="footer.icon"
+        class="text-black dark:text-white"
+      />
       {{ credits }}
     </template>
 

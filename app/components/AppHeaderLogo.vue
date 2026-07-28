@@ -1,14 +1,18 @@
 <script setup lang="ts">
 /**
- * Default header logo: the configured logo images when set, the header title
- * as a wordmark otherwise. Consumers override this component by shipping their
- * own `components/AppHeaderLogo.vue`.
+ * The site's own wordmark: a named mark from the layer (`header.logo.mark`),
+ * configured images, or the site name as text.
  */
 const { header } = useAppConfig()
 </script>
 
 <template>
-  <template v-if="header?.logo?.light || header?.logo?.dark">
+  <LogoMark
+    v-if="header?.logo?.mark"
+    :name="header.logo.mark"
+    class="text-black dark:text-white"
+  />
+  <template v-else-if="header?.logo?.light || header?.logo?.dark">
     <img
       v-if="header.logo.light"
       :src="header.logo.light"

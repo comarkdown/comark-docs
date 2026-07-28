@@ -160,9 +160,14 @@ export default defineAppConfig({
     to: '/',
     logo: {
       alt: '',
+      // A wordmark shipped with the layer ('comark' | 'comark-cms'); takes
+      // precedence over the image/text fallbacks below.
+      mark: '',
       light: '',
       dark: '',
     },
+    // Sibling sites listed in the brand popover; empty = no popover.
+    ecosystem: [] as { mark?: string; to: string; label?: string }[],
     search: true,
     colorMode: true,
     // Main navigation tabs; empty = one tab per top-level content section.
@@ -170,16 +175,16 @@ export default defineAppConfig({
     links: [],
   },
   footer: {
-    // Bottom-left credits; empty = `© ${siteName} ${year}`.
+    // Full credits line; empty = `Copyright © ${owner} ${year}. All rights reserved.`
     credits: '',
-    links: [
-      {
-        icon: 'i-lucide-rss',
-        to: '/rss.xml',
-        target: '_blank',
-        'aria-label': 'RSS Feed',
-      },
-    ],
+    // Copyright holder when it isn't the site itself; empty = `seo.siteName`.
+    owner: '',
+    // Optional icon rendered before the credits.
+    icon: '',
+    // NOTE: app.config arrays are *concatenated* across layers (defu), so any
+    // item defaulted here would be appended to — never replaced by — the
+    // consumer's list. Array defaults stay empty for that reason.
+    links: [],
   },
   toc: {
     title: 'On this page',
@@ -188,6 +193,14 @@ export default defineAppConfig({
     rss: {
       // Empty = `${seo.siteName} Documentation`.
       title: '',
+    },
+    ogImage: {
+      // Accent colour of the OG template (mark column, headline, rule).
+      accent: '#fafafa',
+      // Strapline along the bottom; empty = `site.description`.
+      tagline: '',
+      // Which mark to draw in the left column; 'wordmark' = the site name.
+      mark: 'wordmark' as 'wordmark' | 'comark' | 'comark-cms',
     },
     llms: {
       description: '',

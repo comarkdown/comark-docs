@@ -11,9 +11,13 @@ export default defineNuxtSchema({
       to: '/',
       logo: {
         alt: '',
+        /** A wordmark shipped with the layer (`comark` | `comark-cms`). */
+        mark: '',
         light: '',
         dark: '',
       },
+      /** Sibling sites listed in the brand popover; empty = no popover. */
+      ecosystem: [],
       /** Show the search button. */
       search: true,
       /** Show the color mode toggle. */
@@ -28,8 +32,12 @@ export default defineNuxtSchema({
       links: [],
     },
     footer: {
-      /** Bottom-left credits; empty = `© ${siteName} ${year}`. */
+      /** Full credits line; empty = `Copyright © ${owner} ${year}. All rights reserved.` */
       credits: '',
+      /** Copyright holder when it isn't the site itself; empty = site name. */
+      owner: '',
+      /** Optional icon rendered before the credits. */
+      icon: '',
       links: [],
     },
     toc: {
@@ -51,6 +59,14 @@ export default defineNuxtSchema({
       rss: {
         /** RSS feed title; empty = `${siteName} Documentation`. */
         title: '',
+      },
+      ogImage: {
+        /** Accent colour of the OG template (mark column, headline, rule). */
+        accent: '#fafafa',
+        /** Strapline along the bottom of the OG image; empty = site description. */
+        tagline: '',
+        /** Mark drawn in the left column; `wordmark` renders the site name. */
+        mark: 'wordmark',
       },
       llms: {
         /** Description emitted under the llms.txt heading. */

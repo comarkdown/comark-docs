@@ -8,13 +8,7 @@ const navigation = useMainNavigation()
 <template>
   <UHeader :to="prefixLink(header?.to || '/', cms.base)">
     <template #left>
-      <NuxtLink
-        :to="prefixLink(header?.to || '/', cms.base)"
-        :aria-label="header?.logo?.alt || header?.title"
-        class="flex shrink-0 items-center gap-2.5"
-      >
-        <AppHeaderLogo class="shrink-0" />
-      </NuxtLink>
+      <AppHeaderBrand />
     </template>
 
     <AppHeaderCenter class="hidden lg:flex" />
