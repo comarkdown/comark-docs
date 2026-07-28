@@ -169,7 +169,10 @@ export default defineAppConfig({
     // Sibling sites listed in the brand popover; empty = no popover.
     ecosystem: [] as { mark?: string; to: string; label?: string }[],
     search: true,
-    colorMode: true,
+    // No `colorMode` key: there is no color-mode toggle in the header to gate. The
+    // always-visible one lives in AppFooter, and the header only carries a duplicate
+    // inside the mobile drawer — so the flag would have meant "hide it on small
+    // screens", which is a stranger promise than not offering the knob.
     // Main navigation tabs; empty = one tab per top-level content section.
     nav: [] as { label: string; sections: string[]; link?: 'first-leaf' | 'section' }[],
     links: [],

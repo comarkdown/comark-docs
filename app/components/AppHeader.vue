@@ -52,6 +52,7 @@ const navigation = useMainNavigation()
       <div class="flex flex-col justify-between h-full">
         <div class="flex flex-col gap-4">
           <UContentSearchButton
+            v-if="header?.search"
             :collapsed="false"
             size="xl"
             class="w-full font-normal"

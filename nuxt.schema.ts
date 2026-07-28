@@ -18,10 +18,8 @@ export default defineNuxtSchema({
       },
       /** Sibling sites listed in the brand popover; empty = no popover. */
       ecosystem: [],
-      /** Show the search button. */
+      /** Show the search button (header and mobile drawer). */
       search: true,
-      /** Show the color mode toggle. */
-      colorMode: true,
       /**
        * Main navigation tabs. Each group maps top-level content sections to a
        * tab; `link: 'section'` links to the section index instead of its
