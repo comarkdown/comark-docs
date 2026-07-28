@@ -2,10 +2,17 @@
  * Per-commit data endpoint backed by `cms.handler`
  */
 export default defineEventHandler(async (event) => {
-  const sha = getRouterParam(event, 'sha')
+  const rawSha = getRouterParam(event, 'sha')
   const path = getRouterParam(event, 'path')
-  if (!sha || !path) {
+  if (!rawSha || !path) {
     throw createError({ statusCode: 400, statusMessage: 'Missing sha or path' })
+  }
+
+  // Public endpoint: reject anything that isn't a commit SHA before it becomes a
+  // preview-CMS registry entry (see `getPreviewCMS`) or a GitHub ref.
+  const sha = parseCommitSha(rawSha)
+  if (!sha) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid commit SHA' })
   }
 
   const cms = await getPreviewCMS(sha, `/api/cms/blob/${sha}`)

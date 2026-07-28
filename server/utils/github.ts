@@ -51,22 +51,54 @@ export function githubToken(): string | undefined {
 const refStorage = createStorage({ driver: refCacheDriver() })
 const refKey = (branch: string) => `branch:${branch}`
 
+/** Sentinel for "this ref doesn't resolve" — see the negative caching in `resolveSha`. */
+const UNRESOLVED = '\0unresolved'
+
 /**
  * Resolve a branch name to its tip commit SHA.
+ *
+ * `cacheMisses` opts into caching failures as well as successes, and callers
+ * serving attacker-supplied refs should set it: `/tree/:branch` is public, so
+ * without a negative entry every request naming a branch that doesn't exist costs
+ * one authenticated GitHub API call — an unauthenticated way to burn the token's
+ * hourly rate limit.
+ *
+ * It's off by default because the production branch must not be negative-cached.
+ * GitHub answers 404, not 403, when a token can't see a private repo, so an expired
+ * or rotated token looks exactly like a missing ref — and caching that would take
+ * the whole site down for the TTL window instead of failing one request and
+ * retrying. Deliberately asymmetric: a wasted API call on the hot path is cheaper
+ * than a cached outage.
  */
-export async function resolveSha(branch: string): Promise<string> {
-  if (process.env.NODE_ENV === 'development') return branch
+export async function resolveSha(branch: string, opts: { cacheMisses?: boolean } = {}): Promise<string> {
+  if (import.meta.dev) return branch
 
   const cached = await refStorage.getItem<string>(refKey(branch))
+  if (cached === UNRESOLVED) {
+    throw createError({ statusCode: 404, statusMessage: `Ref not found: ${branch}` })
+  }
   if (cached) return cached
 
   const token = githubToken()
-  const commit = await $fetch<{ sha: string }>(`https://api.github.com/repos/${githubRepo()}/commits/${branch}`, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  })
+  let commit: { sha: string }
+  try {
+    commit = await $fetch<{ sha: string }>(`https://api.github.com/repos/${githubRepo()}/commits/${branch}`, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    })
+  } catch (error: any) {
+    // Only a definitive "no such ref" is cacheable. A 5xx, a rate-limit 403 or a
+    // network blip is transient and must stay retryable.
+    const status = error?.statusCode ?? error?.response?.status
+    if (status === 404) {
+      if (opts.cacheMisses) await refStorage.setItem(refKey(branch), UNRESOLVED)
+      throw createError({ statusCode: 404, statusMessage: `Ref not found: ${branch}` })
+    }
+    throw error
+  }
+
   await refStorage.setItem(refKey(branch), commit.sha)
   return commit.sha
 }
