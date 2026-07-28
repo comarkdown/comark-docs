@@ -95,7 +95,18 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      // Force Nuxt UI Prose headings component to generate links: https://github.com/nuxt/ui/blob/f546b2c9008044a48e4e9a1d08e9082d5012b200/src/runtime/components/prose/H2.vue#L39
+      // Load-bearing, despite looking like leftover MDC config — do not remove.
+      //
+      // Nuxt UI's prose headings read this exact key and default to *off* without it:
+      // `const { headings } = useRuntimeConfig().public?.mdc || {}`, then
+      // `props.anchor ?? headings?.anchorLinks?.h2 ?? false`
+      // (@nuxt/ui 4.10, runtime/components/prose/H{1,2,3,4}.vue). Nothing else
+      // supplies it — not @nuxt/icon, not @comark/nuxt, not MDC itself, which this
+      // layer doesn't install. Delete it and every heading silently loses its anchor
+      // link, which is also what makes the loss easy to miss in review.
+      //
+      // comark-cms removed this block as "unused code" in df12585; that dropped the
+      // anchor links on its docs site.
       mdc: {
         headings: {
           anchorLinks: {
