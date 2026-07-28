@@ -25,7 +25,6 @@ onBeforeUnmount(() => observer?.disconnect())
               variant="link"
               :collapsible="false"
               :navigation="sidebar"
-              ref="navigationRef"
             />
           </div>
         </UPageAside>

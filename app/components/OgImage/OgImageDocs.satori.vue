@@ -1,7 +1,13 @@
 <script setup lang="ts">
 /**
- * Default OG image template. Consumers override it by shipping their own
- * `components/OgImage/OgImageDocs.satori.vue`.
+ * The OG image template, shared by every site on this layer. Accent colour,
+ * tagline and mark come from `docs.ogImage` in app.config; everything else is
+ * derived from site config.
+ *
+ * The marks are inlined here rather than split into per-site components on
+ * purpose: nuxt-og-image renders this through an island that only registers
+ * the OG templates themselves, so a nested `<OgLogoMark />` fails to resolve
+ * and silently renders nothing.
  */
 defineOptions({
   inheritAttrs: false,
@@ -13,11 +19,28 @@ const { headline = '' } = defineProps<{
   headline?: string
 }>()
 
-const { seo } = useAppConfig()
+const { seo, docs } = useAppConfig()
 const site = useSiteConfig()
 
 const siteName = seo?.siteName || site.name || ''
 const host = site.url ? site.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : ''
+const accent = docs?.ogImage?.accent || '#fafafa'
+const tagline = docs?.ogImage?.tagline || site.description || ''
+const mark = docs?.ogImage?.mark || 'wordmark'
+
+/** Satori has no `color-mix`, so alpha variants are computed here. */
+function withAlpha(hex: string, alpha: number) {
+  const value = hex.replace('#', '')
+  const full =
+    value.length === 3
+      ? value
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : value
+  const int = Number.parseInt(full, 16)
+  return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`
+}
 
 function truncate(str: string, max: number) {
   if (!str || str.length <= max) return str
@@ -30,13 +53,33 @@ function truncate(str: string, max: number) {
   <div class="flex flex-row size-full min-h-full">
     <div
       class="flex flex-col shrink-0 items-center min-h-full"
-      style="width: 200px; background: #fafafa"
+      :style="`width: 200px; background: ${accent}`"
     >
       <div
         class="flex shrink-0 flex-col items-center w-full"
         style="padding: 48px 24px 0"
       >
+        <svg
+          v-if="mark === 'comark-cms'"
+          xmlns="http://www.w3.org/2000/svg"
+          width="100"
+          height="62"
+          viewBox="0 0 208 128"
+          fill="none"
+        >
+          <path
+            stroke="#09090b"
+            stroke-width="8"
+            d="M199 9v110H9V9h190Z"
+          />
+          <path
+            fill="#09090b"
+            d="M128 51.25V32h19.937v19.25H128ZM128 96V76.75h19.937V96H128ZM158.063 51.25V32H178v19.25h-19.937Zm0 44.75V76.75H178V96h-19.937ZM30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39H30Z"
+          />
+        </svg>
+
         <div
+          v-else
           style="
             font-family: 'Geist';
             font-size: 24px;
@@ -77,12 +120,12 @@ function truncate(str: string, max: number) {
       style="background: #09090b; position: relative; overflow: hidden"
     >
       <div
-        style="
+        :style="`
           position: absolute;
           inset: 0;
-          background-image: radial-gradient(circle, rgba(234, 179, 8, 0.03) 1px, transparent 1px);
+          background-image: radial-gradient(circle, ${withAlpha(accent, 0.03)} 1px, transparent 1px);
           background-size: 28px 28px;
-        "
+        `"
       />
 
       <div
@@ -91,15 +134,15 @@ function truncate(str: string, max: number) {
       >
         <div
           v-if="headline"
-          style="
+          :style="`
             font-family: 'Geist Mono';
             font-size: 13px;
             font-weight: 600;
             letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: #eeeeee;
+            color: ${accent};
             margin-bottom: 24px;
-          "
+          `"
         >
           {{ headline }}
         </div>
@@ -133,24 +176,24 @@ function truncate(str: string, max: number) {
       </div>
 
       <div
-        v-if="site.description"
+        v-if="tagline"
         class="flex shrink-0 items-center min-w-0"
         style="position: relative; z-index: 1; padding: 0 56px 36px"
       >
         <div style="display: flex; align-items: center; gap: 16px; width: 100%">
-          <div style="flex: 1; height: 1px; background: #fafafa" />
+          <div :style="`flex: 1; height: 1px; background: ${accent}`" />
           <div
-            style="
+            :style="`
               font-family: 'Geist Mono';
               font-size: 13px;
               font-weight: 500;
               line-height: 1;
               letter-spacing: 0.12em;
-              color: #fafafa;
+              color: ${accent};
               white-space: nowrap;
-            "
+            `"
           >
-            {{ truncate(site.description, 60).toUpperCase() }}
+            {{ truncate(tagline, 60).toUpperCase() }}
           </div>
         </div>
       </div>

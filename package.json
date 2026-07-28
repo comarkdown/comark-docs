@@ -61,6 +61,7 @@
     "nuxt": "^4.5.0"
   },
   "devDependencies": {
+    "@nuxt/devtools-kit": "4.0.0-alpha.9",
     "@resvg/resvg-js": "^2.6.2",
     "nuxt": "^4.5.0",
     "typescript": "^6.0.3",
