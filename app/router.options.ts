@@ -7,6 +7,12 @@ import type { RouterConfig } from '@nuxt/schema'
  *
  * They can't be `alias` entries on those pages: an alias may not introduce a
  * param (`:ref`) the canonical record lacks: Vue Router warns (R0102).
+ *
+ * Deliberate divergence from comark-cms: this file arrived there in comarkdown/comark-cms#79
+ * and was reverted an hour later in #83, back to `alias` entries. The layer was
+ * extracted at the commit in between and keeps this approach on purpose — the
+ * warning R0102 emits is accurate, and an alias genuinely cannot add `:ref`. Don't
+ * "resync" this away without a reason the revert didn't record.
  */
 export default <RouterConfig>{
   routes: (routes) => {

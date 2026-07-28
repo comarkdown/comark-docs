@@ -49,7 +49,7 @@ export default defineNuxtConfig({
       // When the layer is installed as a package these are nested deps, so Vite
       // needs the `comark-docs > x` resolution chain; when extended from a local
       // path (or run from the playground) they resolve plainly.
-      include: ['beautiful-mermaid', 'motion-v'].map((id) =>
+      include: ['beautiful-mermaid', 'motion-v', '@vueuse/core'].map((id) =>
         import.meta.url.includes('node_modules') ? `comark-docs > ${id}` : id
       ),
     },
