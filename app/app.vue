@@ -56,9 +56,13 @@ provide('navigation', navTree)
 const colorMode = useColorMode()
 const historyOpen = useVersionHistory()
 
+// `g-h` (a chained sequence — `-` separates keys in order, `_` would mean a
+// modifier) rather than `meta_h`: ⌘H is Hide Window at the macOS level, so the page
+// never receives it. `defineShortcuts` already ignores keypresses in inputs, which
+// is what makes the bare `d` safe. Both are documented in the README.
 defineShortcuts({
-  d: () => (colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'),
-  meta_h: () => (historyOpen.value = !historyOpen.value),
+  'd': () => (colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'),
+  'g-h': () => (historyOpen.value = !historyOpen.value),
 })
 </script>
 

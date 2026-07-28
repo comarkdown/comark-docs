@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const { footer, seo } = useAppConfig()
-// Computed here rather than in app.config so the year can't go stale between
-// deploys — this site publishes content without rebuilding.
+// Read at render rather than baked into app.config, because content pushes go live
+// without a rebuild — so a build-time year would outlive its deploy by months.
+// Render time still means the ISR TTL, not the wall clock: for the few minutes
+// after midnight on Jan 1 a cached page shows last year. Overriding
+// `footer.credits` is the escape hatch if that ever matters.
 const year = new Date().getFullYear()
 const credits = computed(
   () => footer?.credits || `© ${year} ${footer?.owner || seo?.siteName}.`

@@ -72,7 +72,7 @@ export default defineEventHandler(async (event): Promise<PageCommit[]> => {
   const repoPath = `${contentPrefix()}${item.meta.stem}${item.meta.extension}`
 
   // Development: read history from the local git repo (no GitHub envs needed).
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.dev) {
     const [head, file] = await Promise.all([gitLocalHeadCommit(), gitLocalFileHistory(repoPath, HISTORY_LIMIT)])
     return withProductionHead(head, file)
   }
