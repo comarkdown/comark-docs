@@ -9,8 +9,14 @@ import mermaid from 'comark/plugins/mermaid'
 import githubLight from '@shikijs/themes/github-light'
 import githubDark from '@shikijs/themes/github-dark'
 
-/** Shared instance, rebuilt only when the head advances (see `getProdCMS`). */
-let cms: ComarkCMS | undefined
+/**
+ * Shared instance, rebuilt only when the head advances (see `getProdCMS`).
+ *
+ * Holds the *promise*, not the resolved instance: two requests arriving on a cold
+ * instance would otherwise both see `undefined` and each build a CMS, since the
+ * assignment can only happen after the await.
+ */
+let cms: Promise<ComarkCMS> | undefined
 
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
@@ -31,10 +37,11 @@ const comarkPlugins = [
  *
  * - `remote: true` forces the GitHub source
  * - `cache` overrides the comark cache (driver + loaders)
+ * - `watch: true` enables dev file watching (default off, see below)
  */
 export async function createSourceCMS(
   ref: string,
-  opts: { remote?: boolean; cache?: CacheOptions; basePath?: string } = {}
+  opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
   // Expose search sections through `cms.handler`, bound to THIS instance so a
   // preview CMS serves its own version's sections, not production's.
@@ -58,11 +65,20 @@ export async function createSourceCMS(
     basePath: opts.basePath,
   })
 
-  if (import.meta.dev) {
-    instance.watch()
+  // Only the default instance watches. Every other instance reads a fixed ref
+  // (a preview SHA, or the before/after pair in the revalidate webhook) whose
+  // content cannot change, and `watch()` returns a stop function we'd have to
+  // keep in order to release the watcher — so watching them would be both
+  // pointless and a leak once the instance is evicted from the preview registry.
+  if (import.meta.dev && opts.watch) {
+    await instance.watch()
     instance.hooks.hook('watch:file:update', (_source, key) => {
+      // Content changed under a stable instance, so the memoized search index
+      // (keyed by instance identity) has to be dropped by hand here.
+      invalidateSearchSections(instance)
       console.log(`${key} updated`)
     })
+    instance.hooks.hook('watch:file:remove', () => invalidateSearchSections(instance))
   }
 
   return instance
@@ -112,10 +128,15 @@ export async function getProdCMS(): Promise<ComarkCMS> {
   }
 
   if (!cms) {
-    cms = await createSourceCMS(getHeadRef(), {
+    cms = createSourceCMS(getHeadRef(), {
+      watch: true,
       cache: {
         driver: cacheDriver(getHeadRef()),
       },
+    }).catch((error) => {
+      // Don't memoize a failed build — the next request should retry.
+      cms = undefined
+      throw error
     })
   }
   return cms
@@ -148,18 +169,45 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
 const cmsPreviewInstances = new Map<string, Promise<ComarkCMS>>()
 
 /**
+ * How many preview instances one server instance keeps.
+ *
+ * Each entry holds a CMS with its own manifest and parsed bodies, so this map is
+ * unbounded memory if left to grow: `/tree/:branch` and `/blob/:sha` are public,
+ * and even with refs validated a crawler walking commit history creates one entry
+ * per SHA. Previews are a low-traffic path, so a small LRU is plenty — an evicted
+ * ref just rebuilds, and its parsed bodies survive in the per-SHA Runtime Cache.
+ */
+const MAX_PREVIEW_INSTANCES = 8
+
+/**
  * Build (or return the memoized) CMS for a preview commit SHA mounted at `basePath`
  */
 export function getPreviewCMS(sha: string, basePath: string): Promise<ComarkCMS> {
   const key = `${basePath}::${sha}`
-  let instance = cmsPreviewInstances.get(key)
-  if (!instance) {
-    instance = createSourceCMS(sha, {
-      remote: true,
-      basePath,
-      cache: { driver: cacheDriver(sha) },
-    })
-    cmsPreviewInstances.set(key, instance)
+  const existing = cmsPreviewInstances.get(key)
+  if (existing) {
+    // Re-insert so the most recently used key is last — `Map` preserves insertion
+    // order, which is the whole LRU.
+    cmsPreviewInstances.delete(key)
+    cmsPreviewInstances.set(key, existing)
+    return existing
   }
+
+  const instance = createSourceCMS(sha, {
+    remote: true,
+    basePath,
+    cache: { driver: cacheDriver(sha) },
+  }).catch((error) => {
+    cmsPreviewInstances.delete(key)
+    throw error
+  })
+  cmsPreviewInstances.set(key, instance)
+
+  while (cmsPreviewInstances.size > MAX_PREVIEW_INSTANCES) {
+    const oldest = cmsPreviewInstances.keys().next()
+    if (oldest.done) break
+    cmsPreviewInstances.delete(oldest.value)
+  }
+
   return instance
 }

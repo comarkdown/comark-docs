@@ -14,17 +14,40 @@ const open = useVersionHistory()
 const cms = useCMS()
 const route = useRoute()
 const commits = ref<PageCommit[]>([])
+const pending = ref(false)
+
+/** Path the current `commits` belong to, so a reopen on the same page is free. */
+const loadedPath = ref<string>()
 
 async function loadHistory() {
+  const path = cms.value.path
+  pending.value = true
   try {
-    commits.value = await $fetch<PageCommit[]>('/api/history', { query: { path: cms.value.path } })
+    commits.value = await $fetch<PageCommit[]>('/api/history', { query: { path } })
   } catch {
     commits.value = []
+  } finally {
+    loadedPath.value = path
+    pending.value = false
   }
 }
 
-onMounted(loadHistory)
-watch(() => route.path, loadHistory)
+// Fetch on demand, not on mount. This panel is always mounted but starts closed,
+// and `/api/history` isn't ISR-cached — fetching eagerly cost every visitor an
+// extra request per navigation for a panel most never open.
+watch(open, (isOpen) => {
+  if (isOpen && loadedPath.value !== cms.value.path) loadHistory()
+})
+
+// A navigation with the panel already open refetches; otherwise just invalidate so
+// the next open does.
+watch(
+  () => route.path,
+  () => {
+    if (open.value) loadHistory()
+    else loadedPath.value = undefined
+  }
+)
 
 function isActive(commit: PageCommit) {
   if (cms.value.mode === 'blob' && cms.value.ref) {
@@ -54,7 +77,14 @@ function formatDate(date?: string) {
   >
     <template #body>
       <p
-        v-if="!commits.length"
+        v-if="pending"
+        class="text-sm text-muted"
+      >
+        Loading…
+      </p>
+
+      <p
+        v-else-if="!commits.length"
         class="text-sm text-muted"
       >
         No version history for this page.

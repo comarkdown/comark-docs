@@ -9,16 +9,54 @@ interface SearchSection {
 }
 
 /**
+ * Memoized per CMS instance.
+ *
+ * Building the index parses every document, so it's the most expensive read in the
+ * app. A `WeakMap` keyed by the instance gets invalidation for free: `getProdCMS`
+ * drops and rebuilds the singleton when the head advances, and each preview SHA has
+ * its own instance, so a stale index is unreachable by construction.
+ */
+const searchSectionsCache = new WeakMap<ComarkCMS, Promise<SearchSection[]>>()
+
+/**
+ * Drop the memoized index for an instance.
+ *
+ * Needed for the one case instance identity can't cover: in development the
+ * default instance watches the working tree, so its content changes underneath a
+ * stable object. `createSourceCMS` calls this from `watch:file:update`.
+ */
+export function invalidateSearchSections(cms: ComarkCMS): void {
+  searchSectionsCache.delete(cms)
+}
+
+/**
  * Walk every document's AST and yield one section per heading.
  *
  * `UContentSearch` consumes this shape directly via its `files` prop.
  */
-export async function buildSearchSections(cms: ComarkCMS): Promise<SearchSection[]> {
+export function buildSearchSections(cms: ComarkCMS): Promise<SearchSection[]> {
+  let sections = searchSectionsCache.get(cms)
+  if (!sections) {
+    sections = collectSearchSections(cms).catch((error) => {
+      searchSectionsCache.delete(cms)
+      throw error
+    })
+    searchSectionsCache.set(cms, sections)
+  }
+  return sections
+}
+
+async function collectSearchSections(cms: ComarkCMS): Promise<SearchSection[]> {
   const docs = await cms.list(['content'])
   const sections: SearchSection[] = []
 
-  for (const meta of docs) {
-    const item = await cms.get(meta.path)
+  // Fetch (and parse) every document up front rather than awaiting one per
+  // iteration — the section walk below is synchronous and order-dependent, so it
+  // still runs in list order.
+  const items = await Promise.all(docs.map((meta) => cms.get(meta.path)))
+
+  for (const [index, meta] of docs.entries()) {
+    const item = items[index]
     if (!item || item.meta.kind !== 'document') continue
 
     const title = ((item.data as any)?.title as string) ?? meta.path
