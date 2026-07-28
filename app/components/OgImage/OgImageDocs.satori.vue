@@ -28,25 +28,8 @@ const accent = docs?.ogImage?.accent || '#fafafa'
 const tagline = docs?.ogImage?.tagline || site.description || ''
 const mark = docs?.ogImage?.mark || 'wordmark'
 
-/** Satori has no `color-mix`, so alpha variants are computed here. */
-function withAlpha(hex: string, alpha: number) {
-  const value = hex.replace('#', '')
-  const full =
-    value.length === 3
-      ? value
-          .split('')
-          .map((c) => c + c)
-          .join('')
-      : value
-  const int = Number.parseInt(full, 16)
-  return `rgba(${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}, ${alpha})`
-}
-
-function truncate(str: string, max: number) {
-  if (!str || str.length <= max) return str
-  const cut = str.lastIndexOf(' ', max)
-  return `${str.slice(0, cut > 0 ? cut : max)}…`
-}
+// `withAlpha` / `truncate` come from `app/utils/og.ts` (auto-imported) so they can
+// be unit-tested — this template only renders inside a nuxt-og-image island.
 </script>
 
 <template>
@@ -59,8 +42,9 @@ function truncate(str: string, max: number) {
         class="flex shrink-0 flex-col items-center w-full"
         style="padding: 48px 24px 0"
       >
+        <!-- The Comark mark: outlined square, four dots, an `M`. -->
         <svg
-          v-if="mark === 'comark-cms'"
+          v-if="mark === 'comark'"
           xmlns="http://www.w3.org/2000/svg"
           width="100"
           height="62"
@@ -75,6 +59,30 @@ function truncate(str: string, max: number) {
           <path
             fill="#09090b"
             d="M128 51.25V32h19.937v19.25H128ZM128 96V76.75h19.937V96H128ZM158.063 51.25V32H178v19.25h-19.937Zm0 44.75V76.75H178V96h-19.937ZM30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39H30Z"
+          />
+        </svg>
+
+        <!-- The Comark CMS mark: `CMS` set in a pill. -->
+        <svg
+          v-else-if="mark === 'comark-cms'"
+          xmlns="http://www.w3.org/2000/svg"
+          width="100"
+          height="53"
+          viewBox="0 0 129 69"
+          fill="none"
+        >
+          <rect
+            x="3"
+            y="4"
+            width="123"
+            height="61"
+            rx="30"
+            stroke="#09090b"
+            stroke-width="6"
+          />
+          <path
+            fill="#09090b"
+            d="M31.872 50.672C23.724 50.672 17.886 44.876 17.886 35.132C17.886 25.64 23.388 19.508 31.998 19.508C39.81 19.508 44.01 23.498 45.27 30.596L38.634 30.848C37.962 27.11 35.694 24.884 31.998 24.884C27.252 24.884 24.48 28.916 24.48 35.132C24.48 41.432 27.378 45.296 31.956 45.296C35.946 45.296 38.13 42.902 38.718 38.87L45.396 39.122C44.178 46.388 39.642 50.672 31.872 50.672ZM49.623 50V20.18H58.149L65.751 41.894L73.311 20.18H81.837V50H75.453V30.68L68.439 49.916H62.979L56.007 30.68V50H49.623ZM99.2 50.672C91.472 50.672 86.936 46.556 86.474 40.172L92.9 39.878C93.404 43.406 95.42 45.38 99.284 45.38C102.434 45.38 104.282 44.204 104.282 41.936C104.282 39.878 103.232 38.66 97.646 37.4C90.002 35.678 87.062 33.578 87.062 28.496C87.062 23.162 91.22 19.508 98.234 19.508C105.626 19.508 109.616 23.708 110.246 29.588L103.862 29.924C103.526 26.816 101.552 24.8 98.15 24.8C95.252 24.8 93.488 26.186 93.488 28.286C93.488 30.512 94.874 31.436 99.704 32.444C107.978 34.124 110.708 37.106 110.708 41.642C110.708 47.228 106.256 50.672 99.2 50.672Z"
           />
         </svg>
 
