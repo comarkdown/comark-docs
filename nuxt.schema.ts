@@ -32,7 +32,7 @@ export default defineNuxtSchema({
       links: [],
     },
     footer: {
-      /** Full credits line; empty = `Copyright © ${owner} ${year}. All rights reserved.` */
+      /** Full credits line; empty = `Copyright ${owner} ${year}. All rights reserved.` */
       credits: '',
       /** Copyright holder when it isn't the site itself; empty = site name. */
       owner: '',
