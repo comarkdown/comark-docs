@@ -5,11 +5,44 @@ interface Tab {
   description?: string
 }
 
-defineProps<{
+const props = defineProps<{
   items: Tab[]
 }>()
 
 const activeIndex = ref(0)
+
+/** Stable, unique per instance so `aria-controls`/`aria-labelledby` can pair up. */
+const uid = useId()
+const tabId = (index: number) => `${uid}-tab-${index}`
+const panelId = (index: number) => `${uid}-panel-${index}`
+
+const tabs = useTemplateRef<HTMLButtonElement[]>('tabs')
+
+/**
+ * Roving tabindex: the tablist is one stop, arrows move between tabs. Selection
+ * follows focus (automatic activation), which is the recommended pattern when
+ * showing a panel is cheap — every panel is already rendered here.
+ */
+function select(index: number) {
+  const next = (index + props.items.length) % props.items.length
+  activeIndex.value = next
+  tabs.value?.[next]?.focus()
+}
+
+function onKeydown(event: KeyboardEvent) {
+  const handlers: Record<string, () => void> = {
+    ArrowDown: () => select(activeIndex.value + 1),
+    ArrowRight: () => select(activeIndex.value + 1),
+    ArrowUp: () => select(activeIndex.value - 1),
+    ArrowLeft: () => select(activeIndex.value - 1),
+    Home: () => select(0),
+    End: () => select(props.items.length - 1),
+  }
+  const handler = handlers[event.key]
+  if (!handler) return
+  event.preventDefault()
+  handler()
+}
 </script>
 
 <template>
@@ -47,16 +80,30 @@ const activeIndex = ref(0)
           </p>
         </div>
 
-        <div class="space-y-2">
+        <!--
+          A real tablist: one tab stop, arrow keys to move. Note there is no
+          `@mouseenter` — switching the panel on hover meant a pointer merely
+          crossing the list silently replaced the content the reader was looking at.
+        -->
+        <div
+          role="tablist"
+          aria-orientation="vertical"
+          class="space-y-2"
+          @keydown="onKeydown"
+        >
           <button
             v-for="(item, i) in items"
+            :id="tabId(i)"
             :key="item.title"
+            ref="tabs"
             type="button"
+            role="tab"
+            :aria-selected="activeIndex === i"
+            :aria-controls="panelId(i)"
+            :tabindex="activeIndex === i ? 0 : -1"
             class="w-full flex gap-4 p-4 rounded-xl border text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             :class="activeIndex === i ? 'bg-elevated/50 border-muted' : 'hover:bg-elevated/50 border-transparent'"
-            @mouseenter="activeIndex = i"
             @click="activeIndex = i"
-            @focus="activeIndex = i"
           >
             <span
               v-if="item.icon"
@@ -83,14 +130,17 @@ const activeIndex = ref(0)
       </div>
 
       <div class="relative rounded-2xl overflow-hidden">
-        <template
+        <div
           v-for="(_, i) in items"
+          v-show="activeIndex === i"
+          :id="panelId(i)"
           :key="i"
+          role="tabpanel"
+          :aria-labelledby="tabId(i)"
+          :tabindex="0"
         >
-          <div v-show="activeIndex === i">
-            <slot :name="`code-${i}`" />
-          </div>
-        </template>
+          <slot :name="`code-${i}`" />
+        </div>
       </div>
     </div>
   </UPageSection>
