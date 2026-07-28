@@ -4,6 +4,7 @@
   "description": "Nuxt layer for CMS-driven documentation sites powered by @comark/cms",
   "type": "module",
   "main": "./nuxt.config.ts",
+  "types": "./index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/comarkdown/comark-docs.git"
