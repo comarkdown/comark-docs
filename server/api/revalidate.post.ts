@@ -2,6 +2,28 @@ import type { CMSListFile } from '@comark/cms'
 import { verify } from '@octokit/webhooks-methods'
 import { waitUntil } from '@vercel/functions'
 
+/**
+ * Simultaneous re-render requests during the purge fan-out. Each one is a full
+ * page render on this same deployment, so the ceiling is about not stampeding
+ * ourselves; the fan-out runs in `waitUntil`, so taking longer is free.
+ */
+const REVALIDATE_CONCURRENCY = 8
+
+/** `Promise.allSettled` over `items`, at most `size` in flight. */
+async function settleInBatches<T>(
+  items: T[],
+  size: number,
+  fn: (item: T) => Promise<unknown>
+): Promise<PromiseSettledResult<unknown>[]> {
+  const results: PromiseSettledResult<unknown>[] = []
+  for (let i = 0; i < items.length; i += size) {
+    // `.map((item) => fn(item))`, not `.map(fn)` — `map` passes the index as a
+    // second argument, which would land in the callee's optional parameter.
+    results.push(...(await Promise.allSettled(items.slice(i, i + size).map((item) => fn(item)))))
+  }
+  return results
+}
+
 export default defineEventHandler(async (event) => {
   const { docs } = useRuntimeConfig(event)
   const secret = docs.webhookSecret || process.env.WEBHOOK_SECRET
@@ -97,7 +119,13 @@ export default defineEventHandler(async (event) => {
   const requestId = getHeader(event, 'x-vercel-id') ?? getHeader(event, 'x-request-id') ?? 'local'
   const tag = `[revalidate:${requestId}]`
 
-  // Plan synchronously so diagnostics are logged on this request and returned in the webhook body.
+  // Plan synchronously so diagnostics are logged on this request and returned in
+  // the webhook body. This costs two `init()` passes before we respond, against
+  // GitHub's ~10s delivery timeout — acceptable because everything here is
+  // idempotent (`cacheSha` is already written, the fan-out below re-renders), so a
+  // timed-out delivery that GitHub retries only repeats work, it can't corrupt
+  // state. If the content repo ever grows enough to make that routine, move the
+  // before-manifest read into `waitUntil` and drop it from the response body.
   const beforeSha = payload.before
   let oldItems: Record<string, CMSListFile> = {}
   if (beforeSha && !/^0+$/.test(beforeSha)) {
@@ -181,7 +209,11 @@ export default defineEventHandler(async (event) => {
 
       // clear cache storage for payload
       await useStorage('cache:nuxt:payload').clear()
-      const results = await Promise.allSettled([...paths].map((p) => revalidate(p)))
+
+      // Bounded fan-out. A navigation change queues two URLs for *every* page, so
+      // an unbounded `Promise.allSettled` would open hundreds of simultaneous
+      // connections back into this same function — each of which renders a page.
+      const results = await settleInBatches([...paths], REVALIDATE_CONCURRENCY, revalidate)
       const ok = results.filter((r) => r.status === 'fulfilled').length
       console.log(`${tag} complete: ${ok}/${results.length} succeeded`)
     })()
