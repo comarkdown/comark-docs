@@ -2,7 +2,6 @@
 import type { CMSFile } from '@comark/cms'
 import { useClipboard } from '@vueuse/core'
 import type { PageLink } from '@nuxt/ui'
-import { accordionItem } from '#build/ui/prose'
 
 const props = defineProps<{ page: CMSFile }>()
 
@@ -112,7 +111,6 @@ const items = [
     />
     <UButton
       :disabled="cms.mode !== 'prod'"
-      @click="copyPage"
       :loading="copying"
       :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
       :color="copied ? 'success' : 'neutral'"
@@ -121,12 +119,13 @@ const items = [
       class="px-0 py-0 font-normal"
       :class="{ 'text-muted': !copied }"
       :ui="{ leadingIcon: 'size-3.5' }"
+      @click="copyPage"
     />
     <UDropdownMenu
+      v-slot="{ open }"
       :items="items"
       :content="{ align: 'start', side: 'bottom', alignOffset: -8 }"
       :ui="{ itemLeadingIcon: 'size-3.5', item: 'items-center', content: 'bg-white dark:bg-muted/30' }"
-      v-slot="{ open }"
     >
       <UButton
         icon="i-lucide-message-circle"
@@ -136,7 +135,7 @@ const items = [
         label="Open in Chat"
         :disabled="cms.mode !== 'prod'"
         class="font-normal px-0 py-0"
-        trailingIcon="i-lucide-chevron-down"
+        trailing-icon="i-lucide-chevron-down"
         :ui="{
           leadingIcon: 'size-3.5',
           trailingIcon: 'size-3.5 -ml-0.5 transition-transform duration-200' + (open ? ' rotate-180' : ''),
