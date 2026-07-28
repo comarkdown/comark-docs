@@ -1,8 +1,7 @@
 ---
 title: A Nuxt layer for CMS-driven documentation
 description: "comark-docs is a Nuxt layer for documentation sites powered by @comark/cms: Markdown served at request time, ISR-cached, revalidated on push."
-navigation:
-  title: Home
+navigation: false
 ---
 
 ::page-hero

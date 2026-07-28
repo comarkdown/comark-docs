@@ -4,7 +4,7 @@ const { footer, seo } = useAppConfig()
 // deploys — this site publishes content without rebuilding.
 const year = new Date().getFullYear()
 const credits = computed(
-  () => footer?.credits || `Copyright © ${footer?.owner || seo?.siteName} ${year}. All rights reserved.`
+  () => footer?.credits || `© ${year} ${footer?.owner || seo?.siteName}.`
 )
 </script>
 

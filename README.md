@@ -48,7 +48,7 @@ export default defineAppConfig({
     links: [{ icon: 'i-simple-icons-github', to: 'https://github.com/org/repo', target: '_blank' }],
   },
   footer: {
-    credits: `Copyright © ${new Date().getFullYear()}`,
+    credits: `© ${new Date().getFullYear()}`,
     links: [{ icon: 'i-lucide-rss', to: '/rss.xml', target: '_blank', 'aria-label': 'RSS Feed' }],
   },
 })

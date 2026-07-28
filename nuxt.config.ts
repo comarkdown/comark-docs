@@ -36,15 +36,20 @@ export default defineNuxtConfig({
   } as Record<string, unknown>),
   vite: {
     optimizeDeps: {
-      // CJS deps that must be pre-bundled. `elkjs` is beautiful-mermaid's own
-      // dependency and ships CommonJS: without an explicit entry Vite serves it
-      // raw and the browser dies on `does not provide an export named 'default'`,
-      // taking hydration down on every page.
+      // Deps that must go through the dep optimizer, or the browser gets
+      // `module.exports` and dies on "does not provide an export named
+      // 'default'", taking hydration down on every page.
+      //
+      // `beautiful-mermaid` matters because of what it pulls in: it statically
+      // imports the UMD `elkjs/lib/elk.bundled.js`. Optimizing beautiful-mermaid
+      // inlines elkjs into its chunk, so the browser never sees the raw UMD.
+      // Do NOT add an entry for elkjs itself — a second entry pointing at the
+      // same file splits it back out and reintroduces the hydration crash.
       //
       // When the layer is installed as a package these are nested deps, so Vite
       // needs the `comark-docs > x` resolution chain; when extended from a local
       // path (or run from the playground) they resolve plainly.
-      include: ['beautiful-mermaid', 'motion-v', 'beautiful-mermaid > elkjs/lib/elk.bundled.js'].map((id) =>
+      include: ['beautiful-mermaid', 'motion-v'].map((id) =>
         import.meta.url.includes('node_modules') ? `comark-docs > ${id}` : id
       ),
     },

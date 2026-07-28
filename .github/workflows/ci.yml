@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Superseded runs are pointless: every push rebuilds the whole dep tree.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Named `ci` rather than `test` (as in comark-cms) because this package has
+  # no lint or test steps — typecheck and build are the whole signal.
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: '24'
+      - run: npm i -g --force corepack && corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm dev:prepare
+      - run: pnpm typecheck
+      # Builds the playground, which exercises the layer end to end: content
+      # pages, landing, OG images, and the generated ISR route rules.
+      - run: pnpm build
