@@ -15,6 +15,7 @@
     "server",
     "modules",
     "utils",
+    "docs",
     "nuxt.config.ts",
     "nuxt.schema.ts",
     "index.d.ts",
