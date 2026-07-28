@@ -3,11 +3,8 @@ packages:
 
 allowBuilds:
   esbuild: false
+  unrs-resolver: false
   vue-demi: false
-
-overrides:
-  # Keep the workspace on a single h3 major (v1), matching comark-cms.
-  h3: ^1.15.11
 
 minimumReleaseAgeExclude:
   - "@nuxt/kit@4.5.1"
@@ -15,3 +12,7 @@ minimumReleaseAgeExclude:
   - "@nuxt/nitro-server@4.5.1"
   - "@nuxt/vite-builder@4.5.1"
   - nuxt@4.5.1
+
+overrides:
+  # Keep the workspace on a single h3 major (v1), matching comark-cms.
+  h3: ^1.15.11
