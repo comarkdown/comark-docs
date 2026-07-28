@@ -70,7 +70,7 @@ if (cms.value.mode === 'prod') {
       {
         type: 'application/ld+json',
         innerHTML: computed(() =>
-          JSON.stringify([
+          jsonLd([
             {
               '@context': 'https://schema.org',
               '@type': 'TechArticle',

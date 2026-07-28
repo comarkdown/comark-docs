@@ -20,6 +20,21 @@ interface FeedPage {
 
 const cdata = (value: string) => `<![CDATA[${value.replaceAll(']]>', ']]]]><![CDATA[>')}]]>`
 
+/**
+ * XML-escape a value going into element text.
+ *
+ * Used for URLs and ids, which can't be wrapped in CDATA the way titles and
+ * descriptions are — a single `&` in a slug or query string is enough to make the
+ * whole feed unparseable.
+ */
+const escapeXml = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;')
+
 export default defineEventHandler(async (event) => {
   const cms = await getProdCMS()
   const navigation = await cms.navigation()
@@ -57,8 +72,8 @@ export default defineEventHandler(async (event) => {
       return [
         '        <item>',
         `            <title>${cdata(page.title)}</title>`,
-        `            <link>${joinURL(siteUrl, page.path)}</link>`,
-        `            <guid isPermaLink="false">${page.path}</guid>`,
+        `            <link>${escapeXml(joinURL(siteUrl, page.path))}</link>`,
+        `            <guid isPermaLink="false">${escapeXml(page.path)}</guid>`,
         date ? `            <pubDate>${new Date(date).toUTCString()}</pubDate>` : '',
         page.description ? `            <description>${cdata(page.description)}</description>` : '',
         siteName ? `            <author>${cdata(siteName)}</author>` : '',
@@ -78,7 +93,7 @@ export default defineEventHandler(async (event) => {
 <rss version="2.0">
     <channel>
         <title>${cdata(rssTitle)}</title>
-        <link>${siteUrl}</link>
+        <link>${escapeXml(siteUrl)}</link>
         <description>${cdata(site.description || rssTitle)}</description>
         <lastBuildDate>${(dates.size ? new Date(lastBuildDate) : new Date()).toUTCString()}</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
@@ -97,7 +112,7 @@ async function lastModifiedDates(repoPaths: string[]): Promise<Map<string, strin
   const dates = new Map<string, string>()
 
   // Development: local git log per file.
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.dev) {
     await Promise.all(
       repoPaths.map(async (repoPath) => {
         const [commit] = await gitLocalFileHistory(repoPath, 1)
