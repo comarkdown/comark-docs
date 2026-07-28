@@ -16,6 +16,9 @@ export default defineAppConfig({
   },
   footer: {
     icon: 'i-simple-icons-vercel',
-    owner: 'Vercel',
+    owner: 'Vercel, Inc',
+    links: [
+      { icon: 'i-simple-icons-github', to: 'https://github.com/comarkdown/comark-docs', target: '_blank', 'aria-label': 'GitHub' },
+    ]
   },
 })

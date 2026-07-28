@@ -7,4 +7,11 @@ allowBuilds:
 
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-cms.
-  h3: ^1.10.15
+  h3: ^1.15.11
+
+minimumReleaseAgeExclude:
+  - "@nuxt/kit@4.5.1"
+  - "@nuxt/schema@4.5.1"
+  - "@nuxt/nitro-server@4.5.1"
+  - "@nuxt/vite-builder@4.5.1"
+  - nuxt@4.5.1
