@@ -1,9 +1,12 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { defineNuxtModule } from '@nuxt/kit'
+import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
-import { join, relative } from 'pathe'
+import { resolveContentDir } from '../utils/content-dir'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
+import { LAYER_ICON_COLLECTIONS } from '../utils/icons'
 import { getPackageJsonMetadata, inferSiteURL } from '../utils/meta'
+
+const logger = useLogger('comark-docs')
 
 export interface ComarkDocsOptions {
   /**
@@ -97,6 +100,39 @@ export default defineNuxtModule<ComarkDocsOptions>({
       codeExplorer: {
         allowRepos: options.codeExplorer?.allowRepos || [],
       },
+    })
+
+    /*
+     * Un-advertise the layer's icon collections as "custom" at runtime.
+     *
+     * nuxt.config hands @nuxt/icon the collection data through `customCollections`
+     * so the client bundle can be built without depending on the consumer's
+     * node_modules layout (see utils/icons.ts). But @nuxt/icon also copies every
+     * custom prefix into `appConfig.icon.customCollections`, and its runtime plugin
+     * responds by calling `setCustomIconsLoader` for each one — which *replaces* the
+     * Iconify API for that prefix with a fetch against `/api/_nuxt_icon/:collection`.
+     *
+     * That endpoint is served from the server bundle, which `provider: 'iconify'`
+     * disables. So leaving the prefixes in place would break every icon that can't
+     * be statically scanned and therefore isn't in the client bundle: the file-type
+     * icons `CodeIcon` derives from a filename, and any icon named in a consumer's
+     * app.config or in markdown. These are ordinary Iconify collections, so the API
+     * is the correct fallback for them.
+     *
+     * Only the layer's own prefixes are dropped — a consumer's genuinely custom
+     * collections still need their loader.
+     *
+     * On `modules:done` because @nuxt/icon is installed by @nuxt/ui rather than
+     * listed directly, so it hasn't written `appConfig.icon` yet while this module's
+     * `setup` is running. The app config template is generated later still, so
+     * editing it here lands.
+     */
+    nuxt.hook('modules:done', () => {
+      const iconAppConfig = nuxtOptions.appConfig.icon as { customCollections?: string[] } | undefined
+      if (!iconAppConfig?.customCollections?.length) return
+      iconAppConfig.customCollections = iconAppConfig.customCollections.filter(
+        (prefix) => !LAYER_ICON_COLLECTIONS.includes(prefix)
+      )
     })
 
     const mcpOptions = (nuxt.options as { mcp?: { name?: string; version?: string } }).mcp
