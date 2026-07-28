@@ -1,8 +1,10 @@
 # comark-docs
 
-A [Nuxt layer](https://nuxt.com/docs/getting-started/layers) for CMS-driven documentation sites, powered by [`@comark/cms`](https://github.com/comarkdown/comark-cms).
+The [Nuxt layer](https://nuxt.com/docs/getting-started/layers) behind the Comark documentation sites, powered by [`@comark/cms`](https://github.com/comarkdown/comark-cms).
 
 Content lives as Markdown in your repo and is served **at request time** — parsed, indexed and cached through `@comark/cms` — instead of being bundled at build time. Content pushes go live in production without a redeploy.
+
+> **Scope.** This is a shared layer for two specific sites — the Comark docs and the Comark CMS docs — not a general-purpose docs starter. That's why some things that would be configurable in a published theme are simply baked in: the Vercel OSS mark in the header cluster, the `comark` / `comark-cms` wordmarks, and `content/` as the content directory. Anything both sites need to differ on is config; anything they share is code, so it isn't written twice.
 
 ## Features
 
@@ -73,7 +75,23 @@ export default defineAppConfig({
 
 The wordmarks (`LogoComark`, `LogoComarkCms`) live in the layer because each site needs both: its own in the header, its sibling's in the ecosystem popover. Add a new one as `LogoX.vue` plus a branch in `LogoMark.vue` — and in `OgImageDocs.satori.vue`, which has to inline them (nuxt-og-image's island renderer can't resolve nested components).
 
+`docs.ogImage.mark` takes the same names plus `wordmark`, which draws `seo.siteName` as text. The OG template inlines the *icon* of each mark rather than the full lockup, since it renders in a 200px column — so the artwork there is a second copy that has to be kept in step with the `Logo*.vue` component by hand. If you add a mark and only update `LogoMark.vue`, the OG image silently falls back to the wordmark.
+
 Components can still be replaced by shipping a same-named one (`AppHeader`, `AppFooter`, `AppHeaderBrand`, `OgImage/OgImageDocs.satori.vue`), but neither site needs to.
+
+### Keyboard shortcuts
+
+| Keys | Action |
+| --- | --- |
+| `⌘K` | Search |
+| `d` | Toggle dark mode |
+| `g` `h` | Toggle the version-history panel |
+
+Single-key shortcuts are safe because `defineShortcuts` ignores keypresses while an input is focused. `g` `h` is a chained sequence rather than `⌘H`, which macOS claims as Hide Window before the page sees it.
+
+### Content classes
+
+`app/assets/css/theme.css` ships a few plain classes for use in Markdown, since Tailwind scans `content/`: `.caret` (a blinking terminal caret), `.section-label` (a pill-shaped eyebrow label), and `.syntax-hash` / `.syntax-asterisk` / `.syntax-colon` / `.syntax-bracket` / `.syntax-text` for hand-marked-up syntax examples. Nothing in the layer references them — they exist for the content repos.
 
 ### Environment variables
 
@@ -81,14 +99,18 @@ Components can still be replaced by shipping a same-named one (`AppHeader`, `App
 | --- | --- |
 | `GITHUB_TOKEN` | GitHub source reads + GraphQL history/RSS |
 | `WEBHOOK_SECRET` | GitHub push webhook HMAC (`/api/revalidate`) |
-| `VERCEL_BYPASS_TOKEN` | ISR purge on revalidation |
+| `VERCEL_BYPASS_TOKEN` | ISR purge on revalidation. Needed at **build** time too — it's baked into `nitro.vercel.config`, so a runtime-only value leaves purging broken |
+| `VERCEL_AUTOMATION_BYPASS_SECRET` | Lets `/api/revalidate` call back through the deployment protection wall. Set automatically on Vercel |
 | `NUXT_OG_IMAGE_SECRET` | OG image signing |
 
 ## Development
 
 ```bash
 pnpm install
-pnpm dev # runs the playground
+pnpm dev       # runs the playground
+pnpm lint      # correctness-only ESLint (no stylistic rules — see eslint.config.mjs)
+pnpm test      # Vitest over the pure utils
+pnpm typecheck # vue-tsc across the layer + playground
 ```
 
 To develop the layer against a consumer app in a sibling checkout:
@@ -96,12 +118,6 @@ To develop the layer against a consumer app in a sibling checkout:
 ```bash
 COMARK_DOCS_LAYER=../../comark-docs pnpm dev
 ```
-
-> **Known issue:** in dev, hydration intermittently dies with
-> `elkjs ... does not provide an export named 'default'`, showing a 500 page. SSR output is correct —
-> the failure is client-side only. `elkjs` is `beautiful-mermaid`'s CommonJS dependency and doesn't
-> reliably get pre-bundled; the `optimizeDeps.include` entries below help but don't fully fix it.
-> Reproduces in the layer's own playground too. Reload usually clears it. Not yet root-caused.
 
 ## License
 

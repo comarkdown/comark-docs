@@ -38,10 +38,23 @@ sequenceDiagram
   Edge-->>Browser: HTML (cached for next visitor)
 ```
 
-**Cost:** one shared-cache lookup for the branch tip (GitHub is only hit once per
-60s TTL window across *all* instances/regions, not per instance) + the instance
-builds its index from GitHub once per head, then one page parse. All reads
-pinned to the immutable `<sha>`.
+**Cost:** one shared-cache lookup for the branch tip + the instance builds its index
+from GitHub once per head, then one page parse. All reads pinned to the immutable
+`<sha>`.
+
+The ref cache is shared across *instances*, so GitHub is hit once per 60s TTL window
+rather than once per cold start. It is **not** shared across regions — Vercel's
+Runtime Cache is regional (see the note on `refCacheDriver()` in
+`server/utils/cache.ts`), so the ceiling is one GitHub call per region per window.
+This project runs single-region, which is what makes that distinction academic today.
+
+A ref that doesn't resolve is cached too, for the same window, but **only** when the
+caller asks for it (`resolveSha(ref, { cacheMisses: true })`) — the public
+`/tree/:branch` route does, so a nonexistent branch can't be replayed into one
+GitHub API call per request. The production branch above deliberately does not:
+GitHub answers 404 when a token loses access to a private repo, and caching that
+would turn an expired token into a site-wide outage for the window rather than one
+failed request.
 
 **On a content push**, `server/api/revalidate.post.ts` writes the new SHA
 directly into the same shared ref cache (`cacheSha()`) before fanning out ISR
