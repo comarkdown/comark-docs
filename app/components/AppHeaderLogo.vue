@@ -19,13 +19,13 @@ const { header } = useAppConfig()
       :alt="header.logo.alt || header.title"
       class="h-6 w-auto"
       :class="{ 'dark:hidden': header.logo.dark }"
-    />
+    >
     <img
       v-if="header.logo.dark"
       :src="header.logo.dark"
       :alt="header.logo.alt || header.title"
       class="h-6 w-auto hidden dark:block"
-    />
+    >
   </template>
   <span
     v-else

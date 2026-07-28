@@ -25,6 +25,10 @@
     "build": "nuxt build playground",
     "generate": "nuxt generate playground",
     "typecheck": "nuxt typecheck playground",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "dev:prepare": "nuxt prepare playground"
   },
   "dependencies": {
@@ -63,9 +67,12 @@
   },
   "devDependencies": {
     "@nuxt/devtools-kit": "4.0.0-alpha.9",
+    "@nuxt/eslint-config": "^1.16.0",
     "@resvg/resvg-js": "^2.6.2",
+    "eslint": "^10.8.0",
     "nuxt": "^4.5.1",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.10",
     "vue-tsc": "^3.3.8"
   }
 }

@@ -39,17 +39,26 @@ export function getGitRoot(cwd: string): string | undefined {
   return git('rev-parse --show-toplevel', cwd)
 }
 
-/** Owner/name/url parsed from the `origin` remote of the local checkout. */
-export function getLocalGitInfo(cwd: string): GitInfo | undefined {
-  const remote = git('remote get-url origin', cwd)
-  if (!remote) return undefined
-
-  // git@github.com:owner/name.git | https://github.com/owner/name(.git)
-  const match = remote.match(/^(?:git@|https?:\/\/)([^/:]+)[/:]([^/]+)\/(.+?)(?:\.git)?$/)
+/**
+ * Owner/name/url from a git remote URL.
+ *
+ * Handles the two forms `git remote get-url` emits: `git@host:owner/name.git` and
+ * `https://host/owner/name(.git)`. Split out from `getLocalGitInfo` so the parsing
+ * can be tested without a checkout — every inferred default in `modules/config.ts`
+ * (site name, edit links, the webhook's repo) flows from this one regex.
+ */
+export function parseGitRemote(remote: string): GitInfo | undefined {
+  const match = remote.trim().match(/^(?:git@|https?:\/\/)([^/:]+)[/:]([^/]+)\/(.+?)(?:\.git)?$/)
   if (!match) return undefined
 
   const [, host, owner, name] = match
   return { name: name!, owner: owner!, url: `https://${host}/${owner}/${name}` }
+}
+
+/** Owner/name/url parsed from the `origin` remote of the local checkout. */
+export function getLocalGitInfo(cwd: string): GitInfo | undefined {
+  const remote = git('remote get-url origin', cwd)
+  return remote ? parseGitRemote(remote) : undefined
 }
 
 /** Owner/name/url from CI provider env vars (Vercel, GitHub Actions, GitLab). */

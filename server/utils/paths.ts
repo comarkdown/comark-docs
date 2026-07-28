@@ -13,7 +13,7 @@ export function isContentMd(path: string): boolean {
 
 /** Whether a GitHub repo path is a navigation config file (`.navigation.yml` / `.json`). */
 export function isNavConfig(path: string): boolean {
-  return path.startsWith(contentPrefix()) && /\.navigation\.(ya?ml|json)$/i.test(path)
+  return path.startsWith(contentPrefix()) && /\.navigation\.(?:ya?ml|json)$/i.test(path)
 }
 
 /**

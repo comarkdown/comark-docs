@@ -26,9 +26,9 @@ const navigation = useMainNavigation()
         :color="cms.mode === 'prod' ? 'neutral' : 'warning'"
         :variant="cms.mode === 'prod' ? 'outline' : 'subtle'"
         aria-label="Version history"
-        @click="historyOpen = !historyOpen"
         :ui="{ leadingIcon: 'size-4' }"
         class="p-2"
+        @click="historyOpen = !historyOpen"
       />
 
       <template v-if="header?.links">

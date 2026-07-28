@@ -17,8 +17,6 @@ permissions:
   contents: read
 
 jobs:
-  # Named `ci` rather than `test` (as in comark-cms) because this package has
-  # no lint or test steps — typecheck and build are the whole signal.
   ci:
     runs-on: ubuntu-latest
 
@@ -30,6 +28,10 @@ jobs:
           node-version: '24'
       - run: npm i -g --force corepack && corepack enable
       - run: pnpm install --frozen-lockfile
+      # Lint and unit tests need no generated types, so they run before `prepare`
+      # and fail fast.
+      - run: pnpm lint
+      - run: pnpm test
       - run: pnpm dev:prepare
       - run: pnpm typecheck
       # Builds the playground, which exercises the layer end to end: content
