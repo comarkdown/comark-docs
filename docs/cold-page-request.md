@@ -26,7 +26,7 @@ sequenceDiagram
     Refs-->>CMS: sha
   end
   CMS->>CMS: rebuild if sha advanced
-  CMS->>GH: init metaOnly (~36 files, at <sha>)
+  CMS->>GH: init partial (~36 files, at <sha>)
   CMSRoute-->>SSR: nav tree
 
   SSR->>CMSRoute: $fetch (page)

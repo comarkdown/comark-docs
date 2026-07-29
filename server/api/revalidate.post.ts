@@ -203,7 +203,11 @@ export default defineEventHandler(async (event) => {
 
       // Warm per-SHA body cache:
       // Cold instances (next deploy) read bodies from the cache instead of re-parsing from GitHub.
-      await headCms.init({ metaOnly: false }).catch((err) => {
+      // `metaOnly` became `partial` in @comark/cms 0.2.0 with no alias and consumers straddle both,
+      // so send both keys — each version ignores the other's. Not inlined: as a literal,
+      // excess-property checking rejects whichever key the installed types don't declare.
+      const full = { partial: false, metaOnly: false }
+      await headCms.init(full).catch((err) => {
         console.error(`${tag} cache warm failed`, err?.message ?? err)
       })
 
