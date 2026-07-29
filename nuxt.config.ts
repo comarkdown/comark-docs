@@ -39,21 +39,16 @@ export default defineNuxtConfig({
     // Spread untyped: module augmentations aren't visible when typechecking against `nuxt/config`.
   } as Record<string, unknown>),
   vite: {
-    optimizeDeps: {
-      // These must go through the dep optimizer, or the browser gets `module.exports`, dies on "does not
-      // provide an export named 'default'", and hydration goes down on every page. `beautiful-mermaid`
-      // matters for what it pulls in: it statically imports the UMD `elkjs/lib/elk.bundled.js`, which
-      // optimizing beautiful-mermaid inlines into its chunk. Do NOT add an entry for elkjs itself — a
-      // second entry on the same file splits it back out and reintroduces the crash.
-      // Absolute paths because Vite resolves a bare id here with *no importer* (i.e. from the consuming
-      // app's root) while these are the layer's deps; `comark-docs > x` holds only while the layer sits
-      // under the consumer's node_modules, so a local checkout (`COMARK_DOCS_LAYER=…`) optimizes nothing
-      // and the raw UMD elkjs reaches the browser. Nested syntax can't express an absolute path: Vite
-      // reads the part before `>` as a package *name* (`nestedResolveBasedir`).
-      include: ['beautiful-mermaid', 'motion-v', '@vueuse/core'].map((id) =>
-        resolveModulePath(id, { from: import.meta.url })
-      ),
+    resolve: {
+      // `beautiful-mermaid` statically imports the UMD `elkjs/lib/elk.bundled.js`, so it has to go through
+      // the dep optimizer or hydration dies on "does not provide an export named 'default'". The alias is
+      // what gets it there: Vite keys optimized deps by the literal `include` string and only maps a bare
+      // import onto a bare key, so resolving the path in `include` instead builds a chunk nothing imports.
+      // Resolved from the layer, since that's where the dep is — the consumer's root can't see it.
+      alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
     },
+    // Do NOT add `elkjs`: a second entry on the same file splits it out of that chunk and returns the crash.
+    optimizeDeps: { include: ['beautiful-mermaid'] },
   },
   nitro: {
     vercel: {
