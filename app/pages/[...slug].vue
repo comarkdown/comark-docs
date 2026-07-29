@@ -132,7 +132,6 @@ if (cms.value.mode === 'prod') {
 
     <template #right>
       <UContentToc
-        v-show="tocLinks.length"
         highlight
         highlight-color="primary"
         highlight-variant="circuit"
