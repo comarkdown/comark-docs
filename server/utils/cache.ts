@@ -23,31 +23,22 @@ export function cacheDriver(sha: string): Driver {
 }
 
 /**
- * Ad-hoc per-SHA storage for auxiliary data that isn't a comark content item —
- * e.g. GitHub commit-history (`history.get.ts`) and RSS date lookups
- * (`rss.xml.get.ts`). Backed by the same `cacheDriver(sha)` Runtime Cache
- * namespace comark's own content cache uses (keys are prefixed distinctly —
- * `gh:...` vs comark's `<source>:<path>` — so there's no collision), rather
- * than a separate unconfigured storage mount.
+ * Ad-hoc per-SHA storage for non-content data (commit history, RSS dates). Shares comark's
+ * `cacheDriver(sha)` namespace rather than a separate unconfigured mount; `gh:...` keys can't
+ * collide with comark's `<source>:<path>`.
  */
 export function shaCacheStorage(sha: string): Storage {
   return createStorage({ driver: cacheDriver(sha) })
 }
 
 /**
- * Shared driver backing the branch → commit SHA pointer (see `resolveSha`/`cacheSha`
- * in `github.ts`). Separate namespace from the per-SHA content driver above: every
- * instance reads the same pointer instead of maintaining its own timer, so only one
- * GitHub API call happens per TTL window.
+ * Shared driver backing the branch → commit SHA pointer (`resolveSha`/`cacheSha` in `github.ts`),
+ * in its own namespace so every instance reads one pointer instead of keeping its own timer.
  *
- * Vercel Runtime Cache is **regional** (each region has its own cache — see
- * https://vercel.com/docs/caching/runtime-cache), not globally shared. This design
- * assumes this project runs its Functions in a single region (no `regions` array in
- * `vercel.json`/`nuxt.config.ts`), so that assumption currently holds. If this project
- * ever goes multi-region, `cacheSha()`'s write-through only reaches the region that
- * ran the webhook — other regions would fall back to their own `resolveSha()` TTL
- * (still correct, just no longer near-instant everywhere). Reach for a globally
- * replicated store (e.g. Vercel Edge Config) instead if that becomes a real need.
+ * Vercel Runtime Cache is **regional**, not global (https://vercel.com/docs/caching/runtime-cache):
+ * this assumes Functions run in a single region (no `regions` in `vercel.json`/`nuxt.config.ts`).
+ * Multi-region would confine `cacheSha()`'s write-through to the webhook's region — others self-heal
+ * on TTL, so reach for a globally replicated store (e.g. Edge Config) only if that day comes.
  */
 export function refCacheDriver(): Driver {
   if (!cacheAvailable()) return memoryDriver()

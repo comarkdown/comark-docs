@@ -2,11 +2,7 @@ import type { CMSListFile } from '@comark/cms'
 import { verify } from '@octokit/webhooks-methods'
 import { waitUntil } from '@vercel/functions'
 
-/**
- * Simultaneous re-render requests during the purge fan-out. Each one is a full
- * page render on this same deployment, so the ceiling is about not stampeding
- * ourselves; the fan-out runs in `waitUntil`, so taking longer is free.
- */
+/** Each re-render hits this same deployment, so the ceiling is about not stampeding ourselves. */
 const REVALIDATE_CONCURRENCY = 8
 
 /** `Promise.allSettled` over `items`, at most `size` in flight. */
@@ -17,8 +13,7 @@ async function settleInBatches<T>(
 ): Promise<PromiseSettledResult<unknown>[]> {
   const results: PromiseSettledResult<unknown>[] = []
   for (let i = 0; i < items.length; i += size) {
-    // `.map((item) => fn(item))`, not `.map(fn)` — `map` passes the index as a
-    // second argument, which would land in the callee's optional parameter.
+    // Not `.map(fn)` — `map` passes the index, which lands in the callee's optional parameter.
     results.push(...(await Promise.allSettled(items.slice(i, i + size).map((item) => fn(item)))))
   }
   return results
@@ -108,10 +103,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing head commit SHA' })
   }
 
-  // Write straight into the shared ref cache every `getProdCMS()` call reads
-  // (see `resolveSha`/`cacheSha` in `server/utils/github.ts`), ahead of the
-  // purge fan-out below — this is what keeps a freshly-purged page from
-  // re-rendering against a stale SHA right after this push.
+  // Ahead of the purge fan-out, so a freshly-purged page can't re-render against the stale SHA.
   await cacheSha(branch, headSha)
 
   console.log(`[cms] revalidate push headSha=${headSha ?? '<none>'}`)
@@ -119,13 +111,9 @@ export default defineEventHandler(async (event) => {
   const requestId = getHeader(event, 'x-vercel-id') ?? getHeader(event, 'x-request-id') ?? 'local'
   const tag = `[revalidate:${requestId}]`
 
-  // Plan synchronously so diagnostics are logged on this request and returned in
-  // the webhook body. This costs two `init()` passes before we respond, against
-  // GitHub's ~10s delivery timeout — acceptable because everything here is
-  // idempotent (`cacheSha` is already written, the fan-out below re-renders), so a
-  // timed-out delivery that GitHub retries only repeats work, it can't corrupt
-  // state. If the content repo ever grows enough to make that routine, move the
-  // before-manifest read into `waitUntil` and drop it from the response body.
+  // Planning before we respond costs two `init()` passes against GitHub's ~10s delivery timeout,
+  // in exchange for diagnostics in the webhook body. Safe because everything here is idempotent,
+  // so a retried delivery only repeats work. If it gets slow, move this into `waitUntil`.
   const beforeSha = payload.before
   let oldItems: Record<string, CMSListFile> = {}
   if (beforeSha && !/^0+$/.test(beforeSha)) {
@@ -153,13 +141,11 @@ export default defineEventHandler(async (event) => {
   }
   const navChanged = navConfigTouched || addedPaths.length > 0 || removedPaths.length > 0 || metaChangedPaths.length > 0
 
-  // Payload routes are keyed by the build-id query on some deployments, so we
-  // revalidate the exact URL the browser loads (`…/_payload.json?<buildId>`).
+  // Payload routes are keyed by the build-id query on some deployments, so purge the exact
+  // URL the browser loads (`…/_payload.json?<buildId>`).
   const buildId = useRuntimeConfig(event).app.buildId
 
-  // For each page we add both the HTML route and its `_payload.json` hydration payload.
-  // Any content change invalidates the ISR-cached llms indexes, the RSS feed, and the
-  // search index (derived from every doc's body, same as the llms indexes).
+  // Any content change invalidates the llms indexes, the feed, and the body-derived search index.
   const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/rss.xml', '/api/cms/search-sections'])
   for (const f of changedFiles) {
     const pageUrl = pageUrlForPath(f)
@@ -171,8 +157,7 @@ export default defineEventHandler(async (event) => {
     if (rawUrl) paths.add(rawUrl)
   }
 
-  // On a meta change or an added/removed file, navigation is updated
-  // So we re-render every page and its hydration payload.
+  // Navigation renders on every page, so a change to it re-renders all of them.
   if (navChanged) {
     for (const item of Object.values(newItems)) {
       if (item.meta.kind === 'document') {
@@ -191,8 +176,7 @@ export default defineEventHandler(async (event) => {
   if (addedPaths.length) console.log(`${tag} added: ${addedPaths.join(', ')}`)
   if (removedPaths.length) console.log(`${tag} removed: ${removedPaths.join(', ')}`)
 
-  // Fan-out revalidation after the response. Use Vercel's native waitUntil so logs stay
-  // in the same invocation (Nitro's event.waitUntil alone can orphan async work on Vercel).
+  // Vercel's native waitUntil, not Nitro's `event.waitUntil` — that one can orphan async work here.
   waitUntil(
     (async () => {
       const revalidate = (path: string, extra: Record<string, string> = {}) =>
@@ -201,8 +185,7 @@ export default defineEventHandler(async (event) => {
           throw err
         })
 
-      // Warm per-SHA body cache:
-      // Cold instances (next deploy) read bodies from the cache instead of re-parsing from GitHub.
+      // Warm the per-SHA body cache so cold instances skip re-parsing from GitHub.
       // `metaOnly` became `partial` in @comark/cms 0.2.0 with no alias and consumers straddle both,
       // so send both keys — each version ignores the other's. Not inlined: as a literal,
       // excess-property checking rejects whichever key the installed types don't declare.
@@ -211,12 +194,9 @@ export default defineEventHandler(async (event) => {
         console.error(`${tag} cache warm failed`, err?.message ?? err)
       })
 
-      // clear cache storage for payload
       await useStorage('cache:nuxt:payload').clear()
 
-      // Bounded fan-out. A navigation change queues two URLs for *every* page, so
-      // an unbounded `Promise.allSettled` would open hundreds of simultaneous
-      // connections back into this same function — each of which renders a page.
+      // Bounded: a nav change queues two URLs per page, and every one re-enters this function.
       const results = await settleInBatches([...paths], REVALIDATE_CONCURRENCY, revalidate)
       const ok = results.filter((r) => r.status === 'fulfilled').length
       console.log(`${tag} complete: ${ok}/${results.length} succeeded`)

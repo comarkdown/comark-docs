@@ -1,13 +1,11 @@
 import { withBase } from 'ufo'
 
-/** Prefix a single internal link with the base according to mode (tree, blob, prod) */
+/** `base` is the version prefix: `/tree/<branch>`, `/blob/<sha>`, or `''` in prod. */
 export function prefixLink(to: string, base: string): string {
   return to.startsWith('/') ? withBase(to, base) : to
 }
 
-/**
- * Deep-clone a Comark node tree and prefix internal `to`/`href` attributes with the base according to mode (tree, blob, prod).
- */
+/** Deep-clone a Comark node tree, prefixing internal `to`/`href` attributes. */
 export function prefixTreeLinks<T>(nodes: T[], base: string): T[] {
   if (!base) return nodes
   return nodes.map((node) => prefixNode(node, base)) as T[]
@@ -28,7 +26,7 @@ function prefixNode(node: unknown, base: string): unknown {
   return [tag, nextAttrs, ...children.map((child) => prefixNode(child, base))]
 }
 
-/** Deep-clone a navigation tree, prefixing every item `path` with the base according to mode (tree, blob, prod) */
+/** Deep-clone a navigation tree, prefixing every item `path`. */
 export function prefixNavigation<T extends { path: string; children?: T[] }>(items: T[], base: string): T[] {
   if (!base) return items
   return items.map((item) => ({

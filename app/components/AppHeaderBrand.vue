@@ -1,9 +1,4 @@
 <script setup lang="ts">
-/**
- * The header's left-hand cluster: the Vercel OSS mark, a slash, the site's own
- * wordmark, and a popover linking to the sibling sites listed in
- * `header.ecosystem`.
- */
 const { header } = useAppConfig()
 const cms = useCMS()
 

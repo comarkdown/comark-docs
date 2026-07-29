@@ -16,7 +16,6 @@ const navigationRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | undefined
 
 watch(menuDrawerOpen, (open) => {
-  // wait for the DOM to update before observing
   nextTick(() => {
     if (open) {
       observer = observeNavigation(navigationRef)

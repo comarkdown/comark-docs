@@ -1,18 +1,12 @@
 import type { RouterConfig } from '@nuxt/schema'
 
 /**
- * Register the versioned preview routes (`/tree/:ref`, `/blob/:ref` and their
- * `/:slug(.+)` docs variants) as real routes that reuse the landing and docs
- * page components.
+ * Register the versioned preview routes (`/tree/:ref`, `/blob/:ref` and their `/:slug(.+)` docs variants) as
+ * real routes reusing the landing and docs page components. They can't be `alias` entries: an alias may not
+ * introduce a param (`:ref`) the canonical record lacks — Vue Router warns R0102, accurately.
  *
- * They can't be `alias` entries on those pages: an alias may not introduce a
- * param (`:ref`) the canonical record lacks: Vue Router warns (R0102).
- *
- * Deliberate divergence from comark-cms: this file arrived there in comarkdown/comark-cms#79
- * and was reverted an hour later in #83, back to `alias` entries. The layer was
- * extracted at the commit in between and keeps this approach on purpose — the
- * warning R0102 emits is accurate, and an alias genuinely cannot add `:ref`. Don't
- * "resync" this away without a reason the revert didn't record.
+ * Deliberate divergence from comark-cms: added there in comarkdown/comark-cms#79, reverted to aliases in #83.
+ * The layer was extracted in between and keeps this on purpose — don't "resync" it away.
  */
 export default <RouterConfig>{
   routes: (routes) => {

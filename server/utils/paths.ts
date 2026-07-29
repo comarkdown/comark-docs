@@ -1,7 +1,4 @@
-/**
- * Repo-relative content prefix (e.g. `docs/content/`), derived from the
- * consumer's content dir at build time by modules/config.ts.
- */
+/** Repo-relative content prefix (e.g. `docs/content/`), derived at build time by modules/config.ts. */
 export function contentPrefix(): string {
   return `${useRuntimeConfig().docs.contentDir.replace(/\/$/, '')}/`
 }
@@ -17,9 +14,8 @@ export function isNavConfig(path: string): boolean {
 }
 
 /**
- * Parse a content repo path into route segments
- * (e.g. `1.getting-started/2.intro.md` → `['getting-started', 'intro']`).
- * `isIndex` is true if the path is `index.md` or `index/index.md`.
+ * Parse a content repo path into route segments (`1.getting-started/2.intro.md` →
+ * `['getting-started', 'intro']`). `isIndex` covers both `index.md` and `index/index.md`.
  */
 export function slugFromPath(path: string): { isIndex: boolean; segments: string[] } | null {
   const prefix = contentPrefix()
@@ -33,10 +29,7 @@ export function slugFromPath(path: string): { isIndex: boolean; segments: string
   return { isIndex, segments }
 }
 
-/**
- * Frontend page route for a content file
- * (e.g. `1.getting-started/2.intro.md` → `/getting-started/intro`, root `index.md` → `/`).
- */
+/** Frontend page route (e.g. `1.getting-started/2.intro.md` → `/getting-started/intro`, root → `/`). */
 export function pageUrlForPath(path: string): string | null {
   const result = slugFromPath(path)
   if (!result) return null
@@ -45,11 +38,7 @@ export function pageUrlForPath(path: string): string | null {
   return `/${segments.join('/')}`
 }
 
-/**
- * Raw markdown route for a single content file
- * (e.g. `1.getting-started/2.intro.md` → `/raw/getting-started/intro.md`, root `index.md` → `/raw/index.md`).
- * This is the only per-file route that stays cached — `/api/pages` is served live.
- */
+/** Raw markdown route — the only per-file route that stays cached, as `/api/pages` is served live. */
 export function rawUrlForPath(path: string): string | null {
   const result = slugFromPath(path)
   if (!result) return null
@@ -59,9 +48,7 @@ export function rawUrlForPath(path: string): string | null {
   return `/raw/${segments.join('/')}.md`
 }
 
-/**
- * Nuxt payload route for a frontend page route
- */
+/** Nuxt payload route for a frontend page route */
 export function payloadUrlForRoute(route: string, buildId?: string): string {
   const path = `${route === '/' ? '' : route}/_payload.json`
   return buildId ? `${path}?${buildId}` : path

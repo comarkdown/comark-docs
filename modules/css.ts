@@ -3,20 +3,12 @@ import { resolveModulePath } from 'exsolve'
 import { resolve } from 'pathe'
 
 /**
- * Generates the Tailwind entry CSS.
- *
- * The theme itself is a plain hand-written stylesheet (`app/assets/css/theme.css`)
- * shared by every site — only the wiring around it is generated, and only
- * because it can't be written by hand:
- *
- * - Tailwind never auto-scans `node_modules`, so the layer's own components
- *   need an explicit `@source`. It has to be *absolute*: Vite flattens
- *   `@import`s before Tailwind resolves `@source`, so a relative one written
- *   inside theme.css would resolve against the entry file and silently point
- *   at the wrong directory. The absolute path differs between a local checkout
- *   and a pnpm-nested install, so it's only knowable at build time.
- * - `tailwindcss` / `@nuxt/ui` are the layer's dependencies, so they're
- *   resolved from here rather than from the consuming site.
+ * Generates the Tailwind entry CSS; the theme itself is hand-written (`app/assets/css/theme.css`).
+ * Tailwind never auto-scans `node_modules`, so the layer's components need an explicit `@source` — and
+ * an absolute one: Vite flattens `@import`s before Tailwind resolves `@source`, so a relative path
+ * written inside theme.css would resolve against the entry file. That absolute path differs between a
+ * local checkout and a pnpm-nested install, so it's only knowable at build time. `tailwindcss` /
+ * `@nuxt/ui` are the layer's own dependencies, so they resolve from here, not from the consuming site.
  */
 export default defineNuxtModule({
   meta: {
@@ -29,8 +21,6 @@ export default defineNuxtModule({
     const uiPath = resolveModulePath('@nuxt/ui', { from: import.meta.url, conditions: ['style'] })
     const themePath = resolver.resolve('../app/assets/css/theme.css')
 
-    // The layer's components, then the site's own app/ and content/ — the
-    // three places utility classes are written.
     const sources = [
       resolver.resolve('../app'),
       nuxt.options.srcDir,

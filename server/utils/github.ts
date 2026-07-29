@@ -15,9 +15,7 @@ export interface GitHubPushPayload {
   head_commit?: GitHubCommit & { id?: string }
 }
 
-/**
- * Constant-time string comparison.
- */
+/** Constant-time string comparison. */
 export function safeCompare(a: string, b: string): boolean {
   const ha = createHash('sha256').update(a).digest()
   const hb = createHash('sha256').update(b).digest()
@@ -36,18 +34,13 @@ export function githubRepo(): string {
   return `${owner}/${slug}`
 }
 
-/** GitHub token for source reads and API calls. */
 export function githubToken(): string | undefined {
   const { docs } = useRuntimeConfig()
   return docs.githubToken || process.env.GITHUB_TOKEN || undefined
 }
 
-/**
- * Branch → commit SHA pointer, shared across every instance via `refCacheDriver()`
- * (Vercel Runtime Cache in prod, in-memory in dev) so only one instance pays for the
- * GitHub API call per TTL window. See `refCacheDriver()` for the single-region
- * assumption this relies on.
- */
+// Branch → commit SHA pointer, shared across every instance so only one pays for the GitHub API
+// call per TTL window. See `refCacheDriver()` for the single-region assumption this relies on.
 const refStorage = createStorage({ driver: refCacheDriver() })
 const refKey = (branch: string) => `branch:${branch}`
 
@@ -57,18 +50,11 @@ const UNRESOLVED = '\0unresolved'
 /**
  * Resolve a branch name to its tip commit SHA.
  *
- * `cacheMisses` opts into caching failures as well as successes, and callers
- * serving attacker-supplied refs should set it: `/tree/:branch` is public, so
- * without a negative entry every request naming a branch that doesn't exist costs
- * one authenticated GitHub API call — an unauthenticated way to burn the token's
- * hourly rate limit.
- *
- * It's off by default because the production branch must not be negative-cached.
- * GitHub answers 404, not 403, when a token can't see a private repo, so an expired
- * or rotated token looks exactly like a missing ref — and caching that would take
- * the whole site down for the TTL window instead of failing one request and
- * retrying. Deliberately asymmetric: a wasted API call on the hot path is cheaper
- * than a cached outage.
+ * Callers serving attacker-supplied refs must set `cacheMisses`: `/tree/:branch` is public, so with
+ * no negative entry every missing-branch request costs an authenticated GitHub call — an
+ * unauthenticated way to burn the token's rate limit. Off by default because the production branch
+ * must not be negative-cached: GitHub answers 404, not 403, for a repo a token can't see, so a
+ * rotated token looks like a missing ref and caching that downs the site for the TTL.
  */
 export async function resolveSha(branch: string, opts: { cacheMisses?: boolean } = {}): Promise<string> {
   if (import.meta.dev) return branch
@@ -89,8 +75,7 @@ export async function resolveSha(branch: string, opts: { cacheMisses?: boolean }
       },
     })
   } catch (error: any) {
-    // Only a definitive "no such ref" is cacheable. A 5xx, a rate-limit 403 or a
-    // network blip is transient and must stay retryable.
+    // Only a definitive 404 is cacheable; a 5xx, rate-limit 403 or network blip stays retryable.
     const status = error?.statusCode ?? error?.response?.status
     if (status === 404) {
       if (opts.cacheMisses) await refStorage.setItem(refKey(branch), UNRESOLVED)
@@ -104,12 +89,9 @@ export async function resolveSha(branch: string, opts: { cacheMisses?: boolean }
 }
 
 /**
- * Write-through: let the revalidate webhook push a known SHA straight into the
- * shared ref cache the moment it's determined, instead of waiting for the next
- * `resolveSha` TTL window — this is what keeps freshly-purged ISR pages from
- * re-rendering against a stale SHA right after a push. Only reaches the region
- * that runs this call (see `refCacheDriver()`); other regions still self-heal via
- * `resolveSha()`'s own TTL.
+ * Write-through, so the revalidate webhook needn't wait for the next `resolveSha` TTL window — this
+ * stops freshly-purged ISR pages re-rendering against a stale SHA. Reaches only the region running
+ * it (see `refCacheDriver()`); other regions self-heal via TTL.
  */
 export async function cacheSha(branch: string, sha: string): Promise<void> {
   await refStorage.setItem(refKey(branch), sha)

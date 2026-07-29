@@ -1,9 +1,5 @@
-/**
- * Pure filtering and tree-building for the `/api/code-explorer` endpoint.
- *
- * Extracted from the route handler so it can be tested without a source, a GitHub
- * token, or a Shiki highlighter — the route itself is all I/O around these.
- */
+// Pure filtering/tree-building for `/api/code-explorer`, kept out of the route so it's testable
+// without a source, a GitHub token or a Shiki highlighter.
 
 const EXT_TO_LANG: Record<string, string> = {
   ts: 'typescript',

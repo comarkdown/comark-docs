@@ -2,14 +2,7 @@ import type { NavigationItem } from '@comark/cms'
 import { useAppConfig } from 'nitropack/runtime'
 import { joinURL } from 'ufo'
 
-/**
- * RSS 2.0 feed of every docs page, with per-page last-modified dates from git.
- * ISR-cached; purged by the push webhook on content changes.
- *
- * Dates come from one batched GitHub GraphQL query in production (aliased
- * `history(first:1, path:)` per file at the pinned SHA) and from local
- * `git log` in development.
- */
+// RSS 2.0 feed of every docs page, last-modified dates from git. ISR-cached; purged by the push webhook.
 
 interface FeedPage {
   path: string
@@ -20,13 +13,8 @@ interface FeedPage {
 
 const cdata = (value: string) => `<![CDATA[${value.replaceAll(']]>', ']]]]><![CDATA[>')}]]>`
 
-/**
- * XML-escape a value going into element text.
- *
- * Used for URLs and ids, which can't be wrapped in CDATA the way titles and
- * descriptions are — a single `&` in a slug or query string is enough to make the
- * whole feed unparseable.
- */
+// XML-escape element text: URLs and ids can't use CDATA the way titles and descriptions do, and one raw `&`
+// in a slug or query string makes the whole feed unparseable.
 const escapeXml = (value: string) =>
   value
     .replaceAll('&', '&amp;')
@@ -44,7 +32,7 @@ export default defineEventHandler(async (event) => {
   const siteName = appConfig.seo?.siteName || site.name || ''
   const rssTitle = appConfig.docs?.rss?.title || `${siteName} Documentation`
 
-  // Collect every page from navigation, mapped to its repo file for git history.
+  // Every page from navigation, mapped to its repo file for git history.
   const pages: FeedPage[] = []
   const collect = (items: NavigationItem[]) => {
     for (const item of items) {
@@ -111,7 +99,6 @@ ${items}
 async function lastModifiedDates(repoPaths: string[]): Promise<Map<string, string>> {
   const dates = new Map<string, string>()
 
-  // Development: local git log per file.
   if (import.meta.dev) {
     await Promise.all(
       repoPaths.map(async (repoPath) => {
@@ -122,8 +109,7 @@ async function lastModifiedDates(repoPaths: string[]): Promise<Map<string, strin
     return dates
   }
 
-  // Production: one aliased GraphQL query for every file at the pinned SHA,
-  // cached per SHA (content pushes advance the SHA and purge this route).
+  // One aliased GraphQL query for every file at the pinned SHA, cached per SHA (pushes advance it and purge).
   const rev = getHeadRef()
   const cache = shaCacheStorage(rev)
   const cacheKey = 'gh:rss-dates'

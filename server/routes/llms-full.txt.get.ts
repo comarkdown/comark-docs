@@ -1,9 +1,6 @@
 import type { NavigationItem } from '@comark/cms'
 
-/**
- * llms-full.txt: every docs page rendered as markdown, concatenated.
- * ISR-cached; purged by the push webhook on content changes.
- */
+// llms-full.txt: every docs page rendered as markdown, concatenated. ISR-cached; purged by the push webhook.
 export default defineEventHandler(async (event) => {
   const cms = await getProdCMS()
   const navigation = await cms.navigation()

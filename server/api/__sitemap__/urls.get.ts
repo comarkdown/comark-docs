@@ -1,9 +1,6 @@
 import type { NavigationItem } from '@comark/cms'
 
-/**
- * Sitemap source for `@nuxtjs/sitemap`.
- *
- */
+/** Sitemap source for `@nuxtjs/sitemap`. */
 export default defineEventHandler(async () => {
   const cms = await getProdCMS()
   const navigation = await cms.navigation()
@@ -17,6 +14,5 @@ export default defineEventHandler(async () => {
   }
   collect(navigation)
 
-  // De-duplicate while preserving order.
   return [...new Set(urls)].map((loc) => ({ loc }))
 })

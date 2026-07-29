@@ -14,11 +14,7 @@ interface SearchSectionsClientMethods {
   searchSections(): Promise<SearchSection[]>
 }
 
-/**
- * Client half of the custom `search-sections` serve handler ( in `server/utils/cms.ts`).
- *
- * Adds `cms.searchSections()` to the CMS client.
- */
+/** Client half of the `search-sections` serve handler (`server/utils/cms.ts`); adds `cms.searchSections()`. */
 export const searchSectionsClient = defineCMSClientPlugin<Record<string, never>, SearchSectionsClientMethods>(() => ({
   name: 'search-sections',
   setup: ({ options }) => ({

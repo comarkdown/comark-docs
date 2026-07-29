@@ -10,28 +10,20 @@ const logger = useLogger('comark-docs')
 
 export interface ComarkDocsOptions {
   /**
-   * ISR TTL (seconds) applied to content page HTML and the global content
-   * indexes in production builds. `false` disables the generated route rules.
-   * Consumers can still add or override rules per route in `routeRules`.
+   * ISR TTL (seconds) for content page HTML and the global content indexes in production builds.
+   * `false` disables the generated route rules; per-route rules in `routeRules` still apply.
    * @default 300
    */
   isr?: number | false
   /**
-   * Content directory, relative to the **repository** root — not the app root.
-   *
-   * Normally derived by relativising `<rootDir>/content` against the git root, so
-   * an app in `docs/` yields `docs/content`. Set this when the build has no `.git`
-   * to inspect (a shallow or context-limited Docker build, an exported tarball) and
-   * the app isn't at the repository root, otherwise it can only be assumed to be
-   * `content` and the GitHub source, edit links and push webhook will all point at
-   * a directory that doesn't exist. Also settable as `NUXT_DOCS_CONTENT_DIR`.
+   * Content directory, relative to the **repository** root, not the app root. Derived by relativising
+   * `<rootDir>/content` against the git root (app in `docs/` → `docs/content`). Set it when the build
+   * has no `.git` to inspect and the app isn't at the repo root, or the GitHub source, edit links and
+   * push webhook all resolve to a path that doesn't exist. Also settable as `NUXT_DOCS_CONTENT_DIR`.
    */
   contentDir?: string
   codeExplorer?: {
-    /**
-     * GitHub repos (`owner/name`) the `/api/code-explorer` endpoint is allowed
-     * to read. Defaults to the configured content repo only.
-     */
+    /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
   }
 }
@@ -46,19 +38,14 @@ export default defineNuxtModule<ComarkDocsOptions>({
   },
   async setup(options, nuxt) {
     const rootDir = nuxt.options.rootDir
-    // `site` comes from nuxt-site-config (via SEO modules) and `appConfig`
-    // values are loosely typed until the consumer's app.config is generated,
-    // so the seeding below goes through an untyped view of the options.
+    // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
       site?: { url?: string; name?: string }
       appConfig: Record<string, any>
     }
 
-    // Static module defaults (`ui`, `sitemap`, `ogImage`, `icon`) live in the
-    // layer's nuxt.config instead: nothing about them is computed, and seeding
-    // them from a module makes module order load-bearing. Everything below has
-    // to be discovered at build time — from git, the environment, or the
-    // consuming site's content directory.
+    // Static module defaults live in the layer's nuxt.config: seeding them here makes module order
+    // load-bearing. Only build-time discoveries (git, env, the consumer's content dir) belong below.
 
     const url = inferSiteURL()
     const meta = await getPackageJsonMetadata(rootDir)
@@ -66,8 +53,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
     const branch = getGitBranch(rootDir)
     const siteName = nuxtOptions.site?.name || meta.name || gitInfo?.name || ''
 
-    // The consumer's content dir, expressed both absolutely (dev fs source)
-    // and relative to the git root (GitHub source path, edit links, webhook).
+    // Absolute (dev fs source) and git-root-relative (GitHub source, edit links, webhook).
     const gitRoot = getGitRoot(rootDir)
     const repoRoot = gitRoot || rootDir
     const { contentPath, contentDir, source: contentDirSource } = resolveContentDir({
@@ -76,19 +62,9 @@ export default defineNuxtModule<ComarkDocsOptions>({
       explicit: options.contentDir || process.env.NUXT_DOCS_CONTENT_DIR,
     })
 
-    /*
-     * Say so when the content dir had to be assumed.
-     *
-     * Without a git root there's no way to tell an app that *is* the repository root
-     * (where `content` is right) from one in a subdirectory (where it should be
-     * `docs/content`) — the filesystem looks identical. Guessing wrong doesn't fail
-     * the build or show up in dev, because dev reads `contentPath` absolutely; it
-     * surfaces only in production, as every GitHub content read missing at once.
-     *
-     * Not escalated to a hard error: for a single-app repo the assumption is correct,
-     * and that's the common shape, so failing would reject far more working builds
-     * than broken ones. A warning that names the fix is the honest middle.
-     */
+    // Without a git root, an app that *is* the repo root is indistinguishable from one in a subdirectory,
+    // and a wrong guess surfaces only in production (dev reads `contentPath` absolutely). Warn rather
+    // than fail: the assumption holds for the common single-app repo.
     if (contentDirSource === 'assumed') {
       logger.warn(
         `No git repository found above ${rootDir}, so the content directory is assumed to be ` +
@@ -120,8 +96,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
       contentDir,
     })
 
-    // Server-side source configuration; every field is overridable through
-    // `NUXT_DOCS_*` env vars, and secrets fall back to their historical env
+    // Every field is overridable through `NUXT_DOCS_*`; secrets also fall back to their historical env
     // names (GITHUB_TOKEN, WEBHOOK_SECRET, VERCEL_BYPASS_TOKEN) at runtime.
     nuxt.options.runtimeConfig.docs = defu(nuxt.options.runtimeConfig.docs, {
       githubToken: '',
@@ -140,31 +115,15 @@ export default defineNuxtModule<ComarkDocsOptions>({
       },
     })
 
-    /*
-     * Un-advertise the layer's icon collections as "custom" at runtime.
-     *
-     * nuxt.config hands @nuxt/icon the collection data through `customCollections`
-     * so the client bundle can be built without depending on the consumer's
-     * node_modules layout (see utils/icons.ts). But @nuxt/icon also copies every
-     * custom prefix into `appConfig.icon.customCollections`, and its runtime plugin
-     * responds by calling `setCustomIconsLoader` for each one — which *replaces* the
-     * Iconify API for that prefix with a fetch against `/api/_nuxt_icon/:collection`.
-     *
-     * That endpoint is served from the server bundle, which `provider: 'iconify'`
-     * disables. So leaving the prefixes in place would break every icon that can't
-     * be statically scanned and therefore isn't in the client bundle: the file-type
-     * icons `CodeIcon` derives from a filename, and any icon named in a consumer's
-     * app.config or in markdown. These are ordinary Iconify collections, so the API
-     * is the correct fallback for them.
-     *
-     * Only the layer's own prefixes are dropped — a consumer's genuinely custom
-     * collections still need their loader.
-     *
-     * On `modules:done` because @nuxt/icon is installed by @nuxt/ui rather than
-     * listed directly, so it hasn't written `appConfig.icon` yet while this module's
-     * `setup` is running. The app config template is generated later still, so
-     * editing it here lands.
-     */
+    // Un-advertise the layer's icon collections as "custom" at runtime: @nuxt/icon copies every
+    // `customCollections` prefix into `appConfig.icon.customCollections`, whose runtime plugin
+    // `setCustomIconsLoader`s each one, replacing the Iconify API with a fetch against
+    // `/api/_nuxt_icon/:collection` — an endpoint `provider: 'iconify'` never serves. That breaks every
+    // icon not statically scanned into the client bundle (CodeIcon's file-type icons, icons named in
+    // app.config or markdown); they are ordinary Iconify collections, so the API is the right fallback.
+    // A consumer's genuinely custom collections still need their loader. On `modules:done` because
+    // @nuxt/icon arrives via @nuxt/ui, so `appConfig.icon` doesn't exist during setup; the template is
+    // generated later still, so editing it here lands.
     nuxt.hook('modules:done', () => {
       const iconAppConfig = nuxtOptions.appConfig.icon as { customCollections?: string[] } | undefined
       if (!iconAppConfig?.customCollections?.length) return
@@ -179,29 +138,22 @@ export default defineNuxtModule<ComarkDocsOptions>({
       version: '1.0.0',
     })
 
-    /*
-     * ISR route rules (production builds only). Generated here rather than via
-     * `$production` in the layer's nuxt.config so they merge deterministically
-     * across npm-installed layers. Content-tree rules are derived from the
-     * consumer's top-level content entries at build time — adding a new
-     * top-level section requires a redeploy (as it always did).
-     */
+    // Generated here, not via `$production` in nuxt.config, so rules merge deterministically across
+    // npm-installed layers. Content-tree rules are read at build time: a new section needs a redeploy.
     if (!nuxt.options.dev && options.isr !== false) {
       const isr = options.isr!
       const rules: Record<string, Record<string, unknown>> = {
         '/': { isr },
-        // Preview routes are served live (SSR) backed by Runtime Cache and
-        // must never be indexed. `/blob/**` is immutable commit HTML.
+        // Previews are served live (SSR) off Runtime Cache; `/blob/**` is immutable commit HTML.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
         '/blob/**': { isr: true, robots: 'noindex, nofollow' },
-        // Raw markdown mirrors every page for agents; keep them out of search indexes.
+        // Raw markdown mirrors of every page, for agents.
         '/raw/**': { isr, robots: 'noindex' },
         // Global content indexes, purged by the push webhook on content changes.
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
         '/rss.xml': { isr },
-        // Fetched client-side on every page hydration (see app.vue); fully
-        // parses every doc's body, so caching it avoids doing that per visit.
+        // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
         '/api/cms/blob/*/search-sections': { isr: true },
         '/api/cms/tree/*/search-sections': { isr },
         '/api/cms/search-sections': { isr },

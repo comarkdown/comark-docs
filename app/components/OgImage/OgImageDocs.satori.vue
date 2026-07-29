@@ -1,13 +1,9 @@
 <script setup lang="ts">
 /**
- * The OG image template, shared by every site on this layer. Accent colour,
- * tagline and mark come from `docs.ogImage` in app.config; everything else is
- * derived from site config.
+ * The OG image template, shared by every site on this layer.
  *
- * The marks are inlined here rather than split into per-site components on
- * purpose: nuxt-og-image renders this through an island that only registers
- * the OG templates themselves, so a nested `<OgLogoMark />` fails to resolve
- * and silently renders nothing.
+ * Marks are inlined rather than split into components: nuxt-og-image renders this through an
+ * island registering only OG templates, so a nested `<OgLogoMark />` silently renders nothing.
  */
 defineOptions({
   inheritAttrs: false,
@@ -28,8 +24,8 @@ const accent = docs?.ogImage?.accent || '#fafafa'
 const tagline = docs?.ogImage?.tagline || site.description || ''
 const mark = docs?.ogImage?.mark || 'wordmark'
 
-// `withAlpha` / `truncate` come from `app/utils/og.ts` (auto-imported) so they can
-// be unit-tested — this template only renders inside a nuxt-og-image island.
+// `withAlpha` / `truncate` live in `app/utils/og.ts` so they can be unit-tested — this
+// template only renders inside a nuxt-og-image island.
 </script>
 
 <template>

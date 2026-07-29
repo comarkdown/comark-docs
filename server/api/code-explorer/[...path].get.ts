@@ -8,23 +8,13 @@ import githubDark from '@shikijs/themes/github-dark'
 
 type ComarkTree = Awaited<ReturnType<typeof parse>>
 
-// `shouldExclude`, `buildTree` and `languageFor` live in `server/utils/code-explorer.ts`
-// (auto-imported): they're pure, and keeping them out of the handler is what makes
-// them testable.
-
-/**
- * A read source for one example directory.
- *
- * Mirrors {@link contentSource}'s dev/prod split (the repo may be private, so
- * jsDelivr / unauthenticated raw can't be used): the working tree in
- * development, the authenticated GitHub source in production.
- */
+// A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
+// private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.
 function exampleSource(repo: string, branch: string, dirPath: string) {
   const { docs } = useRuntimeConfig()
 
   if (import.meta.dev && repo === `${docs.github.owner}/${docs.github.repo}`) {
-    // `dirPath` is repo-relative (e.g. `examples/node`); resolve it against the
-    // repo root of the content repo.
+    // `dirPath` is repo-relative (e.g. `examples/node`).
     return fs(resolve(docs.repoRoot, dirPath))
   }
 
@@ -40,15 +30,8 @@ function exampleSource(repo: string, branch: string, dirPath: string) {
 
 const CONCURRENCY = 10
 
-/**
- * Most files one request will read.
- *
- * Every file is fetched, then parsed and syntax-highlighted through Shiki, and the
- * response embeds every resulting AST — so both cost and payload are linear in the
- * file count. `@branch` is a free dimension of the cache key, so the ISR entry
- * doesn't bound repeat cost: a caller can force a cold render at will. An example
- * directory needing more than this isn't a code explorer, it's a repo browser.
- */
+// Most files one request will read: cost and payload are linear in the count (each is fetched, parsed,
+// highlighted and its AST embedded), and `@branch` is a free cache-key dimension, so ISR can't bound repeats.
 const MAX_FILES = 100
 
 async function processInBatches<T, R>(items: T[], fn: (item: T) => Promise<R>): Promise<R[]> {
@@ -82,8 +65,8 @@ export default defineEventHandler(async (event) => {
     rawBranch = 'main'
   }
 
-  // `branch` reaches the GitHub API and, in dev, `git`'s argv; `dirPath` is
-  // resolved against the repo root in dev. Validate both — see `utils/refs.ts`.
+  // `branch` reaches the GitHub API and, in dev, `git`'s argv; `dirPath` is resolved
+  // against the repo root — validate both (see `utils/refs.ts`).
   const branch = parseRef(rawBranch)
   if (!branch) {
     throw createError({ statusCode: 400, message: 'Invalid branch or commit SHA' })
@@ -94,8 +77,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Invalid path' })
   }
 
-  // Only proxy authenticated reads for the content repo (and any explicitly
-  // allowed extra repos) — this endpoint carries the GitHub token.
+  // This endpoint carries the GitHub token: only proxy the content repo and explicitly allowed extras.
   const { docs } = useRuntimeConfig(event)
   const allowedRepos = new Set([`${docs.github.owner}/${docs.github.repo}`, ...(docs.codeExplorer?.allowRepos ?? [])])
   if (!allowedRepos.has(`${org}/${repoName}`)) {
