@@ -87,7 +87,7 @@ export function getHeadRef(): string {
  * per-instance timer — and rebuilds when it advances. Previews stay pinned to their build commit.
  */
 export async function getProdCMS(): Promise<ComarkCMS> {
-  if (process.env.VERCEL_ENV === 'production') {
+  if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveSha(targetBranch())
     if (sha !== getHeadRef()) {
       console.log(`[cms] head ${getHeadRef()} -> ${sha}`)
