@@ -85,7 +85,7 @@ function onSelect(e: Event, item: CodeExplorerTreeItem) {
 <template>
   <div
     v-if="data"
-    class="relative border border-muted rounded-lg overflow-hidden not-prose"
+    class="relative border border-muted rounded-lg overflow-hidden"
   >
     <div class="grid lg:grid-cols-3 lg:h-[450px]">
       <div class="p-2 border-b lg:border-b-0 lg:border-r border-muted overflow-y-auto">

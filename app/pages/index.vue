@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import Button from '@nuxt/ui/components/Button.vue'
-import PageHero from '@nuxt/ui/components/PageHero.vue'
-import LandingCta from '../components/landing/LandingCta.vue'
-import LandingFaq from '../components/landing/LandingFaq.vue'
-import LandingFeatures from '../components/landing/LandingFeatures.vue'
-import LandingFeatureCard from '../components/landing/LandingFeatureCard.vue'
-import LandingTabs from '../components/landing/LandingTabs.vue'
-
 const cms = useCMS()
 const site = useSiteConfig()
 
@@ -72,7 +64,6 @@ if (cms.value.mode === 'prod') {
   <ComarkRenderer
     v-if="page"
     :tree="tree"
-    :components="{ Button, PageHero, LandingFaq, LandingCta, LandingFeatures, LandingFeatureCard, LandingTabs }"
   />
   <div v-else>Landing page not found</div>
 </template>
