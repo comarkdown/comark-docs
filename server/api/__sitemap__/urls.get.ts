@@ -8,7 +8,7 @@ export default defineEventHandler(async () => {
   const cms = await getProdCMS()
   const navigation = await cms.navigation()
 
-  const urls: string[] = ['/']
+  const urls: string[] = ['/', '/logos']
   const collect = (items: NavigationItem[]) => {
     for (const item of items) {
       if (item.page !== false && item.path) urls.push(item.path)

@@ -190,6 +190,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
       const isr = options.isr!
       const rules: Record<string, Record<string, unknown>> = {
         '/': { isr },
+        '/logos': { isr },
         // Preview routes are served live (SSR) backed by Runtime Cache and
         // must never be indexed. `/blob/**` is immutable commit HTML.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
