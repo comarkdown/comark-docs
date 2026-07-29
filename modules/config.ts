@@ -144,6 +144,8 @@ export default defineNuxtModule<ComarkDocsOptions>({
       const isr = options.isr!
       const rules: Record<string, Record<string, unknown>> = {
         '/': { isr },
+        // Layer-owned page (not derived from content/); still SSRs the CMS navigation shell.
+        '/logos': { isr },
         // Previews are served live (SSR) off Runtime Cache; `/blob/**` is immutable commit HTML.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
         '/blob/**': { isr: true, robots: 'noindex, nofollow' },

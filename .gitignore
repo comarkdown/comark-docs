@@ -9,3 +9,4 @@ node_modules
 !.env.example
 dist
 .DS_Store
+.history
