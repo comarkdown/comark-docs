@@ -20,6 +20,19 @@ const nav = [
   },
 ] as unknown as NavigationItem[]
 
+// A directory `index.md`: @comark/cms emits it as the section node *and* as its own first child.
+const navWithIndex = [
+  {
+    title: 'Getting started',
+    path: '/getting-started',
+    children: [
+      { title: 'Getting started', path: '/getting-started', description: 'Overview' },
+      { title: 'Installation', path: '/getting-started/installation' },
+    ],
+  },
+  { title: 'Concepts', path: '/concepts', page: false, children: [{ title: 'Architecture', path: '/concepts/architecture' }] },
+] as unknown as NavigationItem[]
+
 describe('findPageHeadline', () => {
   it('returns the section title a page sits under', () => {
     expect(findPageHeadline(nav, '/getting-started/installation')).toBe('Getting started')
@@ -47,6 +60,16 @@ describe('findBreadcrumb', () => {
     expect(trail[0]).toEqual({ title: 'Concepts', path: undefined })
   })
 
+  it('lists a directory index page once, not twice', () => {
+    expect(findBreadcrumb(navWithIndex, '/getting-started')).toEqual([
+      { title: 'Getting started', path: '/getting-started' },
+    ])
+    expect(findBreadcrumb(navWithIndex, '/getting-started/installation')).toEqual([
+      { title: 'Getting started', path: '/getting-started' },
+      { title: 'Installation', path: '/getting-started/installation' },
+    ])
+  })
+
   it('returns empty when the page is not in the tree', () => {
     expect(findBreadcrumb(nav, '/nope')).toEqual([])
     expect(findBreadcrumb(nav, undefined)).toEqual([])
@@ -69,6 +92,18 @@ describe('findSurroundLinks', () => {
   it('returns null at each end', () => {
     expect(findSurroundLinks(nav, '/getting-started/introduction')[0]).toBeNull()
     expect(findSurroundLinks(nav, '/concepts/architecture')[1]).toBeNull()
+  })
+
+  it('counts a directory index page once, not as both section and child', () => {
+    expect(findSurroundLinks(navWithIndex, '/getting-started')).toEqual([
+      null,
+      { title: 'Installation', description: undefined, path: '/getting-started/installation' },
+    ])
+  })
+
+  it('links back to the index page from its first child', () => {
+    const [previous] = findSurroundLinks(navWithIndex, '/getting-started/installation')
+    expect(previous).toEqual({ title: 'Getting started', description: 'Overview', path: '/getting-started' })
   })
 
   it('returns empty for unknown or missing input', () => {

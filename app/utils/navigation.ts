@@ -95,7 +95,12 @@ export function findSurroundLinks(
   const flat: SurroundLink[] = []
   const collect = (items: NavigationItem[]) => {
     for (const item of items) {
-      if (item.page !== false) flat.push({ title: item.title, description: item.description, path: item.path })
+      // A directory `index.md` is emitted twice: as the section node and as its own first child.
+      // Keep only the child, or the page's next link points back at the page itself.
+      const selfIndexed = item.children?.some((child) => child.path === item.path)
+      if (item.page !== false && !selfIndexed) {
+        flat.push({ title: item.title, description: item.description, path: item.path })
+      }
       if (item.children?.length) collect(item.children)
     }
   }
