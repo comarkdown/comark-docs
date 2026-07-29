@@ -4,7 +4,7 @@ description: "comark-docs is a Nuxt layer for documentation sites powered by @co
 navigation: false
 ---
 
-::page-hero
+::u-page-hero
 #title
 Docs that ship without a redeploy.
 
@@ -12,7 +12,7 @@ Docs that ship without a redeploy.
 Write Markdown, push, done. Content is served at request time through [Comark CMS](https://cms.comark.dev), cached at the edge, and revalidated by a webhook.
 
 #links
-  :::button
+  :::u-button
   ---
   to: /getting-started/introduction
   size: lg

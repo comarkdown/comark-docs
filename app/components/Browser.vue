@@ -5,7 +5,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="border border-muted rounded-lg overflow-hidden my-6 not-prose">
+  <div class="border border-muted rounded-lg overflow-hidden my-6">
     <div class="flex items-center gap-2 px-3 py-2 bg-elevated border-b border-muted">
       <div class="flex gap-1.5 mr-1">
         <span class="size-3 rounded-full bg-red-400/80" />

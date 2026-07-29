@@ -115,15 +115,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
       },
     })
 
-    // Un-advertise the layer's icon collections as "custom" at runtime: @nuxt/icon copies every
-    // `customCollections` prefix into `appConfig.icon.customCollections`, whose runtime plugin
-    // `setCustomIconsLoader`s each one, replacing the Iconify API with a fetch against
-    // `/api/_nuxt_icon/:collection` — an endpoint `provider: 'iconify'` never serves. That breaks every
-    // icon not statically scanned into the client bundle (CodeIcon's file-type icons, icons named in
-    // app.config or markdown); they are ordinary Iconify collections, so the API is the right fallback.
-    // A consumer's genuinely custom collections still need their loader. On `modules:done` because
-    // @nuxt/icon arrives via @nuxt/ui, so `appConfig.icon` doesn't exist during setup; the template is
-    // generated later still, so editing it here lands.
+    // Drop layer Iconify prefixes from appConfig so @nuxt/icon keeps using the Iconify API (not `/api/_nuxt_icon`).
     nuxt.hook('modules:done', () => {
       const iconAppConfig = nuxtOptions.appConfig.icon as { customCollections?: string[] } | undefined
       if (!iconAppConfig?.customCollections?.length) return
@@ -132,14 +124,24 @@ export default defineNuxtModule<ComarkDocsOptions>({
       )
     })
 
+
+    // Extend Nuxt UI components to make them global and usable in markdown by consumers.
+    nuxt.hook('components:extend', (components) => {
+      const globalComponents = ['UButton', 'UPageHero']
+      for (const component of globalComponents) {
+        const entry = components.find((c) => c.pascalName === component)
+        if (!entry) continue
+        entry.global = true
+      }
+    })
+
     const mcpOptions = (nuxt.options as { mcp?: { name?: string; version?: string } }).mcp
     ;(nuxt.options as { mcp?: { name?: string; version?: string } }).mcp = defu(mcpOptions, {
       name: `${siteName} Docs`,
       version: '1.0.0',
     })
 
-    // Generated here, not via `$production` in nuxt.config, so rules merge deterministically across
-    // npm-installed layers. Content-tree rules are read at build time: a new section needs a redeploy.
+    // ISR rules here (not `$production`) so they merge cleanly across npm layers; content sections need a redeploy.
     if (!nuxt.options.dev && options.isr !== false) {
       const isr = options.isr!
       const rules: Record<string, Record<string, unknown>> = {
