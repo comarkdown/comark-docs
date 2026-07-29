@@ -2,12 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { parseBranchName, parseCommitSha } from '../server/utils/refs'
 
 /**
- * The public preview endpoints in one place.
- *
- * `/api/cms/blob/:sha` and `/api/cms/tree/:branch` are unauthenticated, and each
- * distinct ref they accept costs a preview-CMS instance and (for branches) a GitHub
- * API call. These assert the boundary those routes enforce, using the same inputs
- * that motivated adding it.
+ * `/api/cms/blob/:sha` and `/api/cms/tree/:branch` are unauthenticated, and each distinct ref they accept costs
+ * a preview-CMS instance and (for branches) a GitHub API call. These guard that boundary.
  */
 describe('preview ref boundary', () => {
   const blobRoute = (sha: string) => parseCommitSha(sha)
@@ -40,17 +36,12 @@ describe('preview ref boundary', () => {
 })
 
 /**
- * The tree route's basePath has to come out encoded exactly once.
- *
- * The client sends an encoded branch, `getRouterParam` does not decode, and the CMS
- * handler strips `basePath` from the request URL as a literal prefix — so encoding
- * the raw param again yields `feat%252Fx`, which never matches the `feat%2Fx` in the
- * URL and silently breaks previews for any branch containing a slash. Upstream hit
- * exactly this (comark-cms#84).
+ * basePath must come out encoded exactly once: the client sends an encoded branch, `getRouterParam` does not
+ * decode, and the CMS handler strips `basePath` as a literal prefix — so re-encoding yields `feat%252Fx`, which
+ * never matches and silently breaks previews for slashed branches. Upstream hit exactly this (comark-cms#84).
  */
 describe('tree route basePath encoding', () => {
-  // What app/composables/useCMS.ts builds: Vue Router params are decoded, so it
-  // encodes once.
+  // What app/composables/useCMS.ts builds: Vue Router params are decoded, so it encodes once.
   const clientBasePath = (branch: string) => `/api/cms/tree/${encodeURIComponent(branch)}`
   // What the server route builds from the raw (still-encoded) router param.
   const serverBasePath = (rawParam: string) =>

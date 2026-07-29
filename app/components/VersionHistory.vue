@@ -32,9 +32,8 @@ async function loadHistory() {
   }
 }
 
-// Fetch on demand, not on mount. This panel is always mounted but starts closed,
-// and `/api/history` isn't ISR-cached — fetching eagerly cost every visitor an
-// extra request per navigation for a panel most never open.
+// On demand, not on mount: always mounted but starts closed, and `/api/history` isn't
+// ISR-cached, so eager fetching cost every visitor a request for a panel most never open.
 watch(open, (isOpen) => {
   if (isOpen && loadedPath.value !== cms.value.path) loadHistory()
 })

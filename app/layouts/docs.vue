@@ -6,7 +6,6 @@ let observer: IntersectionObserver | undefined
 onMounted(() => {
   observer = observeNavigation(navigationRef)
   watch(sidebar, () => {
-    // wait for the DOM to update before observing
     nextTick(() => {
       observer = observeNavigation(navigationRef, observer)
     })

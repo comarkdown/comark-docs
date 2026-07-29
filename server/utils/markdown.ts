@@ -1,10 +1,7 @@
 import type { ComarkCMS } from '@comark/cms'
 import { renderMarkdown } from 'comark/render'
 
-/**
- * Render a CMS document as plain markdown with a `# title` / `> description` lead.
- * Used by the `/raw/**.md` routes and `/llms-full.txt`.
- */
+/** Render a CMS document as plain markdown with a `# title` / `> description` lead. */
 export async function renderPageMarkdown(cms: ComarkCMS, path: string): Promise<string | null> {
   const item = await cms.get(path)
   if (!item || item.meta.kind !== 'document') return null

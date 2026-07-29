@@ -3,17 +3,14 @@ import { searchSectionsClient } from '../utils/search-sections'
 import type { CMSMode } from '../types/cms'
 import { withLeadingSlash } from 'ufo'
 
-/** The production CMS client */
 export const prodCMS = createCMSClient({
   basePath: '/api/cms',
   fetch: $fetch,
   plugins: [searchSectionsClient()],
 })
 
-/** Memoized version-scoped clients */
 const clients = new Map<string, ReturnType<typeof createCMSClient>>()
 
-/** A CMS client bound to a version data endpoint */
 function getClient(basePath: string) {
   let client = clients.get(basePath)
   if (!client) {
@@ -28,7 +25,6 @@ function getClient(basePath: string) {
 }
 
 export interface ActiveCMS {
-  /** Which serving mode the current route is in. */
   mode: CMSMode
   /** The branch name (tree) or commit SHA (blob); `undefined` in prod. */
   ref?: string
@@ -36,13 +32,10 @@ export interface ActiveCMS {
   base: string
   /** The path within the CMS content (with leading slash). */
   path: string
-  /** The CMS client to read content from for this route. */
   client: typeof prodCMS
 }
 
-/**
- * Resolve the active CMS for the current route (from the parsed `[...slug]`).
- */
+/** Resolve the active CMS for the current route (from the parsed `[...slug]`). */
 export function useCMS(): ComputedRef<ActiveCMS> {
   const route = useRoute()
   return computed<ActiveCMS>(() => {

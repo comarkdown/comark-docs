@@ -1,8 +1,5 @@
 <script setup lang="ts">
-/**
- * The site's own wordmark: a named mark from the layer (`header.logo.mark`),
- * configured images, or the site name as text.
- */
+// Falls back in order: a layer mark, configured images, then the site name as text.
 const { header } = useAppConfig()
 </script>
 

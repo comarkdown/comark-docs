@@ -1,11 +1,8 @@
 import { execSync } from 'node:child_process'
 
 export interface GitInfo {
-  /** Repository name */
   name: string
-  /** Repository owner/organization */
   owner: string
-  /** Repository URL */
   url: string
 }
 
@@ -40,12 +37,9 @@ export function getGitRoot(cwd: string): string | undefined {
 }
 
 /**
- * Owner/name/url from a git remote URL.
- *
- * Handles the two forms `git remote get-url` emits: `git@host:owner/name.git` and
- * `https://host/owner/name(.git)`. Split out from `getLocalGitInfo` so the parsing
- * can be tested without a checkout — every inferred default in `modules/config.ts`
- * (site name, edit links, the webhook's repo) flows from this one regex.
+ * Owner/name/url from a git remote URL, in both forms `git remote get-url` emits (`git@host:owner/name.git`,
+ * `https://host/owner/name(.git)`). Split out from `getLocalGitInfo` so the regex is testable without a
+ * checkout — every inferred default in `modules/config.ts` (site name, edit links, webhook repo) flows from it.
  */
 export function parseGitRemote(remote: string): GitInfo | undefined {
   const match = remote.trim().match(/^(?:git@|https?:\/\/)([^/:]+)[/:]([^/]+)\/(.+?)(?:\.git)?$/)

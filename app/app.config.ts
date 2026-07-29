@@ -152,16 +152,13 @@ export default defineAppConfig({
       // info: 'i-tabler-info-square-rounded-filled',
     },
   },
-  // `seo.siteName`, `header.title` and `github.*` are intentionally NOT
-  // defaulted here: modules/config.ts seeds them into `nuxt.options.appConfig`
-  // (from site config / local git), and app.config values — even empty
-  // strings — would take precedence over those seeded values.
+  // `seo.siteName`, `header.title` and `github.*` are deliberately NOT defaulted here: modules/config.ts seeds
+  // them into `nuxt.options.appConfig`, and app.config values — even empty strings — would win over those.
   header: {
     to: '/',
     logo: {
       alt: '',
-      // A wordmark shipped with the layer ('comark' | 'comark-cms'); takes
-      // precedence over the image/text fallbacks below.
+      // Wordmark shipped with the layer ('comark' | 'comark-cms'); takes precedence over the fallbacks below.
       mark: '',
       light: '',
       dark: '',
@@ -169,10 +166,7 @@ export default defineAppConfig({
     // Sibling sites listed in the brand popover; empty = no popover.
     ecosystem: [] as { mark?: string; to: string; label?: string }[],
     search: true,
-    // No `colorMode` key: there is no color-mode toggle in the header to gate. The
-    // always-visible one lives in AppFooter, and the header only carries a duplicate
-    // inside the mobile drawer — so the flag would have meant "hide it on small
-    // screens", which is a stranger promise than not offering the knob.
+    // No `colorMode` key: the always-visible toggle is in AppFooter, the header's is a mobile-drawer duplicate.
     // Main navigation tabs; empty = one tab per top-level content section.
     nav: [] as { label: string; sections: string[]; link?: 'first-leaf' | 'section' }[],
     links: [],
@@ -184,9 +178,8 @@ export default defineAppConfig({
     owner: '',
     // Optional icon rendered before the credits.
     icon: '',
-    // NOTE: app.config arrays are *concatenated* across layers (defu), so any
-    // item defaulted here would be appended to — never replaced by — the
-    // consumer's list. Array defaults stay empty for that reason.
+    // defu *concatenates* app.config arrays across layers, so any default here would append to (never replace)
+    // the consumer's list — hence empty array defaults throughout.
     links: [],
   },
   toc: {
@@ -209,8 +202,7 @@ export default defineAppConfig({
       description: '',
       links: [] as { title: string; description: string; href: string }[],
     },
-    // Optional schema.org SoftwareApplication identity for the landing page
-    // JSON-LD; empty = no SoftwareApplication block is emitted.
+    // schema.org SoftwareApplication identity for the landing page JSON-LD; empty = no block emitted.
     schemaOrg: {},
     // Extra links appended to the docs page aside (below Copy page / Edit).
     asideLinks: [] as { label: string; icon?: string; to: string; target?: string }[],

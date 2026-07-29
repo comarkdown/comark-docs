@@ -1,17 +1,10 @@
-/**
- * Helpers for the Satori OG template (`components/OgImage/OgImageDocs.satori.vue`).
- *
- * Satori implements a subset of CSS, so anything it can't evaluate has to be
- * computed here instead. Kept out of the SFC to be testable — the template renders
- * inside a nuxt-og-image island, which isn't reachable from a unit test.
- */
+// Helpers for the Satori OG template (`components/OgImage/OgImageDocs.satori.vue`): Satori implements only a
+// CSS subset, so what it can't evaluate is computed here — outside the SFC, since the island isn't testable.
 
 /**
- * Flatten a hex colour to `rgba()` at a given alpha.
- *
- * Satori has no `color-mix()`. Only `#rgb` / `#rrggbb` can be decomposed; anything
- * else (a named colour, `oklch()`) returns `transparent` rather than
- * `rgba(NaN, NaN, NaN, …)`, which Satori paints as an opaque black block.
+ * Flatten a hex colour to `rgba()` at a given alpha — Satori has no `color-mix()`. Only `#rgb` / `#rrggbb`
+ * decompose; anything else (a named colour, `oklch()`) returns `transparent`, since `rgba(NaN, NaN, NaN, …)`
+ * would be painted as an opaque black block.
  */
 export function withAlpha(hex: string, alpha: number): string {
   const value = hex.replace('#', '')

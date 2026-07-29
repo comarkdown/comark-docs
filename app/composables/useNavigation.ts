@@ -5,14 +5,10 @@ export interface NavGroup {
   label: string
   /** Top-level content sections grouped under this tab. */
   sections: string[]
-  /**
-   * Where the tab links to: the first leaf page of the first section
-   * (default) or the section index page.
-   */
+  /** Where the tab links: the first leaf page of the first section (default) or the section index page. */
   link?: 'first-leaf' | 'section'
 }
 
-/** Walk down to the first leaf page of a navigation node. */
 function firstLeaf(item: NavigationItem): string {
   let current = item
   while (current.children?.length) current = current.children[0]!
@@ -25,10 +21,7 @@ function segmentOf(path: string, base: string): string {
   return rel.split('/').filter(Boolean)[0] ?? ''
 }
 
-/**
- * The `header.nav` groups from app.config; defaults to one tab per top-level
- * navigation node when unset.
- */
+/** The `header.nav` groups from app.config; defaults to one tab per top-level navigation node. */
 function navGroups(navigation: NavigationItem[], base: string): NavGroup[] {
   const { header } = useAppConfig()
   const groups = (header?.nav ?? []) as NavGroup[]

@@ -1,14 +1,7 @@
-/**
- * Nitro auto-imports, provided by hand.
- *
- * Modules under `server/` are written against Nitro's auto-import globals rather
- * than explicit imports, so importing one directly in a test leaves those names
- * undefined. Rather than pull in the whole Nuxt/Nitro test harness for a handful of
- * pure functions, the tests declare the few globals they touch here.
- *
- * `useRuntimeConfig` returns the shape `modules/config.ts` seeds. Anything a test
- * needs to vary, it overrides via `setRuntimeConfig`.
- */
+// Nitro auto-imports, provided by hand: modules under `server/` are written against Nitro's globals, so
+// importing one directly in a test leaves those names undefined. Declaring the few the tests touch here beats
+// pulling in the whole Nuxt/Nitro harness for a handful of pure functions. `useRuntimeConfig` returns the shape
+// `modules/config.ts` seeds.
 export interface TestRuntimeConfig {
   docs: {
     contentDir: string
@@ -42,8 +35,7 @@ const globals = globalThis as Record<string, unknown>
 
 globals.useRuntimeConfig = () => runtimeConfig
 
-// Minimal stand-in for h3's `createError`: the tests only assert that a throw
-// happened and what status it carried.
+// Minimal stand-in for h3's `createError`: tests only assert that a throw happened and its status.
 globals.createError = (input: { statusCode?: number; statusMessage?: string; message?: string }) => {
   const error = new Error(input.statusMessage || input.message || 'Error') as Error & { statusCode?: number }
   error.statusCode = input.statusCode

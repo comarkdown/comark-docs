@@ -21,9 +21,8 @@ export default defineNuxtSchema({
       /** Show the search button (header and mobile drawer). */
       search: true,
       /**
-       * Main navigation tabs. Each group maps top-level content sections to a
-       * tab; `link: 'section'` links to the section index instead of its
-       * first leaf page. Empty = one tab per top-level content section.
+       * Main navigation tabs, each group mapping top-level content sections to a tab; `link: 'section'`
+       * links to the section index instead of its first leaf page. Empty = one tab per section.
        */
       nav: [],
       /** Right-side icon links. */
@@ -72,10 +71,7 @@ export default defineNuxtSchema({
         /** Extra links appended to llms.txt. */
         links: [],
       },
-      /**
-       * schema.org SoftwareApplication identity emitted as JSON-LD on the
-       * landing page. Empty = no SoftwareApplication block.
-       */
+      /** schema.org SoftwareApplication identity, emitted as JSON-LD on the landing page. Empty = none. */
       schemaOrg: {},
       /** Extra links appended to the docs page aside. */
       asideLinks: [],
