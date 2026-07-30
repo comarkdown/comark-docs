@@ -21,8 +21,7 @@ export default defineNuxtSchema({
       /** Show the search button (header and mobile drawer). */
       search: true,
       /**
-       * Main navigation tabs, each group mapping top-level content sections to a tab; `link: 'section'`
-       * links to the section index instead of its first leaf page. Empty = one tab per section.
+       * Main navigation tabs. A group maps top-level content sections to a tab.
        */
       nav: [],
       /** Right-side icon links. */
