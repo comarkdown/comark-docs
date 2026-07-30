@@ -32,7 +32,10 @@ export default defineNuxtConfig({
       alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
     },
     optimizeDeps: {
-      include: ['beautiful-mermaid'],
+      include: [
+        'beautiful-mermaid',
+        'comark-docs > ai > @ai-sdk/gateway > @vercel/oidc',
+      ],
     },
   },
   nitro: {
