@@ -91,8 +91,18 @@ export default defineAppConfig({
       slots: {
         root: 'lg:pt-12 border-b-0',
         headline: 'hidden',
-        title: 'text-4xl font-semibold',
+        title: 'text-4xl font-medium',
       },
+    },
+    pageSection: {
+      slots: {
+        title: 'font-medium'
+      }
+    },
+    pageCTA: {
+      slots: {
+        title: 'font-medium'
+      }
     },
     pageLinks: {
       slots: {
@@ -113,12 +123,12 @@ export default defineAppConfig({
       },
       h2: {
         slots: {
-          base: 'font-semibold',
+          base: 'font-medium',
         },
       },
       h3: {
         slots: {
-          base: 'font-semibold',
+          base: 'font--medium',
         },
       },
       cardGroup: {

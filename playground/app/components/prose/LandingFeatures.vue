@@ -20,7 +20,7 @@ defineProps<{
       </p>
       <h2
         v-if="$slots.title"
-        class="mt-6 text-3xl sm:text-4xl font-semibold tracking-tight leading-tight text-highlighted"
+        class="mt-6 text-3xl sm:text-4xl medium tracking-tight leading-tight text-highlighted"
       >
         <slot
           name="title"
