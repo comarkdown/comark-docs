@@ -21,7 +21,10 @@ export default defineNuxtConfig({
   icon: {
     provider: 'iconify',
     customCollections: layerIconCollections() as never,
-    clientBundle: { includeCustomCollections: false },
+    clientBundle: { 
+      scan: true,
+      includeCustomCollections: false
+    },
   },
   vite: {
     optimizeDeps: { 
