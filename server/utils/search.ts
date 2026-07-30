@@ -22,6 +22,30 @@ export function invalidateSearchSections(cms: ComarkCMS): void {
   searchSectionsCache.delete(cms)
 }
 
+/**
+ * Keyword-score the search index against `query` and return the best sections.
+ */
+export async function searchDocSections(cms: ComarkCMS, query: string, limit = 10): Promise<SearchSection[]> {
+  const sections = await buildSearchSections(cms)
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
+
+  return sections
+    .map((section) => {
+      const haystackTitle = [section.title, ...section.titles].join(' ').toLowerCase()
+      const haystackContent = section.content.toLowerCase()
+      let score = 0
+      for (const term of terms) {
+        if (haystackTitle.includes(term)) score += 3
+        if (haystackContent.includes(term)) score += 1
+      }
+      return { section, score }
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((entry) => entry.section)
+}
+
 /** Walk every document's AST, one section per heading — the shape `UContentSearch` takes as `files`. */
 export function buildSearchSections(cms: ComarkCMS): Promise<SearchSection[]> {
   let sections = searchSectionsCache.get(cms)

@@ -185,6 +185,12 @@ export default defineAppConfig({
   toc: {
     title: 'On this page',
   },
+  assistant: {
+    // Shows the "Ask AI" (requires AI_GATEWAY_API_KEY).
+    enabled: false,
+    // Suggested questions shown before the first message, grouped by category.
+    faqQuestions: [] as { category: string; items: string[] }[],
+  },
   docs: {
     rss: {
       // Empty = `${seo.siteName} Documentation`.
