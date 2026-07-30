@@ -26,6 +26,7 @@ const props = withDefaults(
   }>(),
   {
     branch: 'main',
+    defaultValue: undefined,
   }
 )
 

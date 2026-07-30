@@ -40,6 +40,12 @@ export default defineNuxtSchema({
     toc: {
       title: 'On this page',
     },
+    assistant: {
+      /** Enable the "Ask AI" assistant */
+      enabled: false,
+      /** Suggested questions shown before the first message, grouped by category. */
+      faqQuestions: [],
+    },
     github: {
       /** Repository owner (inferred from git when unset). */
       owner: '',

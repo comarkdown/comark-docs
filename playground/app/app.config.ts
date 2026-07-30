@@ -21,4 +21,13 @@ export default defineAppConfig({
       { icon: 'i-simple-icons-github', to: 'https://github.com/comarkdown/comark-docs', target: '_blank', 'aria-label': 'GitHub' },
     ]
   },
+  assistant: {
+    enabled: true,
+    faqQuestions: [
+      {
+        category: 'Getting Started',
+        items: ['How do I set up a docs site with this layer?', 'How does content get served from GitHub?'],
+      },
+    ],
+  },
 })

@@ -33,8 +33,11 @@
     "dev:prepare": "nuxt prepare playground"
   },
   "dependencies": {
+    "@ai-sdk/gateway": "^4.0.16",
+    "@ai-sdk/vue": "^4.0.22",
     "@comark/cms": "^0.1.0",
     "@comark/nuxt": "^0.5.1",
+    "ai": "^7.0.22",
     "@iconify-json/lucide": "^1.2.120",
     "@iconify-json/simple-icons": "^1.2.92",
     "@iconify-json/vscode-icons": "^1.2.67",

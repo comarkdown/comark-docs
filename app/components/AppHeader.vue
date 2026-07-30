@@ -1,7 +1,8 @@
 <script setup lang="ts">
-const { header, footer } = useAppConfig()
+const { header, footer, assistant } = useAppConfig()
 const cms = useCMS()
 const historyOpen = useVersionHistory()
+const assistantOpen = useAssistant()
 const navigation = useMainNavigation()
 </script>
 
@@ -19,6 +20,26 @@ const navigation = useMainNavigation()
         :collapsed="false"
         :icon="false"
         class="text-muted font-normal hidden lg:inline-flex min-w-[150px]"
+      />
+
+      <UButton
+        v-if="assistant?.enabled"
+        label="Ask AI"
+        color="neutral"
+        variant="outline"
+        class="hidden lg:inline-flex"
+        @click="assistantOpen = true"
+      />
+
+      <UButton
+        v-if="assistant?.enabled"
+        icon="i-lucide-sparkles"
+        aria-label="Ask AI"
+        color="neutral"
+        variant="outline"
+        :ui="{ leadingIcon: 'size-4' }"
+        class="p-2 lg:hidden"
+        @click="assistantOpen = true"
       />
 
       <UButton

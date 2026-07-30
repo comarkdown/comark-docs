@@ -41,7 +41,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
       site?: { url?: string; name?: string }
-      appConfig: Record<string, any>
+      appConfig: Record<string, unknown>
     }
 
     // Static module defaults live in the layer's nuxt.config: seeding them here makes module order
