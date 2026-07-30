@@ -1,3 +1,4 @@
+import { resolveModulePath } from 'exsolve'
 import { defineNuxtConfig } from 'nuxt/config'
 import { layerIconCollections } from './utils/icons'
 
@@ -27,7 +28,10 @@ export default defineNuxtConfig({
     },
   },
   vite: {
-    optimizeDeps: { 
+    resolve: {
+      alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
+    },
+    optimizeDeps: {
       include: ['beautiful-mermaid'],
     },
   },
