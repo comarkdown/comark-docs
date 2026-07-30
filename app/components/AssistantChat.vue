@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DefaultChatTransport, isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName, type ToolUIPart, type UIMessage } from 'ai'
+import { DefaultChatTransport, isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName, type ToolUIPart, type DynamicToolUIPart, type UIMessage } from 'ai'
 import { useChat } from '@ai-sdk/vue'
 import { isPartStreaming, isToolStreaming } from '@nuxt/ui/utils/ai'
 import highlight from '@comark/nuxt/plugins/highlight'
@@ -52,7 +52,7 @@ function clearChat() {
   messages.value = []
 }
 
-function toolMeta(part: ToolUIPart) {
+function toolMeta(part: ToolUIPart | DynamicToolUIPart) {
   const name = getToolName(part)
   const streaming = isToolStreaming(part)
   const input = part.input as Record<string, string> | undefined
@@ -222,7 +222,7 @@ function sourcesLabel(message: UIMessage) {
               v-for="category in questions"
               :key="category.category"
               :title="category.category"
-              :links="category.items.map((item) => ({ label: item, onClick: () => ask(item) }))"
+              :links="category.items.map((item: string) => ({ label: item, onClick: () => ask(item) }))"
             />
           </div>
         </div>

@@ -29,7 +29,7 @@ function pageIndex(navigation: NavigationItem[]): string {
 }
 
 export default defineEventHandler(async (event) => {
-  const appConfig = useAppConfig(event)
+  const appConfig = useAppConfig()
   if (!appConfig.assistant?.enabled) {
     throw createError({ statusCode: 404, message: 'Assistant is not enabled on this site' })
   }
