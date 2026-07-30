@@ -68,9 +68,9 @@ export default defineAppConfig({
     },
     pageHero: {
       slots: {
-        title: 'font-semibold text-5xl sm:text-6xl lg:text-6xl tracking-tighter',
+        title: 'font-medium text-5xl sm:text-6xl lg:text-12xl tracking-tighter',
         description: 'text-lg sm:text-xl mt-6',
-        container: 'max-w-5xl',
+        container: 'max-w-6xl',
       },
     },
     page: {
