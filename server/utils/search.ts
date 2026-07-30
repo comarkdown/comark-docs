@@ -70,8 +70,9 @@ async function collectSearchSections(cms: ComarkCMS): Promise<SearchSection[]> {
     const item = items[index]
     if (!item || item.meta.kind !== 'document') continue
 
-    const title = ((item.data as any)?.title as string) ?? meta.path
-    const description = ((item.data as any)?.description as string) ?? ''
+    const data = item.data as Record<string, unknown> | undefined
+    const title = (data?.title as string) ?? meta.path
+    const description = (data?.description as string) ?? ''
 
     sections.push({ id: item.path, title, titles: [], level: 1, content: description })
 
