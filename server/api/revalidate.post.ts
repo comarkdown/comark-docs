@@ -121,8 +121,9 @@ export default defineEventHandler(async (event) => {
       const oldCms = await createSourceCMS(beforeSha)
       await oldCms.init()
       oldItems = oldCms.manifest.items
-    } catch (err: any) {
-      console.warn(`${tag} no before-manifest (${beforeSha}) — treating as full revalidate:`, err?.message ?? err)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : err
+      console.warn(`${tag} no before-manifest (${beforeSha}) — treating as full revalidate:`, message)
     }
   }
 

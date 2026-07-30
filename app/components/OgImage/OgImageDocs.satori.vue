@@ -9,7 +9,7 @@ defineOptions({
   inheritAttrs: false,
 })
 
-const { headline = '' } = defineProps<{
+const { title = '', description = '', headline = '' } = defineProps<{
   title?: string
   description?: string
   headline?: string
