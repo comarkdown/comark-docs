@@ -1,5 +1,3 @@
-import { join } from 'pathe'
-import { resolveModulePath } from 'exsolve'
 import { defineNuxtConfig } from 'nuxt/config'
 import { layerIconCollections } from './utils/icons'
 
