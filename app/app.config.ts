@@ -32,6 +32,7 @@ export default defineAppConfig({
     },
     contentNavigation: {
       slots: {
+        linkLeadingIcon: 'grayscale',
         listWithChildren: 'ms-0 border-none',
         itemWithChildren: 'data-[state=open]:mb-2',
         trigger: 'font-medium',
