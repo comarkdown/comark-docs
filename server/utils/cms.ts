@@ -41,7 +41,7 @@ export async function createSourceCMS(
   }))
 
   const instance = createCMS({
-    comark: {
+    markdown: {
       plugins: comarkPlugins,
       html: false,
     },

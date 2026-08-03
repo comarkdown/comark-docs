@@ -1,3 +1,16 @@
+diff --git a/dist/cms.js b/dist/cms.js
+index 42245f0682f6abe04a3cde9033e606ed086b1e7d..3e62e6674cdfb00a4f8fa4c99831594e36bec799 100644
+--- a/dist/cms.js
++++ b/dist/cms.js
+@@ -324,7 +324,7 @@ export function createCMS(options = {}) {
+     }
+     // If no markdown parser is registered, register the default markdown plugin.
+     if (!internalCms.__parserRegistry__.hasParser('.md')) {
+-        installPlugin(markdown({ comark: options.comark }));
++        installPlugin(markdown({ comark: options.markdown }));
+     }
+     const cms = internalCms;
+     cms.handler = createHandler(cms, options);
 diff --git a/dist/plugins/markdown.d.ts b/dist/plugins/markdown.d.ts
 index f0bab6b9ff330794affd0ee5005b28ec255a7ec7..ac79f99caeaf24b752ee76a9ee61df3054fef8cf 100644
 --- a/dist/plugins/markdown.d.ts
@@ -27,7 +40,7 @@ index 55face5e37c3f336291ddb72e09c928155c4c01b..869eda10e567e8635825b6f734781d47
          name: 'markdown',
          setup(cms) {
 diff --git a/dist/types/cms.d.ts b/dist/types/cms.d.ts
-index 317db4a114fe6b451ed2e10c210ab10305f5642a..f75e52240d8e1819699c3fdfa6321b7a130b3ca0 100644
+index 317db4a114fe6b451ed2e10c210ab10305f5642a..2ee62ea947fa700c53fd46a9b8fc5fc60592e154 100644
 --- a/dist/types/cms.d.ts
 +++ b/dist/types/cms.d.ts
 @@ -1,5 +1,5 @@
@@ -42,7 +55,7 @@ index 317db4a114fe6b451ed2e10c210ab10305f5642a..f75e52240d8e1819699c3fdfa6321b7a
      cache?: CacheOptions | false;
      plugins?: ReadonlyArray<CMSPlugin<any>>;
 -    comark?: ParseOptions;
-+    comark?: ParserOptions;
++    markdown?: ParserOptions;
      /**
       * Logger used across the CMS pipeline and its plugins. Pass a custom logger to
       * redirect output, or `false` to silence it entirely — for example in
