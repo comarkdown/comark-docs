@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import type { parse } from '@comark/nuxt/parse'
+import type { MarkdownDocument } from 'comark'
 import CodeIcon from '@nuxt/ui/components/prose/CodeIcon.vue'
-
-type ComarkTree = Awaited<ReturnType<typeof parse>>
 
 interface CodeExplorerTreeItem {
   filename: string
@@ -13,7 +11,7 @@ interface CodeExplorerTreeItem {
 
 interface CodeExplorerData {
   tree: CodeExplorerTreeItem[]
-  files: Record<string, ComarkTree>
+  files: Record<string, MarkdownDocument>
 }
 
 const props = withDefaults(
@@ -123,8 +121,8 @@ function onSelect(e: Event, item: CodeExplorerTreeItem) {
           class="code-explorer-content flex-1 flex-col"
         >
           <UTheme :ui="{ prose: { pre: { root: 'my-0 h-full' } } }">
-            <ComarkRenderer
-              :tree="selectedFile"
+            <MarkdownDocument
+              :value="selectedFile"
               class="h-full"
             />
           </UTheme>
@@ -155,4 +153,3 @@ function onSelect(e: Event, item: CodeExplorerTreeItem) {
   narrower copy in this component leaked to every code block on the page and
   would drift from the canonical one.
 -->
-

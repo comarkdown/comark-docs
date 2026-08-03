@@ -1,12 +1,10 @@
 import { resolve } from 'node:path'
-import { parse } from '@comark/nuxt/parse'
+import { parseMarkdown, type MarkdownDocument } from 'comark'
 import highlight from '@comark/nuxt/plugins/highlight'
 import fs from '@comark/cms/sources/fs'
 import github from '@comark/cms/sources/github'
 import githubLight from '@shikijs/themes/github-light'
 import githubDark from '@shikijs/themes/github-dark'
-
-type ComarkTree = Awaited<ReturnType<typeof parse>>
 
 // A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
 // private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.
@@ -101,13 +99,13 @@ export default defineEventHandler(async (event) => {
       dark: githubDark,
     },
   })
-  const fileResults: Record<string, ComarkTree> = {}
+  const fileResults: Record<string, MarkdownDocument> = {}
 
   await processInBatches(files, async (relativePath) => {
     const content = (await source.getItem(relativePath)) ?? ''
 
     const markdown = '~~~' + languageFor(relativePath) + '\n' + content + '\n~~~'
-    fileResults[relativePath] = await parse(markdown, { plugins: [highlightPlugin] })
+    fileResults[relativePath] = await parseMarkdown(markdown, { plugins: [highlightPlugin] })
   })
 
   const tree = buildTree(files)

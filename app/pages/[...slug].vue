@@ -118,9 +118,9 @@ if (cms.value.mode === 'prod') {
     />
 
     <UPageBody>
-      <ComarkRenderer
-        v-if="page.nodes"
-        :tree="tree"
+      <MarkdownDocument
+        v-if="tree"
+        :value="tree"
         :components="{ Mermaid, CodeExplorer, Browser }"
       />
 
