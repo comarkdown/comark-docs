@@ -7,7 +7,7 @@
  */
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { createContent, defineContentPlugin } from 'comark-content'
+import { comarkContent, defineContentPlugin } from 'comark-content'
 import fsSource from 'comark-content/sources/fs'
 import githubSource from 'comark-content/sources/github'
 import { createContentClient, defineContentClientPlugin } from 'comark-content/client'
@@ -25,7 +25,7 @@ const full = { partial: false, metaOnly: false }
 const bodyKey = 'content:index.md'
 
 function createFixtureCMS() {
-  return createContent({
+  return comarkContent({
     sources: { content: fsSource(fixture) },
     cache: { driver: memoryDriver() },
   })
@@ -33,7 +33,7 @@ function createFixtureCMS() {
 
 describe('comark-content contract', () => {
   it('exposes every entrypoint the layer imports', () => {
-    for (const entry of [createContent, defineContentPlugin, fsSource, githubSource, createContentClient, defineContentClientPlugin]) {
+    for (const entry of [comarkContent, defineContentPlugin, fsSource, githubSource, createContentClient, defineContentClientPlugin]) {
       expect(typeof entry).toBe('function')
     }
   })
@@ -75,7 +75,7 @@ describe('comark-content contract', () => {
       },
     }))
 
-    const cms = createContent({
+    const cms = comarkContent({
       sources: { content: fsSource(fixture) },
       cache: { driver: memoryDriver() },
       plugins: [ping()],

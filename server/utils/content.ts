@@ -1,4 +1,4 @@
-import { createContent, defineContentPlugin, type Content, type CacheOptions } from 'comark-content'
+import { comarkContent, defineContentPlugin, type Content, type CacheOptions } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import highlight from 'comark/plugins/highlight'
@@ -40,7 +40,7 @@ export async function createSourceContent(
     },
   }))
 
-  const instance = createContent({
+  const instance = comarkContent({
     markdown: {
       plugins: comarkPlugins,
       html: false,
