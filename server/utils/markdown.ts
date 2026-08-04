@@ -1,8 +1,8 @@
 import type { ComarkContent } from 'comark-content'
 import { renderMarkdown } from 'comark/render'
 
-/** Render a CMS document as plain markdown with a `# title` / `> description` lead. */
-export async function renderPageMarkdown(cms: ComarkContent, path: string): Promise<string | null> {
+/** Render a content document as plain markdown with a `# title` / `> description` lead. */
+export async function renderPageMarkdown(content: ComarkContent, path: string): Promise<string | null> {
   const item = await content.get(path)
   if (!item || item.meta.kind !== 'document') return null
 
