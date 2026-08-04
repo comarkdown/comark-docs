@@ -37,3 +37,7 @@ jobs:
       # Builds the playground, which exercises the layer end to end: content
       # pages, landing, OG images, and the generated ISR route rules.
       - run: pnpm build
+      # Continuous preview releases via pkg.pr.new: every commit gets an installable
+      # tarball (https://pkg.pr.new/comarkdown/comark-docs@<sha>), so downstream sites
+      # can test the layer before a release. Requires the pkg.pr.new GitHub App.
+      - run: pnpx pkg-pr-new publish --compact --no-template --pnpm
