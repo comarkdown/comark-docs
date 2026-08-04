@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Page not found' })
   }
 
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
 
   const stripped = slug.replace(/\.md$/, '')
   const path = stripped === 'index' ? '/' : withLeadingSlash(stripped)

@@ -1,4 +1,4 @@
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.vue'
 
 export interface NavGroup {
@@ -49,7 +49,7 @@ function navGroups(navigation: NavigationItem[], base: string): NavGroup[] {
 /** High-level navbar items, one per configured nav group (plus GitHub). */
 export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
   const route = useRoute()
-  const cms = useCMS()
+  const cms = useDocsContent()
   const { github } = useAppConfig()
   const navigation = inject<Ref<NavigationItem[]>>('navigation', ref([]))
 
@@ -106,7 +106,7 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
 /** The sidebar tree for the active tab. */
 export function useFilteredNavigation(): ComputedRef<NavigationItem[]> {
   const route = useRoute()
-  const cms = useCMS()
+  const cms = useDocsContent()
   const navigation = inject<Ref<NavigationItem[]>>('navigation', ref([]))
 
   return computed<NavigationItem[]>(() => {

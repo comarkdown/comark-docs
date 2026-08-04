@@ -17,7 +17,7 @@ function cacheAvailable(): boolean {
 export function cacheDriver(sha: string): Driver {
   if (!cacheAvailable()) return memoryDriver()
   return vercelRuntimeCache({
-    base: `cms:${sha}`,
+    base: `content:${sha}`,
     ttl: TTL,
   })
 }
@@ -43,7 +43,7 @@ export function shaCacheStorage(sha: string): Storage {
 export function refCacheDriver(): Driver {
   if (!cacheAvailable()) return memoryDriver()
   return vercelRuntimeCache({
-    base: 'cms:refs',
+    base: 'content:refs',
     ttl: REF_TTL,
   })
 }

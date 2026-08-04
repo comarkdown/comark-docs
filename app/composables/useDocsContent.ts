@@ -1,20 +1,20 @@
-import { createCMSClient } from '@comark/cms/client'
+import { createContentClient } from 'comark-content/client'
 import { searchSectionsClient } from '../utils/search-sections'
-import type { CMSMode } from '../types/cms'
+import type { ContentMode } from '../types/cms'
 import { withLeadingSlash } from 'ufo'
 
-export const prodCMS = createCMSClient({
-  basePath: '/api/cms',
+export const prodContent = createContentClient({
+  basePath: '/api/content',
   fetch: $fetch,
   plugins: [searchSectionsClient()],
 })
 
-const clients = new Map<string, ReturnType<typeof createCMSClient>>()
+const clients = new Map<string, ReturnType<typeof createContentClient>>()
 
 function getClient(basePath: string) {
   let client = clients.get(basePath)
   if (!client) {
-    client = createCMSClient({
+    client = createContentClient({
       basePath,
       fetch: $fetch,
       plugins: [searchSectionsClient()],
@@ -24,21 +24,21 @@ function getClient(basePath: string) {
   return client
 }
 
-export interface ActiveCMS {
-  mode: CMSMode
+export interface ActiveContent {
+  mode: ContentMode
   /** The branch name (tree) or commit SHA (blob); `undefined` in prod. */
   ref?: string
   /** Link prefix for this version (`/tree/<branch>`, `/blob/<sha>`, or `''` in prod). */
   base: string
   /** The path within the CMS content (with leading slash). */
   path: string
-  client: typeof prodCMS
+  client: typeof prodContent
 }
 
 /** Resolve the active CMS for the current route (from the parsed `[...slug]`). */
-export function useCMS(): ComputedRef<ActiveCMS> {
+export function useDocsContent(): ComputedRef<ActiveContent> {
   const route = useRoute()
-  return computed<ActiveCMS>(() => {
+  return computed<ActiveContent>(() => {
     const path = withLeadingSlash(
       Array.isArray(route.params.slug) ? route.params.slug.join('/') : (route.params.slug as string)
     )
@@ -49,7 +49,7 @@ export function useCMS(): ComputedRef<ActiveCMS> {
         ref: route.params.ref as string,
         base: `/tree/${encodedRef}`,
         path,
-        client: getClient(`/api/cms/tree/${encodedRef}`),
+        client: getClient(`/api/content/tree/${encodedRef}`),
       }
     }
     if (route.params.ref && route.path.startsWith('/blob/')) {
@@ -58,9 +58,9 @@ export function useCMS(): ComputedRef<ActiveCMS> {
         ref: route.params.ref as string,
         base: `/blob/${route.params.ref}`,
         path,
-        client: getClient(`/api/cms/blob/${route.params.ref}`),
+        client: getClient(`/api/content/blob/${route.params.ref}`),
       }
     }
-    return { mode: 'prod', base: '', path, client: prodCMS }
+    return { mode: 'prod', base: '', path, client: prodContent }
   })
 }

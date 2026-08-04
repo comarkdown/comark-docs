@@ -1,10 +1,10 @@
 # comark-docs
 
-The [Nuxt layer](https://nuxt.com/docs/getting-started/layers) behind the Comark documentation sites, powered by [`@comark/cms`](https://github.com/comarkdown/comark-cms).
+The [Nuxt layer](https://nuxt.com/docs/getting-started/layers) behind the Comark documentation sites, powered by [`comark-content`](https://github.com/comarkdown/comark-content).
 
-Content lives as Markdown in your repo and is served **at request time** — parsed, indexed and cached through `@comark/cms` — instead of being bundled at build time. Content pushes go live in production without a redeploy.
+Content lives as Markdown in your repo and is served **at request time** — parsed, indexed and cached through `comark-content` — instead of being bundled at build time. Content pushes go live in production without a redeploy.
 
-> **Scope.** This is a shared layer for two specific sites — the Comark docs and the Comark CMS docs — not a general-purpose docs starter. That's why some things that would be configurable in a published theme are simply baked in: the Vercel OSS mark in the header cluster, the `comark` / `comark-cms` wordmarks, and `content/` as the content directory. Anything both sites need to differ on is config; anything they share is code, so it isn't written twice.
+> **Scope.** This is a shared layer for two specific sites — the Comark docs and the Comark Content docs — not a general-purpose docs starter. That's why some things that would be configurable in a published theme are simply baked in: the Vercel OSS mark in the header cluster, the `comark` / `comark-content` wordmarks, and `content/` as the content directory. Anything both sites need to differ on is config; anything they share is code, so it isn't written twice.
 
 ## Features
 
@@ -67,15 +67,15 @@ Branding is config, not components — the header cluster, footer credit and OG 
 ```ts
 export default defineAppConfig({
   header: {
-    logo: { mark: 'comark-cms' },                                          // a wordmark shipped with the layer
+    logo: { mark: 'comark-content' },                                          // a wordmark shipped with the layer
     ecosystem: [{ mark: 'comark', to: 'https://comark.dev', label: 'Comark' }],
   },
   footer: { icon: 'i-simple-icons-vercel', owner: 'Vercel' },
-  docs: { ogImage: { mark: 'comark-cms', tagline: 'The content layer for Markdown' } },
+  docs: { ogImage: { mark: 'comark-content', tagline: 'The content layer for Markdown' } },
 })
 ```
 
-The wordmarks (`LogoComark`, `LogoComarkCms`) live in the layer because each site needs both: its own in the header, its sibling's in the ecosystem popover. Add a new one as `LogoX.vue` plus a branch in `LogoMark.vue` — and in `OgImageDocs.satori.vue`, which has to inline them (nuxt-og-image's island renderer can't resolve nested components).
+The wordmarks (`LogoComark`, `LogoComarkContent`) live in the layer because each site needs both: its own in the header, its sibling's in the ecosystem popover. Add a new one as `LogoX.vue` plus a branch in `LogoMark.vue` — and in `OgImageDocs.satori.vue`, which has to inline them (nuxt-og-image's island renderer can't resolve nested components).
 
 `docs.ogImage.mark` takes the same names plus `wordmark`, which draws `seo.siteName` as text. The OG template inlines the *icon* of each mark rather than the full lockup, since it renders in a 200px column — so the artwork there is a second copy that has to be kept in step with the `Logo*.vue` component by hand. If you add a mark and only update `LogoMark.vue`, the OG image silently falls back to the wordmark.
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { joinURL } from 'ufo'
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 import { Mermaid } from '@comark/nuxt/plugins/mermaid'
 import CodeExplorer from '../components/CodeExplorer.vue'
 import Browser from '../components/Browser.vue'
@@ -12,7 +12,7 @@ definePageMeta({
 
 const { toc, seo } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
-const cms = useCMS()
+const cms = useDocsContent()
 
 const { data: page } = await useAsyncData(`${cms.value.base}:${cms.value.path}`, () =>
   cms.value.client.get(cms.value.path)
@@ -118,9 +118,9 @@ if (cms.value.mode === 'prod') {
     />
 
     <UPageBody>
-      <ComarkRenderer
-        v-if="page.nodes"
-        :tree="tree"
+      <MarkdownDocument
+        v-if="tree"
+        :value="tree"
         :components="{ Mermaid, CodeExplorer, Browser }"
       />
 

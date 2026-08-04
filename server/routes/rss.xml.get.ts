@@ -1,4 +1,4 @@
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 import { useAppConfig } from 'nitropack/runtime'
 import { joinURL } from 'ufo'
 
@@ -24,7 +24,7 @@ const escapeXml = (value: string) =>
     .replaceAll("'", '&apos;')
 
 export default defineEventHandler(async (event) => {
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
   const navigation = await cms.navigation()
   const site = getSiteConfig(event)
   const appConfig = useAppConfig(event)

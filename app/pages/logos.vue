@@ -65,20 +65,20 @@ defineOgImage('DocsSatori', {
 
       <section>
         <h2 class="text-2xl text-highlighted font-bold">
-          Comark CMS
+          Comark Content
         </h2>
         <p class="mt-2 mb-6">
           The content layer for Markdown.
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <LogoCard
-            logo="comark-cms"
+            logo="comark-content"
             name="Black"
             bg="#ffffff"
             color="#0a0a0a"
           />
           <LogoCard
-            logo="comark-cms"
+            logo="comark-content"
             name="White"
             bg="#0a0a0a"
             color="#ffffff"

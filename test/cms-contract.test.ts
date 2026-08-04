@@ -1,16 +1,16 @@
 /**
- * Contract test against the installed `@comark/cms`.
+ * Contract test against the installed `comark-content`.
  *
  * Every other test here imports a pure function and never touches the package,
- * which is how comark-cms#77's `metaOnly` -> `partial` rename silently degraded
+ * which is how comark-content#77's `metaOnly` -> `partial` rename silently degraded
  * the webhook's body warm-up. This exercises the surface the layer depends on.
  */
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { createCMS, defineCMSPlugin } from '@comark/cms'
-import fsSource from '@comark/cms/sources/fs'
-import githubSource from '@comark/cms/sources/github'
-import { createCMSClient, defineCMSClientPlugin } from '@comark/cms/client'
+import { createContent, defineContentPlugin } from 'comark-content'
+import fsSource from 'comark-content/sources/fs'
+import githubSource from 'comark-content/sources/github'
+import { createContentClient, defineContentClientPlugin } from 'comark-content/client'
 import memoryDriver from 'unstorage/drivers/memory'
 
 const fixture = fileURLToPath(new URL('./fixtures/cms-contract', import.meta.url))
@@ -25,15 +25,15 @@ const full = { partial: false, metaOnly: false }
 const bodyKey = 'content:index.md'
 
 function createFixtureCMS() {
-  return createCMS({
+  return createContent({
     sources: { content: fsSource(fixture) },
     cache: { driver: memoryDriver() },
   })
 }
 
-describe('@comark/cms contract', () => {
+describe('comark-content contract', () => {
   it('exposes every entrypoint the layer imports', () => {
-    for (const entry of [createCMS, defineCMSPlugin, fsSource, githubSource, createCMSClient, defineCMSClientPlugin]) {
+    for (const entry of [createContent, defineContentPlugin, fsSource, githubSource, createContentClient, defineContentClientPlugin]) {
       expect(typeof entry).toBe('function')
     }
   })
@@ -67,21 +67,21 @@ describe('@comark/cms contract', () => {
   })
 
   it('dispatches plugin serve handlers through cms.handler', async () => {
-    // Mirrors the `search-sections` plugin in server/utils/cms.ts.
-    const ping = defineCMSPlugin(() => ({
+    // Mirrors the `search-sections` plugin in server/utils/content.ts.
+    const ping = defineContentPlugin(() => ({
       name: 'ping',
       setup(ctx) {
         ctx.addServeHandler('ping', async () => Response.json({ ok: true }))
       },
     }))
 
-    const cms = createCMS({
+    const cms = createContent({
       sources: { content: fsSource(fixture) },
       cache: { driver: memoryDriver() },
       plugins: [ping()],
     })
 
-    const response = await cms.handler(new Request('http://localhost/api/cms/ping'))
+    const response = await cms.handler(new Request('http://localhost/api/content/ping'))
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ ok: true })

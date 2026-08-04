@@ -7,8 +7,8 @@ sequenceDiagram
   participant Browser
   participant Edge as Edge ISR
   participant SSR as Lambda SSR
-  participant CMSRoute as /api/cms/**
-  participant Refs as Shared ref cache (cms:refs)
+  participant CMSRoute as /api/content/**
+  participant Refs as Shared ref cache (content:refs)
   participant GH as GitHub
   participant CMS as shared cms
 
@@ -16,7 +16,7 @@ sequenceDiagram
   Edge-->>SSR: cache miss → render
 
   SSR->>CMSRoute: $fetch (navigation)
-  CMSRoute->>CMS: getProdCMS()
+  CMSRoute->>CMS: getProdContent()
   CMS->>Refs: resolveSha(targetBranch)
   alt cache hit (within 60s TTL)
     Refs-->>CMS: cached sha
@@ -30,7 +30,7 @@ sequenceDiagram
   CMSRoute-->>SSR: nav tree
 
   SSR->>CMSRoute: $fetch (page)
-  CMSRoute->>CMS: getProdCMS() (same sha → no rebuild)
+  CMSRoute->>CMS: getProdContent() (same sha → no rebuild)
   CMS->>GH: fetch + parse 1 page (at <sha>)
   CMSRoute-->>SSR: parsed page
 

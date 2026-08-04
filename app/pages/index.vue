@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const cms = useCMS()
+const cms = useDocsContent()
 const site = useSiteConfig()
 
 const { data: page } = await useAsyncData(`${cms.value.base}:landing`, () => cms.value.client.get('/'))
@@ -61,9 +61,9 @@ if (cms.value.mode === 'prod') {
 </script>
 
 <template>
-  <ComarkRenderer
-    v-if="page"
-    :tree="tree"
+  <MarkdownDocument
+    v-if="tree"
+    :value="tree"
   />
   <div v-else>Landing page not found</div>
 </template>

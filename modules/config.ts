@@ -158,9 +158,9 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/llms-full.txt': { isr },
         '/rss.xml': { isr },
         // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
-        '/api/cms/blob/*/search-sections': { isr: true },
-        '/api/cms/tree/*/search-sections': { isr },
-        '/api/cms/search-sections': { isr },
+        '/api/content/blob/*/search-sections': { isr: true },
+        '/api/content/tree/*/search-sections': { isr },
+        '/api/content/search-sections': { isr },
         '/api/code-explorer/**': { isr },
       }
 

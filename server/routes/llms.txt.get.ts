@@ -1,11 +1,11 @@
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 import { useAppConfig } from 'nitropack/runtime'
 import { joinURL } from 'ufo'
 
 // llms.txt (https://llmstxt.org): index of every docs page for AI agents, linking the raw markdown mirrors
 // under `/raw/**.md`. ISR-cached; purged by the push webhook on content changes.
 export default defineEventHandler(async (event) => {
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
   const navigation = await cms.navigation()
   const site = getSiteConfig(event)
   const appConfig = useAppConfig(event)

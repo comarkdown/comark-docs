@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
   // `cacheMisses`: the ref comes from the URL, so a miss must not re-cost a GitHub call each time.
   const sha = await resolveSha(branch, { cacheMisses: true })
-  const cms = await getPreviewCMS(sha, `/api/cms/tree/${encodeURIComponent(branch)}`)
+  const cms = await getPreviewContent(sha, `/api/content/tree/${encodeURIComponent(branch)}`)
 
   return await cms.handler(toWebRequest(event))
 })

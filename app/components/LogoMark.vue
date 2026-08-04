@@ -7,6 +7,6 @@ defineProps<{
 </script>
 
 <template>
-  <LogoComarkCms v-if="name === 'comark-cms'" />
+  <LogoComarkContent v-if="name === 'comark-content'" />
   <LogoComark v-else />
 </template>

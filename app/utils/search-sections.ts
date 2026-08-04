@@ -1,4 +1,4 @@
-import { defineCMSClientPlugin } from '@comark/cms/client'
+import { defineContentClientPlugin } from 'comark-content/client'
 import { joinURL } from 'ufo'
 
 /** One search entry per document heading — consumed by `UContentSearch`. */
@@ -14,8 +14,8 @@ interface SearchSectionsClientMethods {
   searchSections(): Promise<SearchSection[]>
 }
 
-/** Client half of the `search-sections` serve handler (`server/utils/cms.ts`); adds `cms.searchSections()`. */
-export const searchSectionsClient = defineCMSClientPlugin<Record<string, never>, SearchSectionsClientMethods>(() => ({
+/** Client half of the `search-sections` serve handler (`server/utils/content.ts`); adds `cms.searchSections()`. */
+export const searchSectionsClient = defineContentClientPlugin<Record<string, never>, SearchSectionsClientMethods>(() => ({
   name: 'search-sections',
   setup: ({ options }) => ({
     searchSections: () => options.fetch<SearchSection[]>(joinURL(options.baseURL, options.basePath, 'search-sections')),

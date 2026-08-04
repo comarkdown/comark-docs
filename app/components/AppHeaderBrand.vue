@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { header } = useAppConfig()
-const cms = useCMS()
+const cms = useDocsContent()
 
 const ecosystem = computed(() => (header?.ecosystem ?? []) as { mark?: string; to: string; label?: string }[])
 

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { CMSFile } from '@comark/cms'
+import type { ContentFile } from 'comark-content'
 import { useClipboard } from '@vueuse/core'
 import type { PageLink } from '@nuxt/ui'
 
-const props = defineProps<{ page: CMSFile }>()
+const props = defineProps<{ page: ContentFile }>()
 
 const route = useRoute()
 const toast = useToast()
-const cms = useCMS()
+const cms = useDocsContent()
 const { copy, copied } = useClipboard()
 const { copy: copyLink } = useClipboard()
 const copying = ref(false)

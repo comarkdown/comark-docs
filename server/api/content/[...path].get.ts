@@ -3,7 +3,7 @@
  * (e.g. `search-sections`). Cached per-URL — see `routeRules`.
  */
 export default defineEventHandler(async (event) => {
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
 
   return cms.handler(toWebRequest(event))
 })

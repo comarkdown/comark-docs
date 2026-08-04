@@ -64,7 +64,7 @@ export default defineEventHandler(async (event): Promise<PageCommit[]> => {
   const raw = getQuery(event).path
   const path = typeof raw === 'string' && raw ? withLeadingSlash(raw) : '/'
 
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
 
   const item = await cms.get(path)
   if (!item || item.meta.kind !== 'document') return []

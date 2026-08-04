@@ -1,6 +1,6 @@
 ---
 title: Contract fixture
-description: Minimal document for the @comark/cms contract test.
+description: Minimal document for the comark-content contract test.
 ---
 
 # Contract fixture

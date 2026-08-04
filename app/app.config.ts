@@ -169,7 +169,7 @@ export default defineAppConfig({
     to: '/',
     logo: {
       alt: '',
-      // Wordmark shipped with the layer ('comark' | 'comark-cms'); takes precedence over the fallbacks below.
+      // Wordmark shipped with the layer ('comark' | 'comark-content'); takes precedence over the fallbacks below.
       mark: '',
       light: '',
       dark: '',
@@ -213,7 +213,7 @@ export default defineAppConfig({
       // Strapline along the bottom; empty = `site.description`.
       tagline: '',
       // Which mark to draw in the left column; 'wordmark' = the site name.
-      mark: 'wordmark' as 'wordmark' | 'comark' | 'comark-cms',
+      mark: 'wordmark' as 'wordmark' | 'comark' | 'comark-content',
     },
     llms: {
       description: '',

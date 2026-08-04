@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { header, footer, assistant } = useAppConfig()
-const cms = useCMS()
+const cms = useDocsContent()
 const historyOpen = useVersionHistory()
 const assistantOpen = useAssistant()
 const navigation = useMainNavigation()

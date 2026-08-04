@@ -16,8 +16,8 @@ useSeoMeta({
   description: 'We are sorry but this page could not be found.',
 })
 
-const { data: navigation } = await useAsyncData('navigation', () => prodCMS.navigation())
-const { data: files } = useLazyAsyncData('search-sections', () => prodCMS.searchSections(), {
+const { data: navigation } = await useAsyncData('navigation', () => prodContent.navigation())
+const { data: files } = useLazyAsyncData('search-sections', () => prodContent.searchSections(), {
   server: false,
 })
 
