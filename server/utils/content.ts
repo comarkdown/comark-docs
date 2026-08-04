@@ -1,4 +1,4 @@
-import { comarkContent, defineContentPlugin, type Content, type CacheOptions } from 'comark-content'
+import { comarkContent, defineContentPlugin, type ComarkContent, type CacheOptions } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import highlight from 'comark/plugins/highlight'
@@ -11,7 +11,7 @@ import githubDark from '@shikijs/themes/github-dark'
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
-let cms: Promise<Content> | undefined
+let cms: Promise<ComarkContent> | undefined
 
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
@@ -86,7 +86,7 @@ export function getHeadRef(): string {
  * call resolves the tip of `targetBranch()` via `resolveSha()` — a shared, short-TTL cache, not a
  * per-instance timer — and rebuilds when it advances. Previews stay pinned to their build commit.
  */
-export async function getProdContent(): Promise<Content> {
+export async function getProdContent(): Promise<ComarkContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveSha(targetBranch())
     if (sha !== getHeadRef()) {
@@ -131,14 +131,14 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */
-const cmsPreviewInstances = new Map<string, Promise<Content>>()
+const cmsPreviewInstances = new Map<string, Promise<ComarkContent>>()
 
 // Bound required: each entry is a CMS with its own manifest and parsed bodies, and public
 // `/tree/:branch` / `/blob/:sha` let a crawler mint one per SHA. Evicted refs just rebuild, their
 // bodies surviving in the per-SHA Runtime Cache.
 const MAX_PREVIEW_INSTANCES = 8
 
-export function getPreviewContent(sha: string, basePath: string): Promise<Content> {
+export function getPreviewContent(sha: string, basePath: string): Promise<ComarkContent> {
   const key = `${basePath}::${sha}`
   const existing = cmsPreviewInstances.get(key)
   if (existing) {

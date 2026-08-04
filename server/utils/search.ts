@@ -1,4 +1,4 @@
-import type { Content } from 'comark-content'
+import type { ComarkContent } from 'comark-content'
 
 interface SearchSection {
   id: string
@@ -11,21 +11,21 @@ interface SearchSection {
 // Building the index parses every document — the most expensive read in the app. Keying the memo by
 // instance gets invalidation for free: `getProdContent` rebuilds the singleton when the head advances,
 // and each preview SHA has its own instance, so a stale index is unreachable.
-const searchSectionsCache = new WeakMap<Content, Promise<SearchSection[]>>()
+const searchSectionsCache = new WeakMap<ComarkContent, Promise<SearchSection[]>>()
 
 /**
  * Drop the memoized index for an instance — the one case identity can't cover: in dev the default
  * instance watches the working tree, so content changes under a stable object. Called from
  * `watch:file:update`.
  */
-export function invalidateSearchSections(cms: Content): void {
+export function invalidateSearchSections(cms: ComarkContent): void {
   searchSectionsCache.delete(cms)
 }
 
 /**
  * Keyword-score the search index against `query` and return the best sections.
  */
-export async function searchDocSections(cms: Content, query: string, limit = 10): Promise<SearchSection[]> {
+export async function searchDocSections(cms: ComarkContent, query: string, limit = 10): Promise<SearchSection[]> {
   const sections = await buildSearchSections(cms)
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
 
@@ -47,7 +47,7 @@ export async function searchDocSections(cms: Content, query: string, limit = 10)
 }
 
 /** Walk every document's AST, one section per heading — the shape `UContentSearch` takes as `files`. */
-export function buildSearchSections(cms: Content): Promise<SearchSection[]> {
+export function buildSearchSections(cms: ComarkContent): Promise<SearchSection[]> {
   let sections = searchSectionsCache.get(cms)
   if (!sections) {
     sections = collectSearchSections(cms).catch((error) => {
@@ -59,7 +59,7 @@ export function buildSearchSections(cms: Content): Promise<SearchSection[]> {
   return sections
 }
 
-async function collectSearchSections(cms: Content): Promise<SearchSection[]> {
+async function collectSearchSections(cms: ComarkContent): Promise<SearchSection[]> {
   const docs = await cms.list(['content'])
   const sections: SearchSection[] = []
 
