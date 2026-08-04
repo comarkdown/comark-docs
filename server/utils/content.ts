@@ -11,7 +11,7 @@ import githubDark from '@shikijs/themes/github-dark'
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
-let cms: Promise<ComarkContent> | undefined
+let content: Promise<ComarkContent> | undefined
 
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
@@ -25,14 +25,14 @@ const comarkPlugins = [
 ]
 
 /**
- * Create a new CMS instance reading content at `ref` (a commit SHA or branch). `remote` forces the
+ * Create a new content instance reading content at `ref` (a commit SHA or branch). `remote` forces the
  * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
  */
 export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-  // Bound to THIS instance so a preview CMS serves its own version's sections, not production's.
+  // Bound to THIS instance so a preview content instance serves its own version's sections, not production's.
   const searchSectionsPlugin = defineContentPlugin(() => ({
     name: 'search-sections',
     setup(ctx) {
@@ -82,7 +82,7 @@ export function getHeadRef(): string {
 }
 
 /**
- * Shared CMS for the lifetime of this server instance, pinned to `headRef`. In production every
+ * Shared content instance for the lifetime of this server instance, pinned to `headRef`. In production every
  * call resolves the tip of `targetBranch()` via `resolveSha()` — a shared, short-TTL cache, not a
  * per-instance timer — and rebuilds when it advances. Previews stay pinned to their build commit.
  */
@@ -92,23 +92,23 @@ export async function getProdContent(): Promise<ComarkContent> {
     if (sha !== getHeadRef()) {
       console.log(`[content] head ${getHeadRef()} -> ${sha}`)
       headRef = sha
-      cms = undefined // the old instance baked its source at the old commit
+      content = undefined // the old instance baked its source at the old commit
     }
   }
 
-  if (!cms) {
-    cms = createSourceContent(getHeadRef(), {
+  if (!content) {
+    content = createSourceContent(getHeadRef(), {
       watch: true,
       cache: {
         driver: cacheDriver(getHeadRef()),
       },
     }).catch((error) => {
       // Don't memoize a failed build — the next request should retry.
-      cms = undefined
+      content = undefined
       throw error
     })
   }
-  return cms
+  return content
 }
 
 function contentSource(ref: string, opts: { remote?: boolean } = {}) {
@@ -131,20 +131,20 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */
-const cmsPreviewInstances = new Map<string, Promise<ComarkContent>>()
+const contentPreviewInstances = new Map<string, Promise<ComarkContent>>()
 
-// Bound required: each entry is a CMS with its own manifest and parsed bodies, and public
+// Bound required: each entry is a content instance with its own manifest and parsed bodies, and public
 // `/tree/:branch` / `/blob/:sha` let a crawler mint one per SHA. Evicted refs just rebuild, their
 // bodies surviving in the per-SHA Runtime Cache.
 const MAX_PREVIEW_INSTANCES = 8
 
 export function getPreviewContent(sha: string, basePath: string): Promise<ComarkContent> {
   const key = `${basePath}::${sha}`
-  const existing = cmsPreviewInstances.get(key)
+  const existing = contentPreviewInstances.get(key)
   if (existing) {
     // `Map` preserves insertion order, which is the whole LRU: re-insert so the MRU key is last.
-    cmsPreviewInstances.delete(key)
-    cmsPreviewInstances.set(key, existing)
+    contentPreviewInstances.delete(key)
+    contentPreviewInstances.set(key, existing)
     return existing
   }
 
@@ -153,15 +153,15 @@ export function getPreviewContent(sha: string, basePath: string): Promise<Comark
     basePath,
     cache: { driver: cacheDriver(sha) },
   }).catch((error) => {
-    cmsPreviewInstances.delete(key)
+    contentPreviewInstances.delete(key)
     throw error
   })
-  cmsPreviewInstances.set(key, instance)
+  contentPreviewInstances.set(key, instance)
 
-  while (cmsPreviewInstances.size > MAX_PREVIEW_INSTANCES) {
-    const oldest = cmsPreviewInstances.keys().next()
+  while (contentPreviewInstances.size > MAX_PREVIEW_INSTANCES) {
+    const oldest = contentPreviewInstances.keys().next()
     if (oldest.done) break
-    cmsPreviewInstances.delete(oldest.value)
+    contentPreviewInstances.delete(oldest.value)
   }
 
   return instance

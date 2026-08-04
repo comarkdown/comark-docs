@@ -11,7 +11,7 @@ interface PageCommit {
 
 const open = useVersionHistory()
 
-const cms = useDocsContent()
+const content = useDocsContent()
 const route = useRoute()
 const commits = ref<PageCommit[]>([])
 const pending = ref(false)
@@ -20,7 +20,7 @@ const pending = ref(false)
 const loadedPath = ref<string>()
 
 async function loadHistory() {
-  const path = cms.value.path
+  const path = content.value.path
   pending.value = true
   try {
     commits.value = await $fetch<PageCommit[]>('/api/history', { query: { path } })
@@ -35,7 +35,7 @@ async function loadHistory() {
 // On demand, not on mount: always mounted but starts closed, and `/api/history` isn't
 // ISR-cached, so eager fetching cost every visitor a request for a panel most never open.
 watch(open, (isOpen) => {
-  if (isOpen && loadedPath.value !== cms.value.path) loadHistory()
+  if (isOpen && loadedPath.value !== content.value.path) loadHistory()
 })
 
 // A navigation with the panel already open refetches; otherwise just invalidate so
@@ -49,14 +49,14 @@ watch(
 )
 
 function isActive(commit: PageCommit) {
-  if (cms.value.mode === 'blob' && cms.value.ref) {
-    return commit.sha === cms.value.ref || commit.sha.startsWith(cms.value.ref)
+  if (content.value.mode === 'blob' && content.value.ref) {
+    return commit.sha === content.value.ref || commit.sha.startsWith(content.value.ref)
   }
-  return cms.value.mode === 'prod' && Boolean(commit.production)
+  return content.value.mode === 'prod' && Boolean(commit.production)
 }
 
 function select(commit: PageCommit) {
-  navigateTo(commit.production ? cms.value.path : `/blob/${commit.sha}${cms.value.path}`)
+  navigateTo(commit.production ? content.value.path : `/blob/${commit.sha}${content.value.path}`)
   open.value = false
 }
 

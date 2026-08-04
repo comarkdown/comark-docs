@@ -7,7 +7,7 @@ const props = defineProps<{ page: ContentFile }>()
 
 const route = useRoute()
 const toast = useToast()
-const cms = useDocsContent()
+const content = useDocsContent()
 const { copy, copied } = useClipboard()
 const { copy: copyLink } = useClipboard()
 const copying = ref(false)
@@ -27,10 +27,10 @@ const links = computed(() => [
         {
           icon: 'i-simple-icons-github',
           label: 'Edit this page on GitHub',
-          to: `${githubUrl.value}/edit/${cms.value.mode === 'tree' ? cms.value.ref : github?.branch || 'main'}/${github?.contentDir || 'content'}/${props.page.meta.stem}${props.page.meta.extension}`,
+          to: `${githubUrl.value}/edit/${content.value.mode === 'tree' ? content.value.ref : github?.branch || 'main'}/${github?.contentDir || 'content'}/${props.page.meta.stem}${props.page.meta.extension}`,
           target: '_blank',
-          disabled: cms.value.mode === 'blob',
-          class: cms.value.mode === 'blob' ? 'text-dimmed hover:text-dimmed cursor-not-allowed' : undefined,
+          disabled: content.value.mode === 'blob',
+          class: content.value.mode === 'blob' ? 'text-dimmed hover:text-dimmed cursor-not-allowed' : undefined,
         },
         {
           icon: 'i-lucide-star',
@@ -110,7 +110,7 @@ const items = [
       :ui="{ list: 'gap-2.5' }"
     />
     <UButton
-      :disabled="cms.mode !== 'prod'"
+      :disabled="content.mode !== 'prod'"
       :loading="copying"
       :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
       :color="copied ? 'success' : 'neutral'"
@@ -133,7 +133,7 @@ const items = [
         variant="link"
         aria-label="Open copy actions menu"
         label="Open in Chat"
-        :disabled="cms.mode !== 'prod'"
+        :disabled="content.mode !== 'prod'"
         class="font-normal px-0 py-0"
         trailing-icon="i-lucide-chevron-down"
         :ui="{

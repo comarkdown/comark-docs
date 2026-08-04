@@ -1,6 +1,6 @@
 import { createContentClient } from 'comark-content/client'
 import { searchSectionsClient } from '../utils/search-sections'
-import type { ContentMode } from '../types/cms'
+import type { ContentMode } from '../types/content'
 import { withLeadingSlash } from 'ufo'
 
 export const prodContent = createContentClient({
@@ -30,12 +30,12 @@ export interface ActiveContent {
   ref?: string
   /** Link prefix for this version (`/tree/<branch>`, `/blob/<sha>`, or `''` in prod). */
   base: string
-  /** The path within the CMS content (with leading slash). */
+  /** The path within the content source (with leading slash). */
   path: string
   client: typeof prodContent
 }
 
-/** Resolve the active CMS for the current route (from the parsed `[...slug]`). */
+/** Resolve the active content client for the current route (from the parsed `[...slug]`). */
 export function useDocsContent(): ComputedRef<ActiveContent> {
   const route = useRoute()
   return computed<ActiveContent>(() => {

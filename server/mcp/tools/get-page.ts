@@ -8,9 +8,9 @@ export default defineMcpTool({
     path: z.string().describe('Page path, e.g. /getting-started/installation'),
   },
   handler: async ({ path }) => {
-    const cms = await getProdContent()
+    const content = await getProdContent()
 
-    const markdown = await renderPageMarkdown(cms, withLeadingSlash(path))
+    const markdown = await renderPageMarkdown(content, withLeadingSlash(path))
     if (!markdown) {
       return {
         content: [{ type: 'text', text: `Page not found: ${path}. Use list-pages to see available paths.` }],

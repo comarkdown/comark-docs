@@ -2,8 +2,8 @@ import type { NavigationItem } from 'comark-content'
 
 /** Sitemap source for `@nuxtjs/sitemap`. */
 export default defineEventHandler(async () => {
-  const cms = await getProdContent()
-  const navigation = await cms.navigation()
+  const content = await getProdContent()
+  const navigation = await content.navigation()
 
   const urls: string[] = ['/', '/logos']
   const collect = (items: NavigationItem[]) => {

@@ -4,8 +4,8 @@ export default defineMcpTool({
   description:
     'List every page of the documentation with its path, title, and description. Use get-page to read a page.',
   handler: async () => {
-    const cms = await getProdContent()
-    const navigation = await cms.navigation()
+    const content = await getProdContent()
+    const navigation = await content.navigation()
 
     const lines: string[] = []
     const collect = (items: NavigationItem[], section?: string) => {

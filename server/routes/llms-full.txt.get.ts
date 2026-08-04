@@ -2,8 +2,8 @@ import type { NavigationItem } from 'comark-content'
 
 // llms-full.txt: every docs page rendered as markdown, concatenated. ISR-cached; purged by the push webhook.
 export default defineEventHandler(async (event) => {
-  const cms = await getProdContent()
-  const navigation = await cms.navigation()
+  const content = await getProdContent()
+  const navigation = await content.navigation()
 
   // Skip the landing page: it's component markup, not prose.
   const paths: string[] = []
@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   }
   collect(navigation)
 
-  const pages = await Promise.all([...new Set(paths)].map((path) => renderPageMarkdown(cms, path)))
+  const pages = await Promise.all([...new Set(paths)].map((path) => renderPageMarkdown(content, path)))
 
   setHeader(event, 'Content-Type', 'text/plain; charset=utf-8')
   // No '---' separator: each rendered page already carries a frontmatter fence.

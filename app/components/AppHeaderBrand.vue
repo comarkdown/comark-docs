@@ -84,8 +84,8 @@ onMounted(() => {
       :mode="isTouchDevice ? 'click' : 'hover'"
       :open-delay="isTouchDevice ? 0 : 100"
       enable-touch
-      :content="{ align: 'end', side: 'bottom', sideOffset: 8 }"
-      :ui="{ content: 'w-36 rounded-xl p-2' }"
+      :content="{ align: 'end', side: 'bottom', sideOffset: 8, alignOffset: header?.logo?.mark === 'comark' ? -16 : 0 }"
+      :ui="{ content: 'w-40 rounded-xl p-2' }"
       class="-ml-2"
     >
       <UButton

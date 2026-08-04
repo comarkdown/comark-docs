@@ -5,8 +5,8 @@ import { joinURL } from 'ufo'
 // llms.txt (https://llmstxt.org): index of every docs page for AI agents, linking the raw markdown mirrors
 // under `/raw/**.md`. ISR-cached; purged by the push webhook on content changes.
 export default defineEventHandler(async (event) => {
-  const cms = await getProdContent()
-  const navigation = await cms.navigation()
+  const content = await getProdContent()
+  const navigation = await content.navigation()
   const site = getSiteConfig(event)
   const appConfig = useAppConfig(event)
   const siteUrl = site.url || '/'

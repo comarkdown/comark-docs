@@ -49,12 +49,12 @@ function navGroups(navigation: NavigationItem[], base: string): NavGroup[] {
 /** High-level navbar items, one per configured nav group (plus GitHub). */
 export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
   const route = useRoute()
-  const cms = useDocsContent()
+  const content = useDocsContent()
   const { github } = useAppConfig()
   const navigation = inject<Ref<NavigationItem[]>>('navigation', ref([]))
 
   return computed<NavigationMenuItem[]>(() => {
-    const base = cms.value.base
+    const base = content.value.base
     const seg = segmentOf(route.path, base)
 
     const bySegment = new Map<string, NavigationItem>()
@@ -106,11 +106,11 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
 /** The sidebar tree for the active tab. */
 export function useFilteredNavigation(): ComputedRef<NavigationItem[]> {
   const route = useRoute()
-  const cms = useDocsContent()
+  const content = useDocsContent()
   const navigation = inject<Ref<NavigationItem[]>>('navigation', ref([]))
 
   return computed<NavigationItem[]>(() => {
-    const base = cms.value.base
+    const base = content.value.base
     const seg = segmentOf(route.path, base)
     const nav = navigation.value ?? []
 

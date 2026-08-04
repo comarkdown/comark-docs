@@ -24,8 +24,8 @@ const escapeXml = (value: string) =>
     .replaceAll("'", '&apos;')
 
 export default defineEventHandler(async (event) => {
-  const cms = await getProdContent()
-  const navigation = await cms.navigation()
+  const content = await getProdContent()
+  const navigation = await content.navigation()
   const site = getSiteConfig(event)
   const appConfig = useAppConfig(event)
   const siteUrl = site.url || '/'
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
   const collect = (items: NavigationItem[]) => {
     for (const item of items) {
       if (item.page !== false && item.path) {
-        const entry = cms.stat(item.path)
+        const entry = content.stat(item.path)
         if (entry && entry.meta.kind === 'document') {
           pages.push({
             path: item.path,

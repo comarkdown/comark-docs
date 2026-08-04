@@ -18,15 +18,15 @@ const searchSectionsCache = new WeakMap<ComarkContent, Promise<SearchSection[]>>
  * instance watches the working tree, so content changes under a stable object. Called from
  * `watch:file:update`.
  */
-export function invalidateSearchSections(cms: ComarkContent): void {
-  searchSectionsCache.delete(cms)
+export function invalidateSearchSections(content: ComarkContent): void {
+  searchSectionsCache.delete(content)
 }
 
 /**
  * Keyword-score the search index against `query` and return the best sections.
  */
-export async function searchDocSections(cms: ComarkContent, query: string, limit = 10): Promise<SearchSection[]> {
-  const sections = await buildSearchSections(cms)
+export async function searchDocSections(content: ComarkContent, query: string, limit = 10): Promise<SearchSection[]> {
+  const sections = await buildSearchSections(content)
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
 
   return sections
@@ -47,24 +47,24 @@ export async function searchDocSections(cms: ComarkContent, query: string, limit
 }
 
 /** Walk every document's AST, one section per heading — the shape `UContentSearch` takes as `files`. */
-export function buildSearchSections(cms: ComarkContent): Promise<SearchSection[]> {
-  let sections = searchSectionsCache.get(cms)
+export function buildSearchSections(content: ComarkContent): Promise<SearchSection[]> {
+  let sections = searchSectionsCache.get(content)
   if (!sections) {
-    sections = collectSearchSections(cms).catch((error) => {
-      searchSectionsCache.delete(cms)
+    sections = collectSearchSections(content).catch((error) => {
+      searchSectionsCache.delete(content)
       throw error
     })
-    searchSectionsCache.set(cms, sections)
+    searchSectionsCache.set(content, sections)
   }
   return sections
 }
 
-async function collectSearchSections(cms: ComarkContent): Promise<SearchSection[]> {
-  const docs = await cms.list(['content'])
+async function collectSearchSections(content: ComarkContent): Promise<SearchSection[]> {
+  const docs = await content.list(['content'])
   const sections: SearchSection[] = []
 
   // Parsed up front rather than one await per iteration; the walk below is order-dependent.
-  const items = await Promise.all(docs.map((meta) => cms.get(meta.path)))
+  const items = await Promise.all(docs.map((meta) => content.get(meta.path)))
 
   for (const [index, meta] of docs.entries()) {
     const item = items[index]

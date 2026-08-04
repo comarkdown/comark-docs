@@ -7,32 +7,32 @@ sequenceDiagram
   participant Browser
   participant Edge as Edge ISR
   participant SSR as Lambda SSR
-  participant CMSRoute as /api/content/**
+  participant ContentRoute as /api/content/**
   participant Refs as Shared ref cache (content:refs)
   participant GH as GitHub
-  participant CMS as shared cms
+  participant Content as shared content
 
   Browser->>Edge: GET /docs/foo
   Edge-->>SSR: cache miss → render
 
-  SSR->>CMSRoute: $fetch (navigation)
-  CMSRoute->>CMS: getProdContent()
-  CMS->>Refs: resolveSha(targetBranch)
+  SSR->>ContentRoute: $fetch (navigation)
+  ContentRoute->>Content: getProdContent()
+  Content->>Refs: resolveSha(targetBranch)
   alt cache hit (within 60s TTL)
-    Refs-->>CMS: cached sha
+    Refs-->>Content: cached sha
   else cache miss
     Refs->>GH: commits/<branch>
     GH-->>Refs: sha
-    Refs-->>CMS: sha
+    Refs-->>Content: sha
   end
-  CMS->>CMS: rebuild if sha advanced
-  CMS->>GH: init partial (~36 files, at <sha>)
-  CMSRoute-->>SSR: nav tree
+  Content->>Content: rebuild if sha advanced
+  Content->>GH: init partial (~36 files, at <sha>)
+  ContentRoute-->>SSR: nav tree
 
-  SSR->>CMSRoute: $fetch (page)
-  CMSRoute->>CMS: getProdContent() (same sha → no rebuild)
-  CMS->>GH: fetch + parse 1 page (at <sha>)
-  CMSRoute-->>SSR: parsed page
+  SSR->>ContentRoute: $fetch (page)
+  ContentRoute->>Content: getProdContent() (same sha → no rebuild)
+  Content->>GH: fetch + parse 1 page (at <sha>)
+  ContentRoute-->>SSR: parsed page
 
   SSR-->>Edge: HTML
   Edge-->>Browser: HTML (cached for next visitor)

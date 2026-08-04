@@ -3,7 +3,7 @@ import { renderMarkdown } from 'comark/render'
 
 /** Render a CMS document as plain markdown with a `# title` / `> description` lead. */
 export async function renderPageMarkdown(cms: ComarkContent, path: string): Promise<string | null> {
-  const item = await cms.get(path)
+  const item = await content.get(path)
   if (!item || item.meta.kind !== 'document') return null
 
   const fm = (item.data as any) ?? {}

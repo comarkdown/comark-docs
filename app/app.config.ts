@@ -211,9 +211,7 @@ export default defineAppConfig({
       // Accent colour of the OG template (mark column, headline, rule).
       accent: '#fafafa',
       // Strapline along the bottom; empty = `site.description`.
-      tagline: '',
-      // Which mark to draw in the left column; 'wordmark' = the site name.
-      mark: 'wordmark' as 'wordmark' | 'comark' | 'comark-content',
+      tagline: ''
     },
     llms: {
       description: '',

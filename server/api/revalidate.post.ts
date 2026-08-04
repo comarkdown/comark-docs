@@ -118,18 +118,18 @@ export default defineEventHandler(async (event) => {
   let oldItems: Record<string, ContentListFile> = {}
   if (beforeSha && !/^0+$/.test(beforeSha)) {
     try {
-      const oldCms = await createSourceContent(beforeSha)
-      await oldCms.init()
-      oldItems = oldCms.manifest.items
+      const oldContent = await createSourceContent(beforeSha)
+      await oldContent.init()
+      oldItems = oldContent.manifest.items
     } catch (err) {
       const message = err instanceof Error ? err.message : err
       console.warn(`${tag} no before-manifest (${beforeSha}) — treating as full revalidate:`, message)
     }
   }
 
-  const headCms = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
-  await headCms.init()
-  const newItems = headCms.manifest.items
+  const headContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
+  await headContent.init()
+  const newItems = headContent.manifest.items
 
   const oldPaths = new Set(Object.keys(oldItems))
   const newPaths = Object.keys(newItems)
@@ -191,7 +191,7 @@ export default defineEventHandler(async (event) => {
       // so send both keys — each version ignores the other's. Not inlined: as a literal,
       // excess-property checking rejects whichever key the installed types don't declare.
       const full = { partial: false, metaOnly: false }
-      await headCms.init(full).catch((err) => {
+      await headContent.init(full).catch((err) => {
         console.error(`${tag} cache warm failed`, err?.message ?? err)
       })
 

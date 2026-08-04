@@ -11,5 +11,8 @@
   "dependencies": {
     "comark-docs": "workspace:../",
     "nuxt": "^4.5.0"
+  },
+  "devDependencies": {
+    "nuxtseo-layer-devtools": "^5.3.6"
   }
 }

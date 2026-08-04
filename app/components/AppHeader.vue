@@ -1,13 +1,13 @@
 <script setup lang="ts">
 const { header, footer, assistant } = useAppConfig()
-const cms = useDocsContent()
+const content = useDocsContent()
 const historyOpen = useVersionHistory()
 const assistantOpen = useAssistant()
 const navigation = useMainNavigation()
 </script>
 
 <template>
-  <UHeader :to="prefixLink(header?.to || '/', cms.base)">
+  <UHeader :to="prefixLink(header?.to || '/', content.base)">
     <template #left>
       <AppHeaderBrand />
     </template>
@@ -44,8 +44,8 @@ const navigation = useMainNavigation()
 
       <UButton
         icon="i-lucide-history"
-        :color="cms.mode === 'prod' ? 'neutral' : 'warning'"
-        :variant="cms.mode === 'prod' ? 'outline' : 'subtle'"
+        :color="content.mode === 'prod' ? 'neutral' : 'warning'"
+        :variant="content.mode === 'prod' ? 'outline' : 'subtle'"
         aria-label="Version history"
         :ui="{ leadingIcon: 'size-4' }"
         class="p-2"

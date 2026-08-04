@@ -12,20 +12,20 @@ definePageMeta({
 
 const { toc, seo } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
-const cms = useDocsContent()
+const content = useDocsContent()
 
-const { data: page } = await useAsyncData(`${cms.value.base}:${cms.value.path}`, () =>
-  cms.value.client.get(cms.value.path)
+const { data: page } = await useAsyncData(`${content.value.base}:${content.value.path}`, () =>
+  content.value.client.get(content.value.path)
 )
 if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
 }
 
-const selfPath = computed(() => prefixLink(cms.value.path, cms.value.base))
+const selfPath = computed(() => prefixLink(content.value.path, content.value.base))
 
 const tree = computed(() => {
   const p = page.value
-  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, cms.value.base) } : p
+  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.base) } : p
 })
 
 const surroundLinks = computed(() => findSurroundLinks(navigation?.value, selfPath.value))
@@ -38,9 +38,9 @@ const description = computed(() => fm.value.seo?.description || fm.value.descrip
 
 const site = useSiteConfig()
 // Previews (/tree, /blob) canonicalize to the production URL.
-const canonicalUrl = computed(() => joinURL(site.url, cms.value.path))
+const canonicalUrl = computed(() => joinURL(site.url, content.value.path))
 
-useRobotsRule(computed(() => (cms.value.mode === 'prod' ? 'index, follow' : 'noindex, nofollow')))
+useRobotsRule(computed(() => (content.value.mode === 'prod' ? 'index, follow' : 'noindex, nofollow')))
 
 useSeoMeta({
   title,
@@ -56,11 +56,11 @@ useHead({
 
 const headline = computed(() => findPageHeadline(navigation?.value, selfPath.value))
 
-if (cms.value.mode === 'prod') {
+if (content.value.mode === 'prod') {
   defineOgImage('DocsSatori', {
     title: fm.value.title,
     description: fm.value.description,
-    headline: findPageHeadline(navigation?.value, cms.value.path) ?? '',
+    headline: findPageHeadline(navigation?.value, content.value.path) ?? '',
   })
 
   const breadcrumb = computed(() => findBreadcrumb(navigation?.value, selfPath.value))

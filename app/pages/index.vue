@@ -1,8 +1,8 @@
 <script setup lang="ts">
-const cms = useDocsContent()
+const content = useDocsContent()
 const site = useSiteConfig()
 
-const { data: page } = await useAsyncData(`${cms.value.base}:landing`, () => cms.value.client.get('/'))
+const { data: page } = await useAsyncData(`${content.value.base}:landing`, () => content.value.client.get('/'))
 if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Landing page not found', fatal: true })
 }
@@ -10,13 +10,13 @@ if (!page.value) {
 // Prefix every internal link in the content tree so it stays within the preview.
 const tree = computed(() => {
   const p = page.value
-  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, cms.value.base) } : p
+  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.base) } : p
 })
 
 const fm = computed<Record<string, any>>(() => page.value?.data ?? {})
 
 // Keep branch/commit previews out of search, same as DocsPage.
-useRobotsRule(computed(() => (cms.value.mode === 'prod' ? 'index, follow' : 'noindex, nofollow')))
+useRobotsRule(computed(() => (content.value.mode === 'prod' ? 'index, follow' : 'noindex, nofollow')))
 
 useSeoMeta({
   titleTemplate: '',
@@ -31,7 +31,7 @@ useHead({
   link: [{ rel: 'canonical', href: site.url }],
 })
 
-if (cms.value.mode === 'prod') {
+if (content.value.mode === 'prod') {
   defineOgImage('DocsSatori', {
     title: fm.value.seo?.title || fm.value.title,
     description: fm.value.seo?.description || fm.value.description,

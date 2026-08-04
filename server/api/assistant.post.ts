@@ -46,8 +46,8 @@ export default defineEventHandler(async (event) => {
 
   const site = getSiteConfig(event)
   const siteName = appConfig.seo?.siteName || site.name || 'this site'
-  const cms = await getProdContent()
-  const navigation = await cms.navigation()
+  const content = await getProdContent()
+  const navigation = await content.navigation()
 
   const result = streamText({
     model: gateway(useRuntimeConfig(event).assistant.model),
@@ -79,7 +79,7 @@ ${pageIndex(navigation)}`,
           query: z.string().describe('Search terms, e.g. "github source" or "custom components"'),
         }),
         execute: async ({ query }) => {
-          const results = await searchDocSections(cms, query)
+          const results = await searchDocSections(content, query)
           if (!results.length) return `No results for "${query}". Try other terms or get_page with a path from the page index.`
           return results
             .map((section) => {
@@ -96,7 +96,7 @@ ${pageIndex(navigation)}`,
           path: z.string().describe('Page path, e.g. /getting-started/installation'),
         }),
         execute: async ({ path }) => {
-          const markdown = await renderPageMarkdown(cms, path.startsWith('/') ? path : `/${path}`)
+          const markdown = await renderPageMarkdown(content, path.startsWith('/') ? path : `/${path}`)
           return markdown ?? `Page not found: ${path}. Use a path from the page index.`
         },
       }),

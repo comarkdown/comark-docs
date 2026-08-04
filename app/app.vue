@@ -4,28 +4,28 @@ import type { SearchSection } from './utils/search-sections'
 
 const { seo, docs } = useAppConfig()
 
-const cms = useDocsContent()
+const content = useDocsContent()
 
-const { data: navigation } = await useAsyncData('navigation', () => cms.value.client.navigation(), {
-  watch: [() => cms.value.base],
+const { data: navigation } = await useAsyncData('navigation', () => content.value.client.navigation(), {
+  watch: [() => content.value.base],
 })
 const {
   data: files,
   status,
   execute: loadSearchSections,
-} = useLazyAsyncData('search-sections', () => cms.value.client.searchSections(), {
+} = useLazyAsyncData('search-sections', () => content.value.client.searchSections(), {
   server: false,
-  watch: [() => cms.value.base],
+  watch: [() => content.value.base],
   immediate: false,
 })
 
 onNuxtReady(() => loadSearchSections())
 
-const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], cms.value.base))
+const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
 const searchFiles = computed<SearchSection[]>(() =>
   (files.value ?? []).map((section) => {
     const [path, hash] = section.id.split('#')
-    return { ...section, id: prefixLink(path!, cms.value.base) + (hash ? `#${hash}` : '') }
+    return { ...section, id: prefixLink(path!, content.value.base) + (hash ? `#${hash}` : '') }
   })
 )
 

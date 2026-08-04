@@ -3,7 +3,7 @@ import { parseBranchName, parseCommitSha } from '../server/utils/refs'
 
 /**
  * `/api/content/blob/:sha` and `/api/content/tree/:branch` are unauthenticated, and each distinct ref they accept costs
- * a preview-CMS instance and (for branches) a GitHub API call. These guard that boundary.
+ * a preview-content instance and (for branches) a GitHub API call. These guard that boundary.
  */
 describe('preview ref boundary', () => {
   const blobRoute = (sha: string) => parseCommitSha(sha)
@@ -17,7 +17,7 @@ describe('preview ref boundary', () => {
     expect(treeRoute(encodeURIComponent('feat/new-docs'))).toBe('feat/new-docs')
   })
 
-  it('turns away refs that would each allocate a CMS instance', () => {
+  it('turns away refs that would each allocate a content instance', () => {
     for (const junk of ['', 'x', 'not-a-sha', '../../etc', 'HEAD', 'main']) {
       expect(blobRoute(junk)).toBeNull()
     }
@@ -37,7 +37,7 @@ describe('preview ref boundary', () => {
 
 /**
  * basePath must come out encoded exactly once: the client sends an encoded branch, `getRouterParam` does not
- * decode, and the CMS handler strips `basePath` as a literal prefix — so re-encoding yields `feat%252Fx`, which
+ * decode, and the content handler strips `basePath` as a literal prefix — so re-encoding yields `feat%252Fx`, which
  * never matches and silently breaks previews for slashed branches. Upstream hit exactly this (comark-content#84).
  */
 describe('tree route basePath encoding', () => {
