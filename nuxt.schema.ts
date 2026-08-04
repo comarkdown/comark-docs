@@ -11,7 +11,7 @@ export default defineNuxtSchema({
       to: '/',
       logo: {
         alt: '',
-        /** A wordmark shipped with the layer (`comark` | `comark-cms`). */
+        /** A wordmark shipped with the layer (`comark` | `comark-content`). */
         mark: '',
         light: '',
         dark: '',

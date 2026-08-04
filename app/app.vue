@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 import type { SearchSection } from './utils/search-sections'
 
 const { seo, docs } = useAppConfig()
 
-const cms = useCMS()
+const cms = useDocsContent()
 
 const { data: navigation } = await useAsyncData('navigation', () => cms.value.client.navigation(), {
   watch: [() => cms.value.base],

@@ -1,8 +1,8 @@
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 
 // llms-full.txt: every docs page rendered as markdown, concatenated. ISR-cached; purged by the push webhook.
 export default defineEventHandler(async (event) => {
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
   const navigation = await cms.navigation()
 
   // Skip the landing page: it's component markup, not prose.

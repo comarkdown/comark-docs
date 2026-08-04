@@ -1,4 +1,4 @@
-import type { CMSListFile } from '@comark/cms'
+import type { ContentListFile } from 'comark-content'
 
 /** Deterministic JSON (sorted object keys) for stable equality checks. */
 export function stableStringify(value: unknown): string {
@@ -12,7 +12,7 @@ export function stableStringify(value: unknown): string {
 }
 
 /** Stable hash of a manifest item's visible metadata (its `data` — identity lives on `meta`). */
-export function hashManifestItem(item: CMSListFile | undefined): string {
+export function hashManifestItem(item: ContentListFile | undefined): string {
   if (!item) return ''
   return stableStringify(item.data ?? {})
 }

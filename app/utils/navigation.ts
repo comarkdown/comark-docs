@@ -1,4 +1,4 @@
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 
 const prefetchedPaths = new Set<string>()
 let nuxtApp: ReturnType<typeof useNuxtApp>

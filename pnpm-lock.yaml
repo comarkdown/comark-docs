@@ -6,12 +6,9 @@ settings:
 
 overrides:
   h3: ^1.15.11
-  '@comark/cms': https://pkg.pr.new/@comark/cms@90576b3
+  comark-content: https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b
   comark: https://pkg.pr.new/comark@c084a40
   '@comark/nuxt': https://pkg.pr.new/@comark/nuxt@c084a40
-
-patchedDependencies:
-  '@comark/cms@0.1.0': f8e06c9e5cd3190cd6c49469d1fc9f9490908e77932602a070a7a8d1e150d319
 
 importers:
 
@@ -23,9 +20,6 @@ importers:
       '@ai-sdk/vue':
         specifier: ^4.0.22
         version: 4.0.41(vue@3.5.40(typescript@6.0.3))(zod@4.4.3)
-      '@comark/cms':
-        specifier: https://pkg.pr.new/@comark/cms@90576b3
-        version: https://pkg.pr.new/@comark/cms@90576b3(patch_hash=f8e06c9e5cd3190cd6c49469d1fc9f9490908e77932602a070a7a8d1e150d319)(@vercel/functions@3.7.6(ws@8.21.1))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(shiki@4.3.1)
       '@comark/nuxt':
         specifier: https://pkg.pr.new/@comark/nuxt@c084a40
         version: https://pkg.pr.new/@comark/nuxt@c084a40(6a1504937d4a6474508c863bf42ddf32)
@@ -77,6 +71,9 @@ importers:
       comark:
         specifier: https://pkg.pr.new/comark@c084a40
         version: https://pkg.pr.new/comark@c084a40(beautiful-mermaid@1.1.3)(shiki@4.3.1)
+      comark-content:
+        specifier: https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b
+        version: https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b(@vercel/functions@3.7.6(ws@8.21.1))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(shiki@4.3.1)
       defu:
         specifier: ^6.1.7
         version: 6.1.7
@@ -347,11 +344,6 @@ packages:
 
   '@colordx/core@5.5.0':
     resolution: {integrity: sha512-3PxTH8itZzltK0U9jTwVVnjLXvnDYuq3m+QXsHkENxWiPRh4WaoLcs1SQjqgZ55kS+QyirpH5BVwzP2gMVG6EQ==}
-
-  '@comark/cms@https://pkg.pr.new/@comark/cms@90576b3':
-    resolution: {integrity: sha512-TE58BpiUYCJi6X34bve/wxkxcDZpw081kf1+7eiAe38TwWdnF4qQSYirXawWkkNXO63tOaLSvqmKD7FBSB28HA==, tarball: https://pkg.pr.new/@comark/cms@90576b3}
-    version: 0.1.0
-    hasBin: true
 
   '@comark/nuxt@https://pkg.pr.new/@comark/nuxt@c084a40':
     resolution: {integrity: sha512-BxWdyxkhCd5AMJwOHx05imRYiR82csTZssx8N0u1M9nn2Y2QvV6Ymtwiz+yrltspU5Hun2tX/iDc7Jab1DXndw==, tarball: https://pkg.pr.new/@comark/nuxt@c084a40}
@@ -3370,6 +3362,11 @@ packages:
 
   colortranslator@5.0.0:
     resolution: {integrity: sha512-Z3UPUKasUVDFCDYAjP2fmlVRf1jFHJv1izAmPjiOa0OCIw1W7iC8PZ2GsoDa8uZv+mKyWopxxStT9q05+27h7w==}
+
+  comark-content@https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b:
+    resolution: {integrity: sha512-FaITthKM0YNGwiVRzgdnjTNNSrx23fLHtvEI6Bx0TfpIEswqajZ0NKPRy23rJJuv9Btf5ZKgVp9p+97gCv4tPA==, tarball: https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b}
+    version: 0.1.0
+    hasBin: true
 
   comark@https://pkg.pr.new/comark@c084a40:
     resolution: {integrity: sha512-npOCyt+ZtlNaLQ15liEijdhUUVEii3mGLveQXWn6PkJu47ocZvPYMNFT+MRMOdriPDmG9Db83xmAX5gV+ze2Kw==, tarball: https://pkg.pr.new/comark@c084a40}
@@ -6979,42 +6976,6 @@ snapshots:
 
   '@colordx/core@5.5.0': {}
 
-  '@comark/cms@https://pkg.pr.new/@comark/cms@90576b3(patch_hash=f8e06c9e5cd3190cd6c49469d1fc9f9490908e77932602a070a7a8d1e150d319)(@vercel/functions@3.7.6(ws@8.21.1))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(shiki@4.3.1)':
-    dependencies:
-      citty: 0.2.2
-      comark: https://pkg.pr.new/comark@c084a40(beautiful-mermaid@1.1.3)(shiki@4.3.1)
-      hookable: 6.1.1
-      jiti: 2.7.0
-      ofetch: 1.5.1
-      pathe: 2.0.3
-      picomatch: 4.0.5
-      slugify: 1.6.9
-      ufo: 1.6.4
-      unstorage: 1.17.5(@vercel/functions@3.7.6(ws@8.21.1))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
-    transitivePeerDependencies:
-      - '@azure/app-configuration'
-      - '@azure/cosmos'
-      - '@azure/data-tables'
-      - '@azure/identity'
-      - '@azure/keyvault-secrets'
-      - '@azure/storage-blob'
-      - '@capacitor/preferences'
-      - '@deno/kv'
-      - '@netlify/blobs'
-      - '@planetscale/database'
-      - '@upstash/redis'
-      - '@vercel/blob'
-      - '@vercel/functions'
-      - '@vercel/kv'
-      - aws4fetch
-      - beautiful-mermaid
-      - db0
-      - idb-keyval
-      - ioredis
-      - katex
-      - shiki
-      - uploadthing
-
   '@comark/nuxt@https://pkg.pr.new/@comark/nuxt@c084a40(6a1504937d4a6474508c863bf42ddf32)':
     dependencies:
       '@comark/vue': https://pkg.pr.new/comarkdown/comark/@comark/vue@c084a40(beautiful-mermaid@1.1.3)(shiki@4.3.1)(vue@3.5.40(typescript@6.0.3))
@@ -10184,6 +10145,42 @@ snapshots:
   colorette@2.0.20: {}
 
   colortranslator@5.0.0: {}
+
+  comark-content@https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b(@vercel/functions@3.7.6(ws@8.21.1))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(shiki@4.3.1):
+    dependencies:
+      citty: 0.2.2
+      comark: https://pkg.pr.new/comark@c084a40(beautiful-mermaid@1.1.3)(shiki@4.3.1)
+      hookable: 6.1.1
+      jiti: 2.7.0
+      ofetch: 1.5.1
+      pathe: 2.0.3
+      picomatch: 4.0.5
+      slugify: 1.6.9
+      ufo: 1.6.4
+      unstorage: 1.17.5(@vercel/functions@3.7.6(ws@8.21.1))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - beautiful-mermaid
+      - db0
+      - idb-keyval
+      - ioredis
+      - katex
+      - shiki
+      - uploadthing
 
   comark@https://pkg.pr.new/comark@c084a40(beautiful-mermaid@1.1.3)(shiki@4.3.1):
     dependencies:

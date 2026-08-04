@@ -58,9 +58,9 @@ const mark = docs?.ogImage?.mark || 'wordmark'
           />
         </svg>
 
-        <!-- The Comark CMS mark: `CMS` set in a pill. -->
+        <!-- The Comark Content mark: `CMS` set in a pill. -->
         <svg
-          v-else-if="mark === 'comark-cms'"
+          v-else-if="mark === 'comark-content'"
           xmlns="http://www.w3.org/2000/svg"
           width="100"
           height="53"

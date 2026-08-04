@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { hashManifestItem, stableStringify } from '../server/utils/json'
-import type { CMSListFile } from '@comark/cms'
+import type { ContentListFile } from 'comark-content'
 
 describe('stableStringify', () => {
   it('sorts object keys so equal content compares equal', () => {
@@ -29,7 +29,7 @@ describe('stableStringify', () => {
 })
 
 describe('hashManifestItem', () => {
-  const item = (data: Record<string, unknown>) => ({ data }) as unknown as CMSListFile
+  const item = (data: Record<string, unknown>) => ({ data }) as unknown as ContentListFile
 
   it('is stable across key order — this decides whether nav changed', () => {
     expect(hashManifestItem(item({ title: 'A', description: 'B' }))).toBe(

@@ -1,4 +1,4 @@
-// `/tree/:branch`, `/blob/:sha` and their `/api/cms/**` endpoints are public and unauthenticated,
+// `/tree/:branch`, `/blob/:sha` and their `/api/content/**` endpoints are public and unauthenticated,
 // and what they receive becomes a preview-CMS registry key, a GitHub API ref and (in dev) a `git`
 // argv entry — so an unvalidated ref is an allocation and an outbound call, not just a 404.
 

@@ -9,7 +9,7 @@ import {
 } from 'ai'
 import { gateway } from '@ai-sdk/gateway'
 import { z } from 'zod'
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 
 /** Keep the context bounded on a public endpoint: only the tail of long conversations is forwarded. */
 const MAX_MESSAGES = 20
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
 
   const site = getSiteConfig(event)
   const siteName = appConfig.seo?.siteName || site.name || 'this site'
-  const cms = await getProdCMS()
+  const cms = await getProdContent()
   const navigation = await cms.navigation()
 
   const result = streamText({

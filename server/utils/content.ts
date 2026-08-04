@@ -1,6 +1,6 @@
-import { createCMS, defineCMSPlugin, type ComarkCMS, type CacheOptions } from '@comark/cms'
-import fs from '@comark/cms/sources/fs'
-import github from '@comark/cms/sources/github'
+import { createContent, defineContentPlugin, type Content, type CacheOptions } from 'comark-content'
+import fs from 'comark-content/sources/fs'
+import github from 'comark-content/sources/github'
 import highlight from 'comark/plugins/highlight'
 import security from 'comark/plugins/security'
 import emoji from 'comark/plugins/emoji'
@@ -9,9 +9,9 @@ import mermaid from 'comark/plugins/mermaid'
 import githubLight from '@shikijs/themes/github-light'
 import githubDark from '@shikijs/themes/github-dark'
 
-// Rebuilt only when the head advances (see `getProdCMS`). Holds the *promise*, not the instance: the
+// Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
-let cms: Promise<ComarkCMS> | undefined
+let cms: Promise<Content> | undefined
 
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
@@ -28,19 +28,19 @@ const comarkPlugins = [
  * Create a new CMS instance reading content at `ref` (a commit SHA or branch). `remote` forces the
  * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
  */
-export async function createSourceCMS(
+export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
   // Bound to THIS instance so a preview CMS serves its own version's sections, not production's.
-  const searchSectionsPlugin = defineCMSPlugin(() => ({
+  const searchSectionsPlugin = defineContentPlugin(() => ({
     name: 'search-sections',
     setup(ctx) {
       ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(instance)))
     },
   }))
 
-  const instance = createCMS({
+  const instance = createContent({
     markdown: {
       plugins: comarkPlugins,
       html: false,
@@ -86,18 +86,18 @@ export function getHeadRef(): string {
  * call resolves the tip of `targetBranch()` via `resolveSha()` — a shared, short-TTL cache, not a
  * per-instance timer — and rebuilds when it advances. Previews stay pinned to their build commit.
  */
-export async function getProdCMS(): Promise<ComarkCMS> {
+export async function getProdContent(): Promise<Content> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveSha(targetBranch())
     if (sha !== getHeadRef()) {
-      console.log(`[cms] head ${getHeadRef()} -> ${sha}`)
+      console.log(`[content] head ${getHeadRef()} -> ${sha}`)
       headRef = sha
       cms = undefined // the old instance baked its source at the old commit
     }
   }
 
   if (!cms) {
-    cms = createSourceCMS(getHeadRef(), {
+    cms = createSourceContent(getHeadRef(), {
       watch: true,
       cache: {
         driver: cacheDriver(getHeadRef()),
@@ -131,14 +131,14 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */
-const cmsPreviewInstances = new Map<string, Promise<ComarkCMS>>()
+const cmsPreviewInstances = new Map<string, Promise<Content>>()
 
 // Bound required: each entry is a CMS with its own manifest and parsed bodies, and public
 // `/tree/:branch` / `/blob/:sha` let a crawler mint one per SHA. Evicted refs just rebuild, their
 // bodies surviving in the per-SHA Runtime Cache.
 const MAX_PREVIEW_INSTANCES = 8
 
-export function getPreviewCMS(sha: string, basePath: string): Promise<ComarkCMS> {
+export function getPreviewContent(sha: string, basePath: string): Promise<Content> {
   const key = `${basePath}::${sha}`
   const existing = cmsPreviewInstances.get(key)
   if (existing) {
@@ -148,7 +148,7 @@ export function getPreviewCMS(sha: string, basePath: string): Promise<ComarkCMS>
     return existing
   }
 
-  const instance = createSourceCMS(sha, {
+  const instance = createSourceContent(sha, {
     remote: true,
     basePath,
     cache: { driver: cacheDriver(sha) },

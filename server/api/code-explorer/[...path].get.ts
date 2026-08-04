@@ -1,8 +1,8 @@
 import { resolve } from 'node:path'
 import { parseMarkdown, type MarkdownDocument } from 'comark'
 import highlight from '@comark/nuxt/plugins/highlight'
-import fs from '@comark/cms/sources/fs'
-import github from '@comark/cms/sources/github'
+import fs from 'comark-content/sources/fs'
+import github from 'comark-content/sources/github'
 import githubLight from '@shikijs/themes/github-light'
 import githubDark from '@shikijs/themes/github-dark'
 

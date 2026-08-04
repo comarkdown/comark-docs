@@ -9,13 +9,13 @@ export default defineEventHandler(async (event) => {
   }
 
   // Public endpoint: reject anything that isn't a commit SHA before it becomes a
-  // preview-CMS registry entry (see `getPreviewCMS`) or a GitHub ref.
+  // preview-CMS registry entry (see `getPreviewContent`) or a GitHub ref.
   const sha = parseCommitSha(rawSha)
   if (!sha) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid commit SHA' })
   }
 
-  const cms = await getPreviewCMS(sha, `/api/cms/blob/${sha}`)
+  const cms = await getPreviewContent(sha, `/api/content/blob/${sha}`)
 
   return await cms.handler(toWebRequest(event))
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { findBreadcrumb, findPageHeadline, findSurroundLinks } from '../app/utils/navigation'
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 
 const nav = [
   {
@@ -20,7 +20,7 @@ const nav = [
   },
 ] as unknown as NavigationItem[]
 
-// A directory `index.md`: @comark/cms emits it as the section node *and* as its own first child.
+// A directory `index.md`: comark-content emits it as the section node *and* as its own first child.
 const navWithIndex = [
   {
     title: 'Getting started',

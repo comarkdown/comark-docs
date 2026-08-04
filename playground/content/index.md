@@ -1,6 +1,6 @@
 ---
-title: A Nuxt layer for CMS-driven documentation
-description: "comark-docs is a Nuxt layer for documentation sites powered by @comark/cms: Markdown served at request time, ISR-cached, revalidated on push."
+title: A Nuxt layer for content-driven documentation
+description: "comark-docs is a Nuxt layer for documentation sites powered by comark-content: Markdown served at request time, ISR-cached, revalidated on push."
 navigation: false
 ---
 
@@ -9,7 +9,7 @@ navigation: false
 Docs that ship without a redeploy.
 
 #description
-Write Markdown, push, done. Content is served at request time through [Comark CMS](https://cms.comark.dev), cached at the edge, and revalidated by a webhook.
+Write Markdown, push, done. Content is served at request time through [Comark Content](https://content.comark.dev), cached at the edge, and revalidated by a webhook.
 
 #links
   :::u-button

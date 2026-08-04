@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const cms = useCMS()
+const cms = useDocsContent()
 const site = useSiteConfig()
 
 const { data: page } = await useAsyncData(`${cms.value.base}:landing`, () => cms.value.client.get('/'))

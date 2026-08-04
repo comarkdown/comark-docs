@@ -16,15 +16,10 @@ minimumReleaseAgeExclude:
   - nuxt@4.5.1
 
 overrides:
-  # Keep the workspace on a single h3 major (v1), matching comark-cms.
+  # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
-  # comark-cms overrides every @comark/cms copy onto its workspace build, so the
-  # published release is not what the layer runs — which is how the #77 rename passed
-  # CI on both sides. Track the preview of the commit consumers run; once the rename
+  # Track the pkg.pr.new preview of the commit consumers run; once the rename
   # ships, drop this and bump the dependency instead.
-  "@comark/cms": https://pkg.pr.new/@comark/cms@90576b3
+  comark-content: https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b
   comark: https://pkg.pr.new/comark@c084a40
   "@comark/nuxt": https://pkg.pr.new/@comark/nuxt@c084a40
-
-patchedDependencies:
-  '@comark/cms@0.1.0': patches/@comark__cms@0.1.0.patch

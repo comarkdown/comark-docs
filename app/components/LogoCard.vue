@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import LogoComarkVue from './LogoComark.vue'
-import LogoComarkCmsVue from './LogoComarkCms.vue'
+import LogoComarkContentVue from './LogoComarkContent.vue'
 
 const props = defineProps<{
-  logo: 'comark' | 'comark-cms'
+  logo: 'comark' | 'comark-content'
   name: string
   bg: string
   color: string
 }>()
 
-const logoComponent = computed(() => props.logo === 'comark' ? LogoComarkVue : LogoComarkCmsVue)
+const logoComponent = computed(() => props.logo === 'comark' ? LogoComarkVue : LogoComarkContentVue)
 const viewBox = computed(() => props.logo === 'comark' ? { w: 562, h: 110 } : { w: 489, h: 69 })
 const filePrefix = computed(() => `${props.logo}-${props.name.toLowerCase()}`)
 

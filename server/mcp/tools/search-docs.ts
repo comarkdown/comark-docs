@@ -7,7 +7,7 @@ export default defineMcpTool({
     query: z.string().describe('Search terms, e.g. "github source" or "full text search"'),
   },
   handler: async ({ query }) => {
-    const cms = await getProdCMS()
+    const cms = await getProdContent()
     const results = await searchDocSections(cms, query)
 
     if (!results.length) {

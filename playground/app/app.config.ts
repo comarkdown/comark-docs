@@ -9,7 +9,7 @@ export default defineAppConfig({
     logo: {
       mark: 'comark',
     },
-    ecosystem: [{ mark: 'comark-cms', to: 'https://cms.comark.dev', label: 'Comark CMS' }],
+    ecosystem: [{ mark: 'comark-content', to: 'https://content.comark.dev', label: 'Comark Content' }],
     nav: [
       { label: 'Documentation', sections: ['getting-started', 'concepts'] },
     ],

@@ -1,10 +1,10 @@
-import type { NavigationItem } from '@comark/cms'
+import type { NavigationItem } from 'comark-content'
 
 export default defineMcpTool({
   description:
     'List every page of the documentation with its path, title, and description. Use get-page to read a page.',
   handler: async () => {
-    const cms = await getProdCMS()
+    const cms = await getProdContent()
     const navigation = await cms.navigation()
 
     const lines: string[] = []

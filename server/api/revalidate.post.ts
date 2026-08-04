@@ -1,4 +1,4 @@
-import type { CMSListFile } from '@comark/cms'
+import type { ContentListFile } from 'comark-content'
 import { verify } from '@octokit/webhooks-methods'
 import { waitUntil } from '@vercel/functions'
 
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
   const expectedRef = `refs/heads/${branch}`
 
   if (payload.ref !== expectedRef) {
-    console.log(`[cms] revalidate push skipped (ref=${payload.ref} !== expected=${expectedRef})`)
+    console.log(`[content] revalidate push skipped (ref=${payload.ref} !== expected=${expectedRef})`)
     return {
       ok: true,
       skipped: 'non-target-branch',
@@ -106,7 +106,7 @@ export default defineEventHandler(async (event) => {
   // Ahead of the purge fan-out, so a freshly-purged page can't re-render against the stale SHA.
   await cacheSha(branch, headSha)
 
-  console.log(`[cms] revalidate push headSha=${headSha ?? '<none>'}`)
+  console.log(`[content] revalidate push headSha=${headSha ?? '<none>'}`)
 
   const requestId = getHeader(event, 'x-vercel-id') ?? getHeader(event, 'x-request-id') ?? 'local'
   const tag = `[revalidate:${requestId}]`
@@ -115,10 +115,10 @@ export default defineEventHandler(async (event) => {
   // in exchange for diagnostics in the webhook body. Safe because everything here is idempotent,
   // so a retried delivery only repeats work. If it gets slow, move this into `waitUntil`.
   const beforeSha = payload.before
-  let oldItems: Record<string, CMSListFile> = {}
+  let oldItems: Record<string, ContentListFile> = {}
   if (beforeSha && !/^0+$/.test(beforeSha)) {
     try {
-      const oldCms = await createSourceCMS(beforeSha)
+      const oldCms = await createSourceContent(beforeSha)
       await oldCms.init()
       oldItems = oldCms.manifest.items
     } catch (err) {
@@ -127,7 +127,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const headCms = await createSourceCMS(headSha, { cache: { driver: cacheDriver(headSha) } })
+  const headCms = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
   await headCms.init()
   const newItems = headCms.manifest.items
 
@@ -147,7 +147,7 @@ export default defineEventHandler(async (event) => {
   const buildId = useRuntimeConfig(event).app.buildId
 
   // Any content change invalidates the llms indexes, the feed, and the body-derived search index.
-  const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/rss.xml', '/api/cms/search-sections'])
+  const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/rss.xml', '/api/content/search-sections'])
   for (const f of changedFiles) {
     const pageUrl = pageUrlForPath(f)
     if (pageUrl) {
@@ -187,7 +187,7 @@ export default defineEventHandler(async (event) => {
         })
 
       // Warm the per-SHA body cache so cold instances skip re-parsing from GitHub.
-      // `metaOnly` became `partial` in @comark/cms 0.2.0 with no alias and consumers straddle both,
+      // `metaOnly` became `partial` in comark-content 0.2.0 with no alias and consumers straddle both,
       // so send both keys — each version ignores the other's. Not inlined: as a literal,
       // excess-property checking rejects whichever key the installed types don't declare.
       const full = { partial: false, metaOnly: false }

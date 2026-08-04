@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import type { Source } from '@comark/cms'
+import type { Source } from 'comark-content'
 import type { PageCommit } from './github'
 
 const exec = promisify(execFile)

@@ -8,7 +8,7 @@ export default defineMcpTool({
     path: z.string().describe('Page path, e.g. /getting-started/installation'),
   },
   handler: async ({ path }) => {
-    const cms = await getProdCMS()
+    const cms = await getProdContent()
 
     const markdown = await renderPageMarkdown(cms, withLeadingSlash(path))
     if (!markdown) {

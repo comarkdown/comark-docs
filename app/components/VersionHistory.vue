@@ -11,7 +11,7 @@ interface PageCommit {
 
 const open = useVersionHistory()
 
-const cms = useCMS()
+const cms = useDocsContent()
 const route = useRoute()
 const commits = ref<PageCommit[]>([])
 const pending = ref(false)
