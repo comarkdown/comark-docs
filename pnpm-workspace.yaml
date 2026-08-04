@@ -14,12 +14,13 @@ minimumReleaseAgeExclude:
   - "@nuxt/nitro-server@4.5.1"
   - "@nuxt/vite-builder@4.5.1"
   - nuxt@4.5.1
+  - "@comark/nuxt@0.6.0"
+  - "@comark/vue@0.6.0"
+  - comark@0.6.0
 
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
   # Track the pkg.pr.new preview of the commit consumers run; once the rename
   # ships, drop this and bump the dependency instead.
-  comark-content: https://pkg.pr.new/comarkdown/comark-cms/comark-content@1801e9b
-  comark: https://pkg.pr.new/comark@c084a40
-  "@comark/nuxt": https://pkg.pr.new/@comark/nuxt@c084a40
+  comark-content: https://pkg.pr.new/comarkdown/comark-cms/comark-content@28b1061
