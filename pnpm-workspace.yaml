@@ -17,7 +17,7 @@ minimumReleaseAgeExclude:
   - "@comark/nuxt@0.6.0"
   - "@comark/vue@0.6.0"
   - comark@0.6.0
-  - comark-content@0.2.0
+  - comark-content@0.3.0
 
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
