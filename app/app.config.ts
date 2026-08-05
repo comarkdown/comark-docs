@@ -118,14 +118,15 @@ export default defineAppConfig({
       codeIcon: {
         'nitro.config.ts': 'i-unjs-nitro',
         'astro.config.mjs': 'i-simple-icons:astro',
+        'vite.config.ts': 'i-logos-vite-icon',
+        'vite.config.mjs': 'i-logos-vite-icon',
         astro: 'i-simple-icons:astro',
         nitro: 'i-unjs-nitro',
-        md: 'i-custom-comark',
-        mdc: 'i-custom-comark',
         react: 'i-logos-react',
         html: 'i-vscode-icons-file-type-html',
         svelte: 'i-logos-svelte-icon',
         nuxt: 'i-logos-nuxt-icon',
+        vite: 'i-logos-vite-icon',
         angular: 'i-logos-angular-icon',
       },
       codeGroup: {
