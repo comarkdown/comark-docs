@@ -120,6 +120,7 @@ export default defineAppConfig({
         'astro.config.mjs': 'i-simple-icons:astro',
         'vite.config.ts': 'i-logos-vite-icon',
         'vite.config.mjs': 'i-logos-vite-icon',
+        'next.config.ts': 'i-simple-icons-nextjs',
         astro: 'i-simple-icons:astro',
         nitro: 'i-unjs-nitro',
         react: 'i-logos-react',
