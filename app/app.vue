@@ -66,7 +66,8 @@ watch(assistantOpen, (isOpen) => {
 })
 
 defineShortcuts({
-  'd': () => (colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'),
+  // Disabled `d` for now as it prevents the playground editor to work with the `d` letter
+  // 'd': () => (colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'),
   'g-h': () => (historyOpen.value = !historyOpen.value),
 })
 </script>
