@@ -53,7 +53,7 @@ useSeoMeta({
 
 provide('navigation', navTree)
 
-const colorMode = useColorMode()
+// const colorMode = useColorMode()
 const historyOpen = useVersionHistory()
 
 const { assistant } = useAppConfig()

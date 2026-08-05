@@ -1,6 +1,9 @@
 import { resolveModulePath } from 'exsolve'
 import { defineNuxtConfig } from 'nuxt/config'
-import { layerIconCollections } from './utils/icons'
+// import { layerIconCollections } from './utils/icons'
+import { createResolver } from 'nuxt/kit'
+
+const { resolve } = createResolver(import.meta.url)
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-06-09',
@@ -14,17 +17,25 @@ export default defineNuxtConfig({
     'nuxt-og-image',
     '@nuxtjs/mcp-toolkit',
   ],
-  ui: { content: true, prose: true },
-  sitemap: { 
+  ui: {
+    content: true,
+    prose: true
+  },
+  sitemap: {
     sources: ['/api/__sitemap__/urls'], exclude: ['/tree/**', '/blob/**']
   },
   ogImage: { zeroRuntime: false },
   icon: {
     provider: 'iconify',
-    customCollections: layerIconCollections() as never,
-    clientBundle: { 
+    customCollections: [
+      {
+        prefix: 'custom',
+        dir: resolve('app/assets/icons'),
+      },
+    ],
+    clientBundle: {
       scan: true,
-      includeCustomCollections: false
+      includeCustomCollections: true
     },
   },
   vite: {

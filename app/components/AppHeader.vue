@@ -27,18 +27,6 @@ const navigation = useMainNavigation()
         label="Ask AI"
         color="neutral"
         variant="outline"
-        class="hidden lg:inline-flex"
-        @click="assistantOpen = true"
-      />
-
-      <UButton
-        v-if="assistant?.enabled"
-        icon="i-lucide-sparkles"
-        aria-label="Ask AI"
-        color="neutral"
-        variant="outline"
-        :ui="{ leadingIcon: 'size-4' }"
-        class="p-2 lg:hidden"
         @click="assistantOpen = true"
       />
 
