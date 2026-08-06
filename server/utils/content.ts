@@ -1,13 +1,12 @@
 import { comarkContent, defineContentPlugin, type ComarkContent, type CacheOptions } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import highlight from 'comark/plugins/highlight'
+import rangi from 'comark/plugins/rangi'
 import security from 'comark/plugins/security'
 import emoji from 'comark/plugins/emoji'
 import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
-import githubLight from '@shikijs/themes/github-light'
-import githubDark from '@shikijs/themes/github-dark'
+import { githubLight, githubDark } from 'rangi/themes'
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
@@ -15,7 +14,7 @@ let content: Promise<ComarkContent> | undefined
 
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
-  highlight({ themes: { light: githubLight, dark: githubDark } }),
+  rangi({ theme: { light: githubLight, dark: githubDark } }),
   toc({ depth: 3 }),
   emoji(),
   security({
