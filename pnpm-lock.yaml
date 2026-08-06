@@ -18,8 +18,8 @@ importers:
         specifier: ^4.0.22
         version: 4.0.41(vue@3.5.40(typescript@6.0.3))(zod@4.4.3)
       '@comark/nuxt':
-        specifier: ^0.6.0
-        version: 0.6.0(6a1504937d4a6474508c863bf42ddf32)
+        specifier: ^0.6.1
+        version: 0.6.1(eefb09ef85cf3ec375eabb1f28d6b4e3)
       '@iconify-json/lucide':
         specifier: ^1.2.120
         version: 1.2.120
@@ -50,9 +50,6 @@ importers:
       '@resvg/resvg-js':
         specifier: ^2.6.2
         version: 2.6.2
-      '@shikijs/themes':
-        specifier: ^4.3.1
-        version: 4.3.1
       '@vercel/functions':
         specifier: ^3.7.6
         version: 3.7.6(ws@8.21.1)
@@ -66,8 +63,8 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       comark:
-        specifier: https://pkg.pr.new/comark@332
-        version: https://pkg.pr.new/comark@332(beautiful-mermaid@1.1.3)(rangi@2.1.0)(shiki@4.3.1)
+        specifier: ^0.6.1
+        version: 0.6.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.3.1)
       comark-content:
         specifier: ^0.3.0
         version: 0.3.0(@vercel/functions@3.7.6(ws@8.21.1))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(shiki@4.3.1)
@@ -90,14 +87,11 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       rangi:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.2.0
+        version: 2.2.0
       satori:
         specifier: ^0.29.0
         version: 0.29.0
-      shiki:
-        specifier: ^4.3.1
-        version: 4.3.1
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -349,13 +343,13 @@ packages:
   '@colordx/core@5.5.0':
     resolution: {integrity: sha512-3PxTH8itZzltK0U9jTwVVnjLXvnDYuq3m+QXsHkENxWiPRh4WaoLcs1SQjqgZ55kS+QyirpH5BVwzP2gMVG6EQ==}
 
-  '@comark/nuxt@0.6.0':
-    resolution: {integrity: sha512-oyNlqqOSsvxYW1ObZvloXUfADupjYfbxhhqc/I9MWweboC+/HsEXDB341TKXyTkwUISIOvpTcChP8tWjfrB/ww==}
+  '@comark/nuxt@0.6.1':
+    resolution: {integrity: sha512-j1dMZet/D+kBm77WTOeoEeIEspes7BBJdW9P50wcV1KwOOdPPMJD429Z1prmisWaP56Ay4sIY9r7rpymM5mQEg==}
     peerDependencies:
       nuxt: ^4.0.0
 
-  '@comark/vue@0.6.0':
-    resolution: {integrity: sha512-c7BxpneMTWcA34OabdMetm1+Q2ANTbPdSpqNESaFB2cVB7i5IufmA5jjEyQkXWw24/ChfBbvT6BQkib2BxHqSQ==}
+  '@comark/vue@0.6.1':
+    resolution: {integrity: sha512-rZQu6TVYEOFVbPbJtdxjfvcTN2gOAtq92WnIinfYvO5+q3CZWNpRyfiBwkseUm+nglCFXDCvcET++h3PTJLoEw==}
     peerDependencies:
       beautiful-mermaid: ^1.1.3
       katex: ^0.17.0
@@ -3405,9 +3399,8 @@ packages:
       shiki:
         optional: true
 
-  comark@https://pkg.pr.new/comark@332:
-    resolution: {integrity: sha512-PZdRTCAmff5zjqKtPrU0Sdc4Tw3Rmbk1S2lFojhGwTUxaKbeJX6imzBGjEEyf/X8XLkqXL7lUd4NTZJxfHMuXg==, tarball: https://pkg.pr.new/comark@332}
-    version: 0.6.0
+  comark@0.6.1:
+    resolution: {integrity: sha512-CwvudkUGfSdoRYv5DGNddy1d0odxazpzh5/kK4UIQkrOWlWUa8D9TkMF+9iXj3/ebGr8VXAbkzFFw9WCPrPjDA==}
     peerDependencies:
       beautiful-mermaid: ^1.1.3
       katex: ^0.17.0
@@ -5587,8 +5580,8 @@ packages:
     resolution: {integrity: sha512-hek2mFQpPuI4E1BBKrSto+BU3e3x4xuarsbiwr3+lf7p44juvFMV0XFWQAP3xUyqXA4RrXLIoaSUGbSt056ZMw==}
     engines: {node: '>= 0.6'}
 
-  rangi@2.1.0:
-    resolution: {integrity: sha512-2IJphkRRAIrGn+ujlKfu8kogEOhcm09Igw/HZsU/DsLcxyrOn16MCzpdr2s2qEQC3e4GLVitcTEoXr9pVVAJQg==}
+  rangi@2.2.0:
+    resolution: {integrity: sha512-zMXLNs+3ejB2dg5kjJdNbllNq6FrdtEbHA9f3POxbSIHb0CyslALbY8qSDCE2r+/6Ku7xaVHKtnC5qHbF2SgNg==}
     hasBin: true
 
   raw-body@3.0.2:
@@ -7023,11 +7016,11 @@ snapshots:
 
   '@colordx/core@5.5.0': {}
 
-  '@comark/nuxt@0.6.0(6a1504937d4a6474508c863bf42ddf32)':
+  '@comark/nuxt@0.6.1(eefb09ef85cf3ec375eabb1f28d6b4e3)':
     dependencies:
-      '@comark/vue': 0.6.0(beautiful-mermaid@1.1.3)(shiki@4.3.1)(vue@3.5.40(typescript@6.0.3))
+      '@comark/vue': 0.6.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.3.1)(vue@3.5.40(typescript@6.0.3))
       '@nuxt/kit': 4.5.1(magic-string@1.1.0)(magicast@0.5.3)(oxc-parser@0.140.0)(rolldown@1.2.0)(unplugin@3.3.0(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.2)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)))
-      comark: 0.6.0(beautiful-mermaid@1.1.3)(shiki@4.3.1)
+      comark: 0.6.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.3.1)
       nuxt: 4.5.1(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(@types/node@26.1.1)(@vercel/functions@3.7.6(ws@8.21.1))(@vue/compiler-sfc@3.5.40)(cac@7.0.0)(db0@0.3.4)(esbuild@0.28.1)(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(ioredis@5.11.1(supports-color@10.2.2))(lightningcss@1.33.0)(magicast@0.5.3)(optionator@0.9.4)(oxc-parser@0.140.0)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.0)(rollup@4.62.2))(rollup@4.62.2)(srvx@0.11.22)(supports-color@10.2.2)(terser@5.49.0)(typescript@6.0.3)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))(vue-tsc@3.3.8(typescript@6.0.3))(yaml@2.9.0)
     transitivePeerDependencies:
       - beautiful-mermaid
@@ -7035,18 +7028,21 @@ snapshots:
       - magic-string
       - magicast
       - oxc-parser
+      - rangi
       - rolldown
       - shiki
       - unplugin
       - vue
 
-  '@comark/vue@0.6.0(beautiful-mermaid@1.1.3)(shiki@4.3.1)(vue@3.5.40(typescript@6.0.3))':
+  '@comark/vue@0.6.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.3.1)(vue@3.5.40(typescript@6.0.3))':
     dependencies:
-      comark: 0.6.0(beautiful-mermaid@1.1.3)(shiki@4.3.1)
+      comark: 0.6.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.3.1)
       vue: 3.5.40(typescript@6.0.3)
     optionalDependencies:
       beautiful-mermaid: 1.1.3
       shiki: 4.3.1
+    transitivePeerDependencies:
+      - rangi
 
   '@devframes/hub@0.5.4(devframe@0.5.4(@modelcontextprotocol/sdk@1.29.0(supports-color@10.2.2)(zod@4.4.3))(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.2)(typescript@6.0.3)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0)))(esbuild@0.28.1)(rolldown@1.2.0)(rollup@4.62.2)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.49.0)(yaml@2.9.0))':
     dependencies:
@@ -10271,7 +10267,7 @@ snapshots:
       beautiful-mermaid: 1.1.3
       shiki: 4.3.1
 
-  comark@https://pkg.pr.new/comark@332(beautiful-mermaid@1.1.3)(rangi@2.1.0)(shiki@4.3.1):
+  comark@0.6.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.3.1):
     dependencies:
       entities: 8.0.0
       htmlparser2: 12.0.0
@@ -10279,7 +10275,7 @@ snapshots:
       markdown-exit: 1.1.0-beta.2
     optionalDependencies:
       beautiful-mermaid: 1.1.3
-      rangi: 2.1.0
+      rangi: 2.2.0
       shiki: 4.3.1
 
   comma-separated-tokens@2.0.3: {}
@@ -12957,7 +12953,7 @@ snapshots:
 
   range-parser@1.3.0: {}
 
-  rangi@2.1.0: {}
+  rangi@2.2.0: {}
 
   raw-body@3.0.2:
     dependencies:
