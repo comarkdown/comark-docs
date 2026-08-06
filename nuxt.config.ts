@@ -12,7 +12,8 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap',
     'nuxt-seo-utils',
     'nuxt-og-image',
-    '@nuxtjs/mcp-toolkit'
+    '@nuxtjs/mcp-toolkit',
+    'nuxt-llms',
   ],
   ignore: ['content/**'],
   ui: { content: true, prose: true },
