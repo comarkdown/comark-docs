@@ -12,8 +12,9 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap',
     'nuxt-seo-utils',
     'nuxt-og-image',
-    '@nuxtjs/mcp-toolkit',
+    '@nuxtjs/mcp-toolkit'
   ],
+  ignore: ['content/**'],
   ui: { content: true, prose: true },
   sitemap: {
     sources: ['/api/__sitemap__/urls'], exclude: ['/tree/**', '/blob/**']

@@ -3,5 +3,5 @@ export default defineNuxtConfig({
   site: {
     url: 'https://docs.comark.dev',
     name: 'Comark Docs',
-  },
+  }
 })

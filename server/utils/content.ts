@@ -24,6 +24,13 @@ const comarkPlugins = [
   }),
 ]
 
+const searchSectionsPlugin = defineContentPlugin(() => ({
+  name: 'search-sections',
+  setup(ctx) {
+    ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(ctx as unknown as ComarkContent)))
+  },
+}))()
+
 /**
  * Create a new content instance reading content at `ref` (a commit SHA or branch). `remote` forces the
  * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
@@ -32,14 +39,6 @@ export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-  // Bound to THIS instance so a preview content instance serves its own version's sections, not production's.
-  const searchSectionsPlugin = defineContentPlugin(() => ({
-    name: 'search-sections',
-    setup(ctx) {
-      ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(instance)))
-    },
-  }))
-
   const instance = comarkContent({
     markdown: {
       plugins: comarkPlugins,
@@ -48,7 +47,7 @@ export async function createSourceContent(
     sources: {
       content: contentSource(ref, { remote: opts.remote }),
     },
-    plugins: [searchSectionsPlugin()],
+    plugins: [searchSectionsPlugin],
     cache: opts.cache,
     basePath: opts.basePath,
   })
