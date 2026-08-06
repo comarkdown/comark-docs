@@ -1,10 +1,9 @@
 import { resolve } from 'node:path'
 import { parseMarkdown, type MarkdownDocument } from 'comark'
-import highlight from '@comark/nuxt/plugins/highlight'
+import rangi from 'comark/plugins/rangi'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import githubLight from '@shikijs/themes/github-light'
-import githubDark from '@shikijs/themes/github-dark'
+import { githubLight, githubDark } from 'rangi/themes'
 
 // A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
 // private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.
@@ -93,11 +92,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const highlightPlugin = highlight({
-    themes: {
-      light: githubLight,
-      dark: githubDark,
-    },
+  const highlightPlugin = rangi({
+    theme: { light: githubLight, dark: githubDark },
   })
   const fileResults: Record<string, MarkdownDocument> = {}
 

@@ -14,9 +14,9 @@ minimumReleaseAgeExclude:
   - "@nuxt/nitro-server@4.5.1"
   - "@nuxt/vite-builder@4.5.1"
   - nuxt@4.5.1
-  - "@comark/nuxt@0.6.0"
-  - "@comark/vue@0.6.0"
-  - comark@0.6.0
+  - '@comark/nuxt@0.6.0 || 0.6.1'
+  - '@comark/vue@0.6.0 || 0.6.1'
+  - comark@0.6.0 || 0.6.1
   - comark-content@0.3.0
 
 overrides:
