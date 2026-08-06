@@ -8,18 +8,21 @@ interface SearchSection {
   content: string
 }
 
-// Building the index parses every document — the most expensive read in the app. Keying the memo by
-// instance gets invalidation for free: `getProdContent` rebuilds the singleton when the head advances,
-// and each preview SHA has its own instance, so a stale index is unreachable.
-const searchSectionsCache = new WeakMap<ComarkContent, Promise<SearchSection[]>>()
+// Building the index parses every document — the most expensive read in the app. The built sections
+// are persisted in `content.cache`, whose driver is namespaced per SHA (`content:${sha}`), so the
+// index survives cold starts, is shared across lambda instances in the region, and a stale index is
+// unreachable: a new head or preview SHA reads from a fresh namespace. Colon-free so it can't collide
+// with `<source>:<path>` content keys, the `manifest` key, or the shared `gh:` namespace, and the SWR
+// fallback in `cache.get` (`key.split(':')`) can't map it to a real source.
+const SEARCH_SECTIONS_KEY = 'search-sections'
 
 /**
- * Drop the memoized index for an instance — the one case identity can't cover: in dev the default
- * instance watches the working tree, so content changes under a stable object. Called from
+ * Drop the cached index — the one case the per-SHA namespace can't cover: in dev the default
+ * instance watches the working tree, so content changes under a stable ref. Called from
  * `watch:file:update`.
  */
 export function invalidateSearchSections(content: ComarkContent): void {
-  searchSectionsCache.delete(content)
+  void content.cache.invalidate(SEARCH_SECTIONS_KEY).catch(() => {})
 }
 
 /**
@@ -47,15 +50,13 @@ export async function searchDocSections(content: ComarkContent, query: string, l
 }
 
 /** Walk every document's AST, one section per heading — the shape `UContentSearch` takes as `files`. */
-export function buildSearchSections(content: ComarkContent): Promise<SearchSection[]> {
-  let sections = searchSectionsCache.get(content)
-  if (!sections) {
-    sections = collectSearchSections(content).catch((error) => {
-      searchSectionsCache.delete(content)
-      throw error
-    })
-    searchSectionsCache.set(content, sections)
-  }
+export async function buildSearchSections(content: ComarkContent): Promise<SearchSection[]> {
+  const cached = await content.cache.get<SearchSection[]>(SEARCH_SECTIONS_KEY)
+  if (cached) return cached
+
+  const sections = await collectSearchSections(content)
+  // Non-fatal: an oversized payload (Runtime Cache per-item limit) just means no persistence.
+  await content.cache.set(SEARCH_SECTIONS_KEY, sections).catch(() => {})
   return sections
 }
 
