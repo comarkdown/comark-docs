@@ -12,7 +12,8 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap',
     'nuxt-seo-utils',
     'nuxt-og-image',
-    '@nuxtjs/mcp-toolkit'
+    '@nuxtjs/mcp-toolkit',
+    'nuxt-llms',
   ],
   ignore: ['content/**'],
   ui: { content: true, prose: true },
@@ -40,6 +41,10 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    routeRules: {
+      '/llms.txt': { prerender: false },
+      '/llms-full.txt': { prerender: false },
+    },
     vercel: {
       config: {
         bypassToken: process.env.VERCEL_BYPASS_TOKEN,
