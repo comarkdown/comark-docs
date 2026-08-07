@@ -8,6 +8,22 @@ import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
 import { githubLight, githubDark } from 'rangi/themes'
 
+/**
+ * Identity wrapper for consumer `extendContent` hooks.
+ *
+ * The callback is typed against wide {@link ContentOptions} so consumers can
+ * read/mutate options without re-declaring plugin generics. The *returned*
+ * function is generic at each call site so `comarkContent` still infers
+ * source and plugin types from the options literal (a plain
+ * `(options: ContentOptions) => ContentOptions` would widen them away).
+ */
+export function defineDocsExtendContent(
+  fn: (options: ContentOptions) => ContentOptions,
+): <const T extends ContentOptions>(options: T) => T {
+  return fn as <const T extends ContentOptions>(options: T) => T
+}
+
+
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
 let content: Promise<ComarkContent> | undefined
@@ -39,8 +55,10 @@ export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-
-  const options: any = {
+  // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
+  // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
+  // argument would erase the source and plugin types `comarkContent` infers from the literal.
+  const instance = comarkContent(extendContent({
     markdown: {
       plugins: comarkPlugins,
       html: false,
@@ -51,12 +69,7 @@ export async function createSourceContent(
     plugins: [searchSectionsPlugin],
     cache: opts.cache,
     basePath: opts.basePath,
-  }
-
-  // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
-  // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
-  // argument would erase the source and plugin types `comarkContent` infers from the literal.
-  const instance = comarkContent(extendContent(options) as ContentOptions)
+  }))
 
   // Only the default instance watches: others read a fixed ref that can't change, and retaining
   // `watch()`'s stop function to release the watcher would leak once the preview entry is evicted.
