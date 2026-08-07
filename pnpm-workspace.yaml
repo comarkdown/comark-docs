@@ -20,5 +20,6 @@ minimumReleaseAgeExclude:
   - comark-content@0.3.0
 
 overrides:
+  comark-content: https://pkg.pr.new/comark-content@1f55d09
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11

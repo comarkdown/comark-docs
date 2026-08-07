@@ -40,13 +40,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
     const resolver = createResolver(import.meta.url)
     const rootDir = nuxt.options.rootDir
 
-    addServerImports([
-      {
-        name: 'extendContent',
-        from: resolver.resolve('../server/internal/extend-content'),
-        priority: -1,
-      },
-    ])
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
       site?: { url?: string; name?: string }
