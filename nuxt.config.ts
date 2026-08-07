@@ -41,6 +41,10 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    routeRules: {
+      '/llms.txt': { prerender: false },
+      '/llms-full.txt': { prerender: false },
+    },
     vercel: {
       config: {
         bypassToken: process.env.VERCEL_BYPASS_TOKEN,
