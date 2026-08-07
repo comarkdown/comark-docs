@@ -1,4 +1,4 @@
-import { comarkContent, defineContentPlugin, type ComarkContent, type CacheOptions } from 'comark-content'
+import { type ContentOptions, defineContentPlugin, type ComarkContent, type CacheOptions, comarkContent  } from 'comark-content';
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import rangi from 'comark/plugins/rangi'
@@ -7,6 +7,22 @@ import emoji from 'comark/plugins/emoji'
 import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
 import { githubLight, githubDark } from 'rangi/themes'
+
+/**
+ * Identity wrapper for consumer `extendContent` hooks.
+ *
+ * The callback is typed against wide {@link ContentOptions} so consumers can
+ * read/mutate options without re-declaring plugin generics. The *returned*
+ * function is generic at each call site so `comarkContent` still infers
+ * source and plugin types from the options literal (a plain
+ * `(options: ContentOptions) => ContentOptions` would widen them away).
+ */
+export function defineDocsExtendContent(
+  fn: (options: ContentOptions) => ContentOptions,
+): <const T extends ContentOptions>(options: T) => T {
+  return fn as <const T extends ContentOptions>(options: T) => T
+}
+
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
@@ -23,6 +39,7 @@ const comarkPlugins = [
   }),
 ]
 
+// Bound to THIS instance so a preview content instance serves its own version's sections, not production's.
 const searchSectionsPlugin = defineContentPlugin(() => ({
   name: 'search-sections',
   setup(ctx) {
@@ -38,7 +55,10 @@ export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-  const instance = comarkContent({
+  // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
+  // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
+  // argument would erase the source and plugin types `comarkContent` infers from the literal.
+  const instance = comarkContent(extendContent({
     markdown: {
       plugins: comarkPlugins,
       html: false,
@@ -49,13 +69,13 @@ export async function createSourceContent(
     plugins: [searchSectionsPlugin],
     cache: opts.cache,
     basePath: opts.basePath,
-  })
+  }))
 
   // Only the default instance watches: others read a fixed ref that can't change, and retaining
   // `watch()`'s stop function to release the watcher would leak once the preview entry is evicted.
   if (import.meta.dev && opts.watch) {
     await instance.watch()
-    instance.hooks.hook('watch:file:update', (_source, key) => {
+    instance.hooks.hook('watch:file:update', (_source:string, key: string) => {
       invalidateSearchSections(instance)
       console.log(`${key} updated`)
     })
