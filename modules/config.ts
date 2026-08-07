@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { addServerImports, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
+import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
 import { resolveContentDir } from '../utils/content-dir'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
@@ -37,7 +37,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
     isr: 300,
   },
   async setup(options, nuxt) {
-    const resolver = createResolver(import.meta.url)
     const rootDir = nuxt.options.rootDir
 
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.

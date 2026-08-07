@@ -1,4 +1,4 @@
-import { type ContentOptions, defineContentPlugin, type ComarkContent, type CacheOptions, comarkContent  } from 'comark-content';
+import { defineContentPlugin, type ComarkContent, type CacheOptions, comarkContent  } from 'comark-content';
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import rangi from 'comark/plugins/rangi'

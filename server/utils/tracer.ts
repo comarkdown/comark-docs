@@ -4,7 +4,7 @@ import { trace, type Tracer } from '@opentelemetry/api'
 const require = createRequire(import.meta.url)
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __comarkDocsLocalTracerReady: boolean | undefined
 }
 
@@ -49,8 +49,8 @@ export function ensureLocalTracer(): void {
 
     provider.register()
     localProvider = provider
-  } catch (e) {
-    throw new Error(`Failed to register local tracer, please install the required dependencies: @opentelemetry/exporter-trace-otlp-proto @opentelemetry/resources @opentelemetry/sdk-trace-node`)
+  } catch (err) {
+    throw new Error(`Failed to register local tracer, please install the required dependencies: @opentelemetry/exporter-trace-otlp-proto @opentelemetry/resources @opentelemetry/sdk-trace-node`, { cause: err })
   }
 }
 
