@@ -6,6 +6,7 @@ import security from 'comark/plugins/security'
 import emoji from 'comark/plugins/emoji'
 import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
+import tracingOtel from 'comark-content/plugins/tracing/otel'
 import { githubLight, githubDark } from 'rangi/themes'
 import { contentTracer } from './tracer.ts'
 
@@ -43,6 +44,7 @@ export async function createSourceContent(
   // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
   // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
   // argument would erase the source and plugin types `comarkContent` infers from the literal.
+  const tracer = contentTracer()
   const instance = comarkContent({
     markdown: {
       plugins: comarkPlugins,
@@ -50,10 +52,12 @@ export async function createSourceContent(
     sources: {
       content: contentSource(ref, { remote: opts.remote }),
     },
-    plugins: [searchSectionsPlugin],
+    plugins: [
+      searchSectionsPlugin,
+      tracer && tracingOtel({ tracer }),
+    ],
     cache: opts.cache,
     basePath: opts.basePath,
-    tracer: contentTracer(),
   })
 
   // Only the default instance watches: others read a fixed ref that can't change, and retaining

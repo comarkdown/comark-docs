@@ -9,7 +9,7 @@ export const prodContent = createContentClient({
   plugins: [searchSectionsClient()],
 })
 
-const clients = new Map<string, ReturnType<typeof createContentClient>>()
+const clients = new Map<string, typeof prodContent>()
 
 function getClient(basePath: string) {
   let client = clients.get(basePath)
