@@ -167,19 +167,6 @@ export default defineAppConfig({
       td: {
         base: 'bg-white dark:bg-muted/80',
       },
-
-      // callout: {
-      //   variants: {
-      //     color: {
-      //       info: {
-      //         base: 'border-muted bg-muted text-toned [&_a]:text-primary [&_a]:hover:border-primary [&_a]:outline-primary/25 [&_a]:focus-visible:outline-3 [&_a]:focus-visible:has-[>code]:outline-0 [&_code]:text-primary-600 dark:[&_code]:text-primary-300 [&_code]:border-primary/25 [&_a]:[&>code]:outline-primary/25 [&_a]:hover:[&>code]:border-primary [&_a]:hover:[&>code]:text-primary [&_a]:focus-visible:[&>code]:border-primary [&_a]:focus-visible:[&>code]:text-primary [&>ul]:marker:text-primary/50',
-      //       },
-      //       success: {
-      //         base: 'border-muted bg-muted text-toned [&_a]:text-primary [&_a]:hover:border-primary [&_a]:outline-primary/25 [&_a]:focus-visible:outline-3 [&_a]:focus-visible:has-[>code]:outline-0 [&_code]:text-primary-600 dark:[&_code]:text-primary-300 [&_code]:border-primary/25 [&_a]:[&>code]:outline-primary/25 [&_a]:hover:[&>code]:border-primary [&_a]:hover:[&>code]:text-primary [&_a]:focus-visible:[&>code]:border-primary [&_a]:focus-visible:[&>code]:text-primary [&>ul]:marker:text-primary/50'
-      //       }
-      //     }
-      //   }
-      // }
     },
     icons: {
       // info: 'i-tabler-info-square-rounded-filled',
@@ -197,7 +184,13 @@ export default defineAppConfig({
       dark: '',
     },
     // Sibling sites listed in the brand popover; empty = no popover.
-    ecosystem: [] as { mark?: string; to: string; label?: string }[],
+    ecosystem: [
+      {
+        mark: 'comark-content',
+        to: 'https://comark-content.com',
+        label: 'Comark Content',
+      },
+    ] as { mark?: string; to: string; label?: string }[],
     search: true,
     // No `colorMode` key: the always-visible toggle is in AppFooter, the header's is a mobile-drawer duplicate.
     // Main navigation tabs; empty = one tab per top-level content section.
