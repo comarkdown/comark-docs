@@ -7,7 +7,10 @@ interface Tab {
 
 const props = defineProps<{
   items: Tab[]
+  reverse?: boolean | string
 }>()
+
+const reversed = computed(() => props.reverse === true || props.reverse === 'true' || props.reverse === '')
 
 const activeIndex = ref(0)
 
@@ -52,7 +55,10 @@ function onKeydown(event: KeyboardEvent) {
     }"
   >
     <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-end">
-      <div class="space-y-10">
+      <div
+        class="space-y-10"
+        :class="reversed ? 'lg:order-last' : ''"
+      >
         <div>
           <p
             v-if="$slots.headline"
@@ -80,11 +86,6 @@ function onKeydown(event: KeyboardEvent) {
           </p>
         </div>
 
-        <!--
-          A real tablist: one tab stop, arrow keys to move. Note there is no
-          `@mouseenter`: switching the panel on hover meant a pointer merely
-          crossing the list silently replaced the content the reader was looking at.
-        -->
         <div
           role="tablist"
           aria-orientation="vertical"

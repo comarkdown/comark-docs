@@ -123,6 +123,8 @@ export default defineAppConfig({
         'next.config.ts': 'i-simple-icons-nextjs',
         astro: 'i-simple-icons:astro',
         nitro: 'i-unjs-nitro',
+        md: 'i-custom-comark',
+        mdc: 'i-custom-comark',
         react: 'i-logos-react',
         html: 'i-vscode-icons-file-type-html',
         svelte: 'i-logos-svelte-icon',

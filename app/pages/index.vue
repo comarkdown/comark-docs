@@ -5,6 +5,7 @@ import LandingFeatures from '../components/landing/LandingFeatures.vue'
 import LandingFeatureCard from '../components/landing/LandingFeatureCard.vue'
 import LandingFaq from '../components/landing/LandingFaq.vue'
 import LandingCta from '../components/landing/LandingCta.vue'
+import LandingHeroDemo from '../components/landing/LandingHeroDemo.vue'
 
 const landingComponents = {
   LandingStack,
@@ -13,6 +14,7 @@ const landingComponents = {
   LandingFeatureCard,
   LandingFaq,
   LandingCta,
+  LandingHeroDemo,
 }
 
 const content = useDocsContent()
