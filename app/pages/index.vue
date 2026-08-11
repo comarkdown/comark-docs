@@ -1,4 +1,22 @@
 <script setup lang="ts">
+import LandingStack from '../components/landing/LandingStack.vue'
+import LandingTabs from '../components/landing/LandingTabs.vue'
+import LandingFeatures from '../components/landing/LandingFeatures.vue'
+import LandingFeatureCard from '../components/landing/LandingFeatureCard.vue'
+import LandingFaq from '../components/landing/LandingFaq.vue'
+import LandingCta from '../components/landing/LandingCta.vue'
+import LandingHeroDemo from '../components/landing/LandingHeroDemo.vue'
+
+const landingComponents = {
+  LandingStack,
+  LandingTabs,
+  LandingFeatures,
+  LandingFeatureCard,
+  LandingFaq,
+  LandingCta,
+  LandingHeroDemo,
+}
+
 const content = useDocsContent()
 const site = useSiteConfig()
 
@@ -64,6 +82,7 @@ if (content.value.mode === 'prod') {
   <MarkdownDocument
     v-if="tree"
     :value="tree"
+    :components="landingComponents"
   />
   <div v-else>Landing page not found</div>
 </template>
