@@ -128,6 +128,7 @@ export default defineAppConfig({
         react: 'i-logos-react',
         html: 'i-vscode-icons-file-type-html',
         svelte: 'i-logos-svelte-icon',
+        next: 'i-logos-nextjs-icon',
         nuxt: 'i-logos-nuxt-icon',
         vite: 'i-logos-vite-icon',
         angular: 'i-logos-angular-icon',
