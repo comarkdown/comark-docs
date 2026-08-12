@@ -14,8 +14,8 @@ const plugins = [shiki()]
 const sourceAsCode = computed(() => ['````md', props.source, '````'].join('\n'))
 
 const tabs = [
-  { id: 'source', label: 'source.md' },
-  { id: 'output', label: 'rendered output' },
+  { id: 'source', label: 'source.md', icon: 'i-custom-comark' },
+  { id: 'output', label: 'preview', icon: 'i-lucide-eye' },
 ]
 const activeIndex = ref(0)
 
@@ -71,10 +71,14 @@ function onKeydown(event: KeyboardEvent) {
             :aria-selected="activeIndex === index"
             :aria-controls="panelId(index)"
             :tabindex="activeIndex === index ? 0 : -1"
-            class="rounded-md px-2.5 py-1 font-mono text-xs transition-colors"
+            class="flex items-center gap-1.5 rounded-md px-2.5 py-1 font-mono text-xs transition-colors"
             :class="activeIndex === index ? 'bg-accented/60 text-highlighted' : 'text-muted hover:text-highlighted'"
             @click="select(index)"
           >
+            <UIcon
+              :name="tab.icon"
+              class="size-3.5 shrink-0"
+            />
             {{ tab.label }}
           </button>
         </div>
