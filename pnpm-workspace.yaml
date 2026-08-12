@@ -21,5 +21,7 @@ minimumReleaseAgeExclude:
 
 overrides:
   comark-content: https://pkg.pr.new/comark-content@f43a94b
+  comark: https://pkg.pr.new/comark@af8d3e8
+  '@comark/nuxt': https://pkg.pr.new/@comark/nuxt@af8d3e8
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
