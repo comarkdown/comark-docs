@@ -1,3 +1,4 @@
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import type { NavigationItem } from 'comark-content'
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.vue'
 
@@ -32,6 +33,18 @@ function firstLeaf(item: NavigationItem): string {
 function segmentOf(path: string, base: string): string {
   const rel = base && path.startsWith(base) ? path.slice(base.length) : path
   return rel.split('/').filter(Boolean)[0] ?? ''
+}
+
+function childIsActive(target: string, route: RouteLocationNormalizedLoaded): boolean {
+  const [path, search] = target.split('?')
+  if (!route.path.startsWith(path!)) return false
+
+  for (const [key, value] of new URLSearchParams(search ?? '')) {
+    const current = route.query[key]
+    const currentValue = Array.isArray(current) ? current[0] : current
+    if (currentValue !== value) return false
+  }
+  return true
 }
 
 /** The `header.nav` groups from app.config; defaults to one tab per top-level navigation node. */
@@ -73,7 +86,7 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
             children: group.children.map((child) => ({
               label: child.label,
               to: child.to,
-              active: route.path.startsWith((child.activePath ?? child.to).split('?')[0]!),
+              active: childIsActive(child.activePath ?? child.to, route),
             })),
           }),
         })
