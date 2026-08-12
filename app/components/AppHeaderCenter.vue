@@ -10,7 +10,7 @@ const navigation = useMainNavigation()
     :highlight="false"
     content-orientation="vertical"
     :ui="{
-      content: 'w-max',
+      content: 'w-max min-w-32',
       childList: 'p-1',
       childLink: 'px-2.5 py-1 before:inset-x-px before:inset-y-0',
     }"
