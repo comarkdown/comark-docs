@@ -1,6 +1,6 @@
 @theme {
   --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, monospace;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
 
   --text-color-accented: var(--ui-text-accented);
 }

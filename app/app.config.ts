@@ -141,8 +141,11 @@ export default defineAppConfig({
       pre: {
         slots: {
           header: 'bg-muted border-muted',
-          base: 'bg-white dark:bg-default border-muted **:[.line.highlight]:bg-elevated/50! dark:**:[.line.highlight]:bg-accented/80!',
+          base: 'bg-white dark:bg-default border-muted **:[.line.highlight]:bg-elevated/50! dark:**:[.line.highlight]:bg-accented/80! [font-variant-ligatures:none]',
         },
+      },
+      code: {
+        base: '[font-variant-ligatures:none]'
       },
       h2: {
         slots: {
