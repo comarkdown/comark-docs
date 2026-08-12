@@ -6,6 +6,7 @@ import security from 'comark/plugins/security'
 import emoji from 'comark/plugins/emoji'
 import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
+import yaml from 'comark-content/plugins/yaml'
 import tracingOtel from 'comark-content/plugins/tracing/otel'
 import { githubLight, githubDark } from 'rangi/themes'
 import { contentTracer } from './tracer.ts'
@@ -53,6 +54,7 @@ export async function createSourceContent(
       content: contentSource(ref, { remote: opts.remote }),
     },
     plugins: [
+      yaml(), // enable .navigation.yml to be detected
       searchSectionsPlugin,
       tracer && tracingOtel({ tracer }),
     ],
