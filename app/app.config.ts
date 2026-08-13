@@ -189,13 +189,7 @@ export default defineAppConfig({
       dark: '',
     },
     // Sibling sites listed in the brand popover; empty = no popover.
-    ecosystem: [
-      {
-        mark: 'comark-content',
-        to: 'https://comark-content.com',
-        label: 'Comark Content',
-      },
-    ] as { mark?: string; to: string; label?: string }[],
+    ecosystem: [] as { mark?: string; to: string; label?: string }[],
     search: true,
     // No `colorMode` key: the always-visible toggle is in AppFooter, the header's is a mobile-drawer duplicate.
     // Main navigation tabs; empty = one tab per top-level content section.
