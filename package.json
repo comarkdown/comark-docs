@@ -60,6 +60,7 @@
     "comark-content": "https://pkg.pr.new/comark-content@6b8aae4",
     "defu": "^6.1.7",
     "exsolve": "^1.1.0",
+    "js-yaml": "^5.2.1",
     "motion-v": "^2.3.0",
     "nuxt-llms": "^0.2.0",
     "nuxt-og-image": "^6.7.4",
