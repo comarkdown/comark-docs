@@ -11,7 +11,7 @@ Content lives as Markdown in your repo and is served **at request time** — par
 - **Instant production content** — GitHub-sourced content pinned to a commit SHA, ISR-cached HTML, revalidated on push by a GitHub webhook (`/api/revalidate`).
 - **Versioned previews** — any branch (`/tree/:branch`) or commit (`/blob/:sha`) can be previewed through versioned URLs.
 - Docs UI built with [Nuxt UI](https://ui.nuxt.com): sidebar navigation, search (`⌘K`), TOC, prev/next links, version history panel.
-- SEO & AEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, `llms.txt` / `llms-full.txt`, raw markdown mirrors (`/raw/**`), RSS, MCP server (`/mcp`).
+- SEO & AEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, `llms.txt` / `llms-full.txt`, raw markdown mirrors (`/raw/**`), RSS, MCP server (`/mcp`), Agent Skills discovery (`/.well-known/skills/`).
 
 ## Usage
 
@@ -58,7 +58,7 @@ export default defineAppConfig({
 
 > Nuxt merges `app.config.ts` across layers with [defu](https://github.com/unjs/defu), which **concatenates arrays**. A consumer's list is *appended to* the layer's, not substituted for it — which is why every array default in the layer is empty. Keep it that way.
 
-`comarkDocs` in `nuxt.config.ts` covers `isr` (`false` disables the generated ISR route rules), `codeExplorer.allowRepos`, and `contentDir`. The GitHub repo, branch and content directory are inferred from the local git checkout and `VERCEL_GIT_*`; override them at runtime with `NUXT_DOCS_*` env vars (`NUXT_DOCS_GITHUB_OWNER`, `NUXT_DOCS_GITHUB_REPO`, `NUXT_DOCS_GITHUB_BRANCH`, …).
+`comarkDocs` in `nuxt.config.ts` covers `isr` (`false` disables the generated ISR route rules), `codeExplorer.allowRepos`, `contentDir`, and `skills.dir`. The GitHub repo, branch and content directory are inferred from the local git checkout and `VERCEL_GIT_*`; override them at runtime with `NUXT_DOCS_*` env vars (`NUXT_DOCS_GITHUB_OWNER`, `NUXT_DOCS_GITHUB_REPO`, `NUXT_DOCS_GITHUB_BRANCH`, …).
 
 > **Builds without `.git`.** The content directory is stored relative to the *repository* root, since that's what the GitHub source, the edit links and the push webhook all need — an app in `docs/` becomes `docs/content`. That's derived by relativising against the git root, so a build that can't see `.git` (a shallow or context-limited Docker build, an exported tarball) can only assume the app *is* the repository root. For a single-app repo that's correct; for an app in a subdirectory it silently points every production content read at a path that doesn't exist, and dev won't show it because dev reads the absolute path. The build warns when it has to assume. Set `comarkDocs.contentDir` (or `NUXT_DOCS_CONTENT_DIR`) to silence it authoritatively.
 
@@ -80,6 +80,33 @@ The wordmarks (`LogoComark`, `LogoComarkContent`) live in the layer because each
 `docs.ogImage.mark` takes the same names plus `wordmark`, which draws `seo.siteName` as text. The OG template inlines the *icon* of each mark rather than the full lockup, since it renders in a 200px column — so the artwork there is a second copy that has to be kept in step with the `Logo*.vue` component by hand. If you add a mark and only update `LogoMark.vue`, the OG image silently falls back to the wordmark.
 
 Components can still be replaced by shipping a same-named one (`AppHeader`, `AppFooter`, `AppHeaderBrand`, `OgImage/OgImageDocs.satori.vue`), but neither site needs to.
+
+### Agent Skills
+
+Drop skills into a `skills/` directory at the app root and the layer serves them at `/.well-known/skills/`, following the [Cloudflare Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) (v0.1). Users install them with:
+
+```bash
+npx skills add https://your-docs-domain.com
+```
+
+```
+my-docs/
+└─ skills/
+    └─ my-product/
+        ├─ SKILL.md
+        └─ references/
+            └─ api.md
+```
+
+Each skill needs a `SKILL.md` whose frontmatter includes a `description`. `name` defaults to the directory name and must match the [Agent Skills naming spec](https://agentskills.io/specification#name-field) (lowercase letters, numbers and hyphens). Discovery:
+
+```
+GET /.well-known/skills/index.json
+GET /.well-known/skills/{skill-name}/SKILL.md
+GET /.well-known/skills/{skill-name}/references/api.md
+```
+
+Override the directory with `comarkDocs.skills.dir` if it isn't `skills/`. Skills are scanned at build time from the filesystem (they ship with the app, not with GitHub-sourced content), so a skill change needs a redeploy.
 
 ### Keyboard shortcuts
 
