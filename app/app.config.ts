@@ -132,6 +132,7 @@ export default defineAppConfig({
         nuxt: 'i-logos-nuxt-icon',
         vite: 'i-logos-vite-icon',
         angular: 'i-logos-angular-icon',
+        ansi: 'i-lucide-terminal',
       },
       codeGroup: {
         slots: {
