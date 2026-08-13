@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { resolveSkillFilePath, scanSkills } from '../utils/skills'
+import { resolveSkillFilePath, scanSkills } from '../utils'
 
 async function skillsRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'comark-skills-'))

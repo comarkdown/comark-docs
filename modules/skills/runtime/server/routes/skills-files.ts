@@ -1,4 +1,4 @@
-import { resolveSkillFilePath, type SkillEntry } from '../../../../../utils/skills'
+import { resolveSkillFilePath, type SkillEntry } from '../../../utils'
 
 const PREFIX = '/.well-known/skills/'
 const CONTENT_TYPES: Record<string, string> = {

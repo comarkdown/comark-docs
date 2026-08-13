@@ -1,7 +1,7 @@
 import { addPrerenderRoutes, addServerHandler, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
 import { join } from 'pathe'
-import { scanSkills } from '../../utils/skills'
+import { scanSkills } from './utils'
 import type { ComarkDocsOptions } from '../config'
 
 const logger = useLogger('comark-docs')

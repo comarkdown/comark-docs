@@ -89,6 +89,9 @@ importers:
       exsolve:
         specifier: ^1.1.0
         version: 1.1.0
+      js-yaml:
+        specifier: ^5.2.1
+        version: 5.2.2
       motion-v:
         specifier: ^2.3.0
         version: 2.3.0(@vueuse/core@14.3.0(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
@@ -119,9 +122,6 @@ importers:
       unstorage:
         specifier: ^1.17.5
         version: 1.17.5(@vercel/functions@3.7.6(ws@8.21.1))(db0@0.3.4)(ioredis@5.11.1)
-      yaml:
-        specifier: ^2.9.0
-        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
