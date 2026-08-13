@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { lstat, readdir, readFile, stat } from 'node:fs/promises'
 import { isAbsolute, join, normalize } from 'pathe'
 import { parse as parseYaml } from 'yaml'
@@ -8,10 +9,20 @@ export interface SkillEntry {
   files: string[]
 }
 
+export interface SkillV2Entry {
+  name: string
+  type: 'skill-md'
+  description: string
+  url: string
+  digest: string
+}
+
 export interface ScanSkillsResult {
   catalog: SkillEntry[]
   warnings: string[]
 }
+
+export const V2_SCHEMA = 'https://schemas.agentskills.io/discovery/0.2.0/schema.json'
 
 const SKILL_NAME_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
 const MAX_NAME_LENGTH = 64
@@ -114,4 +125,24 @@ export async function scanSkills(skillsDir: string): Promise<ScanSkillsResult> {
 
   catalog.sort((a, b) => a.name.localeCompare(b.name))
   return { catalog, warnings }
+}
+
+export function sha256Digest(bytes: Uint8Array): string {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`
+}
+
+/** v0.2 index entries: `skill-md` pointing at `SKILL.md`, with a SHA-256 digest of that file. */
+export async function buildV2Catalog(skillsDir: string, catalog: SkillEntry[]): Promise<SkillV2Entry[]> {
+  return Promise.all(
+    catalog.map(async (skill) => {
+      const bytes = await readFile(join(skillsDir, skill.name, 'SKILL.md'))
+      return {
+        name: skill.name,
+        type: 'skill-md' as const,
+        description: skill.description,
+        url: `/.well-known/agent-skills/${skill.name}/SKILL.md`,
+        digest: sha256Digest(bytes),
+      }
+    })
+  )
 }

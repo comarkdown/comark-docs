@@ -11,7 +11,7 @@ Content lives as Markdown in your repo and is served **at request time** — par
 - **Instant production content** — GitHub-sourced content pinned to a commit SHA, ISR-cached HTML, revalidated on push by a GitHub webhook (`/api/revalidate`).
 - **Versioned previews** — any branch (`/tree/:branch`) or commit (`/blob/:sha`) can be previewed through versioned URLs.
 - Docs UI built with [Nuxt UI](https://ui.nuxt.com): sidebar navigation, search (`⌘K`), TOC, prev/next links, version history panel.
-- SEO & AEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, `llms.txt` / `llms-full.txt`, raw markdown mirrors (`/raw/**`), RSS, MCP server (`/mcp`), Agent Skills discovery (`/.well-known/skills/`).
+- SEO & AEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, `llms.txt` / `llms-full.txt`, raw markdown mirrors (`/raw/**`), RSS, MCP server (`/mcp`), Agent Skills discovery (`/.well-known/skills/` and `/.well-known/agent-skills/`).
 
 ## Usage
 
@@ -83,7 +83,7 @@ Components can still be replaced by shipping a same-named one (`AppHeader`, `App
 
 ### Agent Skills
 
-Drop skills into a `skills/` directory at the app root and the layer serves them at `/.well-known/skills/`, following the [Cloudflare Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) (v0.1). Users install them with:
+Drop skills into a `skills/` directory at the app root and the layer serves them at both [RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) paths: `/.well-known/skills/` (v0.1) and `/.well-known/agent-skills/` (v0.2). Users install them with:
 
 ```bash
 npx skills add https://your-docs-domain.com
@@ -98,12 +98,16 @@ my-docs/
             └─ api.md
 ```
 
-Each skill needs a `SKILL.md` whose frontmatter includes a `description`. `name` defaults to the directory name and must match the [Agent Skills naming spec](https://agentskills.io/specification#name-field) (lowercase letters, numbers and hyphens). Discovery:
+Each skill needs a `SKILL.md` whose frontmatter includes a `description`. `name` defaults to the directory name and must match the [Agent Skills naming spec](https://agentskills.io/specification#name-field) (lowercase letters, numbers and hyphens). The v0.2 index lists every skill as `skill-md` (SHA-256 of `SKILL.md`); supporting files are still served next to it. Discovery:
 
 ```
 GET /.well-known/skills/index.json
 GET /.well-known/skills/{skill-name}/SKILL.md
 GET /.well-known/skills/{skill-name}/references/api.md
+
+GET /.well-known/agent-skills/index.json
+GET /.well-known/agent-skills/{skill-name}/SKILL.md
+GET /.well-known/agent-skills/{skill-name}/references/api.md
 ```
 
 Override the directory with `comarkDocs.skills.dir` if it isn't `skills/`. Skills are scanned at build time from the filesystem (they ship with the app, not with GitHub-sourced content), so a skill change needs a redeploy.
