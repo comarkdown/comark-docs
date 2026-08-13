@@ -1,8 +1,8 @@
-import { mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'pathe'
 import { describe, expect, it } from 'vitest'
-import { resolveSkillFilePath, scanSkills } from '../utils'
+import { buildV2Catalog, resolveSkillFilePath, scanSkills, sha256Digest } from '../utils'
 
 async function skillsRoot(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'comark-skills-'))
@@ -120,5 +120,37 @@ describe('resolveSkillFilePath', () => {
     expect(resolveSkillFilePath('my-skill/SKILL.md\0.png')).toBeNull()
     expect(resolveSkillFilePath('my-skill')).toBeNull()
     expect(resolveSkillFilePath('')).toBeNull()
+  })
+})
+
+describe('buildV2Catalog', () => {
+  it('emits skill-md entries with a digest of SKILL.md', async () => {
+    const root = await skillsRoot()
+    await writeSkill(root, 'simple', '---\ndescription: One file.\n---\n')
+    await writeSkill(root, 'bundled', '---\ndescription: Many files.\n---\n', {
+      'references/api.md': '# API\n',
+    })
+
+    const { catalog } = await scanSkills(root)
+    const v2 = await buildV2Catalog(root, catalog)
+    const bundledMd = await readFile(join(root, 'bundled', 'SKILL.md'))
+    const simpleMd = await readFile(join(root, 'simple', 'SKILL.md'))
+
+    expect(v2).toEqual([
+      {
+        name: 'bundled',
+        type: 'skill-md',
+        description: 'Many files.',
+        url: '/.well-known/agent-skills/bundled/SKILL.md',
+        digest: sha256Digest(bundledMd),
+      },
+      {
+        name: 'simple',
+        type: 'skill-md',
+        description: 'One file.',
+        url: '/.well-known/agent-skills/simple/SKILL.md',
+        digest: sha256Digest(simpleMd),
+      },
+    ])
   })
 })

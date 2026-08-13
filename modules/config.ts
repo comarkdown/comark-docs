@@ -29,7 +29,8 @@ export interface ComarkDocsOptions {
   skills?: {
     /**
      * Directory, relative to the app root, scanned at build time for Agent Skills.
-     * Each subdirectory with a `SKILL.md` is published at `/.well-known/skills/`.
+     * Each subdirectory with a `SKILL.md` is published at `/.well-known/skills/` (v0.1)
+     * and `/.well-known/agent-skills/` (v0.2).
      * @default 'skills'
      */
     dir?: string

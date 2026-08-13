@@ -1,6 +1,7 @@
-import { resolveSkillFilePath, type SkillEntry } from '../../../utils'
+import { resolveSkillFilePath, V2_SCHEMA, type SkillEntry } from '../../../utils'
 
-const PREFIX = '/.well-known/skills/'
+const V1_PREFIX = '/.well-known/skills/'
+const V2_PREFIX = '/.well-known/agent-skills/'
 const CONTENT_TYPES: Record<string, string> = {
   '.md': 'text/markdown; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
@@ -18,16 +19,21 @@ function contentType(path: string): string {
   return (dot === -1 ? undefined : CONTENT_TYPES[path.slice(dot)]) || 'application/octet-stream'
 }
 
+function relativePath(pathname: string, prefix: string): string {
+  const idx = pathname.indexOf(prefix)
+  return idx === -1 ? '' : decodeURIComponent(pathname.slice(idx + prefix.length))
+}
+
 export default defineEventHandler(async (event) => {
   const url = getRequestURL(event)
-  const idx = url.pathname.indexOf(PREFIX)
-  const filePath = idx === -1 ? '' : decodeURIComponent(url.pathname.slice(idx + PREFIX.length))
+  const v2 = url.pathname === '/.well-known/agent-skills' || url.pathname.startsWith(V2_PREFIX)
+  const filePath = relativePath(url.pathname, v2 ? V2_PREFIX : V1_PREFIX)
   const { skills } = useRuntimeConfig(event)
 
   if (!filePath || filePath === 'index.json') {
     setHeader(event, 'content-type', 'application/json')
     setHeader(event, 'cache-control', 'public, max-age=3600')
-    return { skills: skills.catalog }
+    return v2 ? { $schema: V2_SCHEMA, skills: skills.v2 } : { skills: skills.catalog }
   }
 
   const resolved = resolveSkillFilePath(filePath)
@@ -35,8 +41,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Bad Request' })
   }
 
-  const catalog = skills.catalog as SkillEntry[]
-  const skill = catalog.find((entry) => entry.name === resolved.skillName)
+  const skill = (skills.catalog as SkillEntry[]).find((entry) => entry.name === resolved.skillName)
   if (!skill || !skill.files.includes(resolved.relativeFile)) {
     throw createError({ statusCode: 404, statusMessage: 'Not Found' })
   }
