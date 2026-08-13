@@ -17,8 +17,11 @@ useSeoMeta({
 })
 
 const { data: navigation } = await useAsyncData('navigation', () => prodContent.navigation())
-const { data: files } = useLazyAsyncData('search-sections', () => prodContent.searchSections(), {
-  server: false,
+
+const { search: localSearch, status: localSearchStatus, warmup } = useLocalSearch()
+const searchOpen = useContentSearch().open
+watch(searchOpen, (isOpen) => {
+  if (isOpen) warmup()
 })
 
 provide('navigation', navigation)
@@ -34,8 +37,10 @@ provide('navigation', navigation)
 
     <ClientOnly>
       <LazyUContentSearch
-        :files="files ?? []"
+        :search="localSearch"
+        :search-status="localSearchStatus"
         :navigation="navigation ?? []"
+        :loading="localSearchStatus === 'loading'"
       />
     </ClientOnly>
   </UApp>

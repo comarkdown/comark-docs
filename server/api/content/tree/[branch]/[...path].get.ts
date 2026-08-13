@@ -16,5 +16,7 @@ export default defineEventHandler(async (event) => {
   const sha = await resolveSha(branch, { cacheMisses: true })
   const content = await getPreviewContent(sha, `/api/content/tree/${encodeURIComponent(branch)}`)
 
+  await ensureSnapshotContent(content, path)
+
   return await content.handler(toWebRequest(event))
 })

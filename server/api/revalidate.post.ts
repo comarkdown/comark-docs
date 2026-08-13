@@ -146,8 +146,10 @@ export default defineEventHandler(async (event) => {
   // URL the browser loads (`…/_payload.json?<buildId>`).
   const buildId = useRuntimeConfig(event).app.buildId
 
-  // Any content change invalidates the llms indexes, the feed, and the body-derived search index.
-  const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/rss.xml', '/api/content/search-sections'])
+  // Any content change invalidates the llms indexes and the feed. The search artifacts need no
+  // purge: the client hydrates from SHA-pinned `/api/content/blob/<sha>/*` URLs, so a new head
+  // simply reads from new URLs and the old entries become unreachable.
+  const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/rss.xml'])
   for (const f of changedFiles) {
     const pageUrl = pageUrlForPath(f)
     if (pageUrl) {

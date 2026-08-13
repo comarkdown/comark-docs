@@ -1,4 +1,4 @@
-import { defineContentPlugin, type ComarkContent, type CacheOptions, comarkContent  } from 'comark-content';
+import { type ComarkContent, type CacheOptions, comarkContent } from 'comark-content';
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import rangi from 'comark/plugins/rangi'
@@ -26,14 +26,6 @@ const comarkPlugins = [
   }),
 ]
 
-// Bound to THIS instance so a preview content instance serves its own version's sections, not production's.
-const searchSectionsPlugin = defineContentPlugin(() => ({
-  name: 'search-sections',
-  setup(ctx) {
-    ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(ctx as unknown as ComarkContent)))
-  },
-}))()
-
 /**
  * Create a new content instance reading content at `ref` (a commit SHA or branch). `remote` forces the
  * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
@@ -55,7 +47,6 @@ export async function createSourceContent(
     },
     plugins: [
       yaml(), // enable .navigation.yml to be detected
-      searchSectionsPlugin,
       tracer && tracingOtel({ tracer }),
     ],
     cache: opts.cache,
@@ -74,6 +65,17 @@ export async function createSourceContent(
   }
 
   return instance
+}
+
+/**
+ * Snapshot artifacts must dump the full corpus, but the default init is partial (frontmatter only)
+ * and `cache.snapshot()` only sees bodies already in the cache. Upgrade the instance before serving
+ * a snapshot — memoized, so bodies parse once per instance (the FTS serve handler has the same guard).
+ */
+export async function ensureSnapshotContent(content: ComarkContent, path: string): Promise<void> {
+  if (path.startsWith('snapshot')) {
+    await content.init({ partial: false })
+  }
 }
 
 /** Production branch, resolved per request: content pushes skip redeploys (`vercel.json` `ignoreCommand`). */

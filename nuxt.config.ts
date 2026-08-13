@@ -42,6 +42,8 @@ export default defineNuxtConfig({
         'js-yaml',
         'markdown-exit',
       ],
+      // Pre-bundling would break the wasm/worker assets sqlite loads relative to its module URL.
+      exclude: ['@sqlite.org/sqlite-wasm'],
     },
   },
   nitro: {

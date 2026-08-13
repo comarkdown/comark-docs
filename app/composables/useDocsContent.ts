@@ -1,12 +1,10 @@
 import { createContentClient } from 'comark-content/client'
-import { searchSectionsClient } from '../utils/search-sections'
 import type { ContentMode } from '../types/content'
 import { withLeadingSlash } from 'ufo'
 
 export const prodContent = createContentClient({
   basePath: '/api/content',
   fetch: $fetch,
-  plugins: [searchSectionsClient()],
 })
 
 const clients = new Map<string, typeof prodContent>()
@@ -17,7 +15,6 @@ function getClient(basePath: string) {
     client = createContentClient({
       basePath,
       fetch: $fetch,
-      plugins: [searchSectionsClient()],
     })
     clients.set(basePath, client)
   }
