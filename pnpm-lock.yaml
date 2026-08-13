@@ -92,6 +92,9 @@ importers:
       exsolve:
         specifier: ^1.1.0
         version: 1.1.0
+      js-yaml:
+        specifier: ^5.2.1
+        version: 5.2.2
       motion-v:
         specifier: ^2.3.0
         version: 2.3.0(@vueuse/core@14.3.0(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))

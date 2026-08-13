@@ -8,7 +8,7 @@ export default defineConfig({
   // `transformSync`, hence the cast.
   oxc: { tsconfig: false } as never,
   test: {
-    include: ['test/**/*.test.ts'],
+    include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
     setupFiles: ['test/setup.ts'],
     environment: 'node',
   },

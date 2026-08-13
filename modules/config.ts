@@ -26,6 +26,14 @@ export interface ComarkDocsOptions {
     /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
   }
+  skills?: {
+    /**
+     * Directory, relative to the app root, scanned at build time for Agent Skills.
+     * Each subdirectory with a `SKILL.md` is published at `/.well-known/skills/`.
+     * @default 'skills'
+     */
+    dir?: string
+  }
 }
 
 export default defineNuxtModule<ComarkDocsOptions>({
