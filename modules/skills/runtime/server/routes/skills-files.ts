@@ -1,4 +1,4 @@
-import { resolveSkillFilePath, V2_SCHEMA, type SkillEntry } from '../../../../../utils/skills'
+import { resolveSkillFilePath, V2_SCHEMA, type SkillEntry } from '../../../utils'
 
 const V1_PREFIX = '/.well-known/skills/'
 const V2_PREFIX = '/.well-known/agent-skills/'

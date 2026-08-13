@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { lstat, readdir, readFile, stat } from 'node:fs/promises'
+import { load as parseYaml } from 'js-yaml'
 import { isAbsolute, join, normalize } from 'pathe'
-import { parse as parseYaml } from 'yaml'
 
 export interface SkillEntry {
   name: string
