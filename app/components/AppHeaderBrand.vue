@@ -76,7 +76,7 @@ onMounted(() => {
       :aria-label="header?.logo?.alt || header?.title"
       class="text-highlighted!"
     >
-      <AppHeaderLogo class="shrink-0" />
+      <AppHeaderLogo class="shrink-0" :class="{ 'lg:mr-4': !ecosystem.length }" />
     </NuxtLink>
 
     <UPopover
