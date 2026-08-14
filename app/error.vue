@@ -18,12 +18,6 @@ useSeoMeta({
 
 const { data: navigation } = await useAsyncData('navigation', () => prodContent.navigation())
 
-const { search: localSearch, status: localSearchStatus, warmup } = useLocalSearch()
-const searchOpen = useContentSearch().open
-watch(searchOpen, (isOpen) => {
-  if (isOpen) warmup()
-})
-
 provide('navigation', navigation)
 </script>
 
@@ -35,13 +29,6 @@ provide('navigation', navigation)
 
     <AppFooter />
 
-    <ClientOnly>
-      <LazyUContentSearch
-        :search="localSearch"
-        :search-status="localSearchStatus"
-        :navigation="navigation ?? []"
-        :loading="localSearchStatus === 'loading'"
-      />
-    </ClientOnly>
+    <AppSearch :navigation="navigation ?? []" />
   </UApp>
 </template>

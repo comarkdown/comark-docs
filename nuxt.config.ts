@@ -33,6 +33,7 @@ export default defineNuxtConfig({
     resolve: {
       alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
     },
+    worker: { format: 'es' },
     optimizeDeps: {
       include: [
         'beautiful-mermaid',

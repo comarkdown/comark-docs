@@ -9,13 +9,6 @@ const { data: navigation } = await useAsyncData('navigation', () => content.valu
   watch: [() => content.value.base],
 })
 
-const { search, status, warmup } = useLocalSearch()
-
-const searchOpen = useContentSearch().open
-watch(searchOpen, (isOpen) => {
-  if (isOpen) warmup()
-})
-
 const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
 
 useHead({
@@ -78,14 +71,9 @@ defineShortcuts({
 
     <AppFooter />
 
+    <AppSearch :navigation="navTree" />
+
     <ClientOnly>
-      <LazyUContentSearch
-        :search="search"
-        :search-status="status"
-        :navigation="navTree"
-        :transition="false"
-        :loading="status === 'loading'"
-      />
       <LazyVersionHistory />
       <LazyAssistantChat v-if="assistant?.enabled && assistantMounted" />
     </ClientOnly>

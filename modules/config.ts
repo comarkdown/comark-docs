@@ -166,7 +166,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
         '/rss.xml': { isr },
-        // Per-commit artifacts hydrating the client-side search database (see `useLocalSearch`)
+        // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
         '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
         '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
         '/api/content/tree/*/manifest.json': { isr },
