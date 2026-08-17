@@ -10,11 +10,11 @@ const { header } = useAppConfig()
 const brand = computed(() =>
   header?.logo?.mark === 'comark-content'
     ? {
-      logo: 'comark-content',
+      logo: 'comark-content' as const,
       name: 'Comark Content',
       tagline: 'The content layer for Markdown.'
     } : {
-      logo: 'comark',
+      logo: 'comark' as const,
       name: 'Comark',
       tagline: 'The open-source Markdown parser and renderer.',
     },
