@@ -11,6 +11,8 @@ export type SearchWorkerPayload =
     type: 'warmup'
     apiBase: string
     origin: string
+    /** Turns on the worker's hydration logging. Resolved on the main thread, which owns `?debug=search`. */
+    debug?: boolean
   }
   | {
     type: 'search',

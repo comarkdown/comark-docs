@@ -9,6 +9,14 @@ let worker: Worker | undefined
 let nextId = 0
 const pending = new Map<number, { resolve: (results: SearchResult[]) => void, reject: (error: Error) => void }>()
 
+/**
+ * Hydration logging switch: `?debug=search`
+ */
+function searchDebug(): boolean {
+  if (!import.meta.client) return false
+  return new URLSearchParams(location.search).get('debug') === 'search'
+}
+
 function getWorker(): Worker {
   if (worker) return worker
 
@@ -18,13 +26,17 @@ function getWorker(): Worker {
     const message = event.data
     if (message.type === 'status') {
       status.value = message.value
+      if (searchDebug()) console.info(`[search] status -> ${message.value}`)
       return
     }
     const settle = pending.get(message.id)
     if (!settle) return
     pending.delete(message.id)
     if (message.type === 'result') settle.resolve(message.results)
-    else settle.reject(new Error(message.message))
+    else {
+      if (searchDebug()) console.error(`[search] request ${message.id} failed:`, message.message)
+      settle.reject(new Error(message.message))
+    }
   }
 
   worker.onerror = () => {
@@ -73,7 +85,10 @@ export function useSearch() {
       // Immutable per-commit artifacts, CDN-cached forever. Only unpinned in dev, per the guard above.
       const apiBase = headSha.value ? `/api/content/blob/${headSha.value}` : '/api/content'
 
-      await request({ type: 'warmup', apiBase, origin: location.origin })
+      const debug = searchDebug()
+      if (debug) console.info(`[search] warmup from ${apiBase} (head ${headSha.value ?? 'unpinned'})`)
+
+      await request({ type: 'warmup', apiBase, origin: location.origin, debug })
     } catch (error) {
       status.value = 'error'
       console.error('[search] could not load the search database', error)

@@ -9,10 +9,11 @@
  *
  * Not a Nuxt-scanned directory, so nothing here is auto-imported.
  */
-import { comarkContent } from 'comark-content'
+import { comarkContent, readArtifact } from 'comark-content'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import { ofetch } from 'ofetch'
+import { describeArtifact, indexedRows, isDebug, log, logger, setDebug, since } from './search-logger'
 import type { CacheArtifact, ComarkContent } from 'comark-content'
 import type { SqliteFullTextSearchMethods } from 'comark-content/plugins/sqlite-full-text-search'
 import type { SearchWorkerRequest, SearchWorkerResponse } from '../types/search-worker'
@@ -40,27 +41,58 @@ function setStatus(value: Exclude<SearchStatus, 'idle'>): void {
  * a message behind, so two warmups fired in the same tick would both get through it.
  */
 async function loadDatabase(apiBase: string, origin: string): Promise<void> {
-  if (status === 'loading' || status === 'ready') return
+  if (status === 'loading' || status === 'ready') {
+    log(`warmup ignored — already ${status}`)
+    return
+  }
 
   setStatus('loading')
+  const started = performance.now()
   try {
-    const fetchArtifact = (path: string) => ofetch<CacheArtifact>(new URL(path, origin).href)
+    const fetchArtifact = async (path: string): Promise<CacheArtifact> => {
+      const url = new URL(path, origin).href
+      const fetchStarted = performance.now()
+      try {
+        const artifact = await ofetch<CacheArtifact>(url)
+        if (isDebug()) {
+          let contents: string
+          try {
+            contents = describeArtifact(await readArtifact(artifact))
+          } catch (error) {
+            contents = `undecodable: ${error instanceof Error ? error.message : String(error)}`
+          }
+          log(`fetched ${path} in ${since(fetchStarted)} — ${artifact?.size ?? 0} bytes, ${contents}`)
+        }
+        return artifact
+      } catch (error) {
+        log(`failed ${path} after ${since(fetchStarted)}`, error)
+        throw error
+      }
+    }
 
+    // Held rather than inlined into the plugin so the row count below can query the index directly.
+    const database = sqliteWasm()
     const content = comarkContent({
       cache: {
         loadManifest: () => fetchArtifact(`${apiBase}/manifest.json`),
         loadSnapshot: (source: string) => fetchArtifact(`${apiBase}/snapshot/${source}.json`),
       },
-      plugins: [sqliteFullTextSearch({ database: sqliteWasm() })],
+      plugins: [sqliteFullTextSearch({ database })],
+      logger,
     })
 
     await content.init()
+
+    const indexStarted = performance.now()
     await content.search(['content'], '') // pulls the snapshot in and builds the FTS index
+    log(`index built in ${since(indexStarted)} — ${await indexedRows(database, 'content')} row(s)`)
 
     instance = content
     setStatus('ready')
+    log(`ready in ${since(started)}`)
   } catch (error) {
     setStatus('error')
+    log(`hydration failed after ${since(started)}`, error)
     throw error
   }
 }
@@ -69,11 +101,13 @@ self.onmessage = async (event: MessageEvent<SearchWorkerRequest>) => {
   const request = event.data
   try {
     if (request.type === 'warmup') {
+      setDebug(request.debug === true)
       await loadDatabase(request.apiBase, request.origin)
       post({ type: 'result', id: request.id, results: [] })
       return
     }
 
+    const queryStarted = performance.now()
     const results = instance
       ? await instance.search(['content'], request.query, {
           limit: 25,
@@ -81,9 +115,10 @@ self.onmessage = async (event: MessageEvent<SearchWorkerRequest>) => {
           ...request.opts,
         })
       : []
+    if (!instance) log(`dropped query "${request.query}" — no instance yet (status ${status})`)
+    else log(`query "${request.query}" -> ${results.length} result(s) in ${since(queryStarted)}`)
     post({ type: 'result', id: request.id, results })
   } catch (error) {
-    // Serialized rather than cloned: plugin errors can carry non-transferable properties.
     post({ type: 'error', id: request.id, message: error instanceof Error ? error.message : String(error) })
   }
 }
