@@ -380,13 +380,13 @@ packages:
     resolution: {integrity: sha512-3PxTH8itZzltK0U9jTwVVnjLXvnDYuq3m+QXsHkENxWiPRh4WaoLcs1SQjqgZ55kS+QyirpH5BVwzP2gMVG6EQ==}
 
   '@comark/nuxt@https://pkg.pr.new/@comark/nuxt@af8d3e8':
-    resolution: {tarball: https://pkg.pr.new/@comark/nuxt@af8d3e8}
+    resolution: {integrity: sha512-DB1uYeorYZOJGqEIqxkGzOtnW2Zq2t4Ov9dOmi/H9qAymwPXiON1esTAne72jaJ+pBnMKaFat5JDObbNe0PDUA==, tarball: https://pkg.pr.new/@comark/nuxt@af8d3e8}
     version: 0.6.2
     peerDependencies:
       nuxt: ^4.0.0
 
   '@comark/vue@https://pkg.pr.new/comarkdown/comark/@comark/vue@af8d3e8':
-    resolution: {tarball: https://pkg.pr.new/comarkdown/comark/@comark/vue@af8d3e8}
+    resolution: {integrity: sha512-Rsbr+USFlvSJOgDGOG61yQtS5V3Ms7maGofb9RnaxLHdVlBqewGlkhdS14xRz9ONOjCg717PumDMdz4IpundWA==, tarball: https://pkg.pr.new/comarkdown/comark/@comark/vue@af8d3e8}
     version: 0.6.2
     peerDependencies:
       beautiful-mermaid: ^1.1.3
@@ -3600,7 +3600,7 @@ packages:
         optional: true
 
   comark@https://pkg.pr.new/comark@af8d3e8:
-    resolution: {tarball: https://pkg.pr.new/comark@af8d3e8}
+    resolution: {integrity: sha512-w4UJSGwzUf+W8qp2eGxf7dCwJgQPVJvTM8GLpibYHRelLImjwVEMA10pkGNQOumdi8QgTIDWWcba+JO1CFrTcg==, tarball: https://pkg.pr.new/comark@af8d3e8}
     version: 0.6.2
     peerDependencies:
       beautiful-mermaid: ^1.1.3
@@ -3618,7 +3618,7 @@ packages:
         optional: true
 
   comark@https://pkg.pr.new/comarkdown/comark/comark@af8d3e8:
-    resolution: {tarball: https://pkg.pr.new/comarkdown/comark/comark@af8d3e8}
+    resolution: {integrity: sha512-w4UJSGwzUf+W8qp2eGxf7dCwJgQPVJvTM8GLpibYHRelLImjwVEMA10pkGNQOumdi8QgTIDWWcba+JO1CFrTcg==, tarball: https://pkg.pr.new/comarkdown/comark/comark@af8d3e8}
     version: 0.6.2
     peerDependencies:
       beautiful-mermaid: ^1.1.3
