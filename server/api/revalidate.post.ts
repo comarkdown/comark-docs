@@ -188,13 +188,9 @@ export default defineEventHandler(async (event) => {
           throw err
         })
 
-      // Warm the per-SHA body cache so cold instances skip re-parsing from GitHub.
-      // `metaOnly` became `partial` in comark-content 0.2.0 with no alias and consumers straddle both,
-      // so send both keys — each version ignores the other's. Not inlined: as a literal,
-      // excess-property checking rejects whichever key the installed types don't declare.
-      const full = { partial: false, metaOnly: false }
-      await headContent.init(full).catch((err) => {
-        console.error(`${tag} cache warm failed`, err?.message ?? err)
+      // Warms the per-SHA body cache and persists the snapshot artifact
+      await warmSnapshot(headContent).catch((err) => {
+        console.error(`${tag} snapshot warm failed`, err?.message ?? err)
       })
 
       await useStorage('cache:nuxt:payload').clear()

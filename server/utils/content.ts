@@ -68,14 +68,12 @@ export async function createSourceContent(
 }
 
 /**
- * Snapshot artifacts must dump the full corpus, but the default init is partial (frontmatter only)
- * and `cache.snapshot()` only sees bodies already in the cache. Upgrade the instance before serving
- * a snapshot — memoized, so bodies parse once per instance (the FTS serve handler has the same guard).
+ * Fully parse and persist the snapshot artifact into this instance's per-SHA cache.
  */
-export async function ensureSnapshotContent(content: ComarkContent, path: string): Promise<void> {
-  if (path.startsWith('snapshot')) {
-    await content.init({ partial: false })
-  }
+export async function warmSnapshot(content: ComarkContent): Promise<void> {
+  await content.init({ partial: false })
+  const artifact = await content.cache.snapshot('content', { fresh: false })
+  console.log(`[content] snapshot artifact ${artifact ? `${artifact.size} bytes` : 'not produced'}`)
 }
 
 /** Production branch, resolved per request: content pushes skip redeploys (`vercel.json` `ignoreCommand`). */

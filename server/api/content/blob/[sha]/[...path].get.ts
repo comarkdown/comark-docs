@@ -21,7 +21,6 @@ export default defineEventHandler(async (event) => {
   if (sha === getHeadRef()) {
     const prod = await getProdContent()
     if (sha === getHeadRef()) {
-      await ensureSnapshotContent(prod, path)
       const request = toWebRequest(event)
       const url = new URL(request.url)
       url.pathname = url.pathname.replace(`/blob/${rawSha}`, '')
@@ -30,8 +29,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const content = await getPreviewContent(sha, `/api/content/blob/${sha}`)
-
-  await ensureSnapshotContent(content, path)
 
   return await content.handler(toWebRequest(event))
 })
