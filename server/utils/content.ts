@@ -86,18 +86,19 @@ export function targetBranch(): string {
 let headRef: string | undefined
 
 export function getHeadRef(): string {
-  headRef ??= process.env.VERCEL_GIT_COMMIT_SHA || targetBranch()
+  headRef ??= targetBranch()
   return headRef
 }
 
 /**
  * Shared content instance for the lifetime of this server instance, pinned to `headRef`. In production every
- * call resolves the tip of `targetBranch()` via `resolveSha()` — a shared, short-TTL cache, not a
- * per-instance timer — and rebuilds when it advances. Previews stay pinned to their build commit.
+ * call resolves the latest commit touching the content directory via `resolveContentSha()` — a shared,
+ * short-TTL cache, not a per-instance timer — and rebuilds when that advances. Previews stay pinned.
  */
 export async function getProdContent(): Promise<ComarkContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
-    const sha = await resolveSha(targetBranch())
+    const { contentDir } = useRuntimeConfig().docs
+    const sha = await resolveContentSha(targetBranch(), contentDir)
     if (sha !== getHeadRef()) {
       console.log(`[content] head ${getHeadRef()} -> ${sha}`)
       headRef = sha

@@ -9,11 +9,11 @@ interface SearchSection {
 }
 
 // Building the index parses every document — the most expensive read in the app. The built sections
-// are persisted in `content.cache`, whose driver is namespaced per SHA (`content:${sha}`), so the
-// index survives cold starts, is shared across lambda instances in the region, and a stale index is
-// unreachable: a new head or preview SHA reads from a fresh namespace. Colon-free so it can't collide
-// with `<source>:<path>` content keys, the `manifest` key, or the shared `gh:` namespace, and the SWR
-// fallback in `cache.get` (`key.split(':')`) can't map it to a real source.
+// are persisted in `content.cache`, whose driver is namespaced per deployment and content SHA, so the
+// index survives cold starts, is shared across lambda instances in the region, and stale parser output
+// is unreachable. Colon-free so it can't collide with `<source>:<path>` content keys, the `manifest`
+// key, or the shared `gh:` namespace, and the SWR fallback in `cache.get` (`key.split(':')`) can't map
+// it to a real source.
 const SEARCH_SECTIONS_KEY = 'search-sections'
 
 /**
