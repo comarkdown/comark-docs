@@ -14,19 +14,16 @@ function cacheAvailable(): boolean {
 }
 
 /**
- * Runtime Cache persists across deployments within one Vercel environment. Include the deployment's
- * code revision so a parser/plugin change cannot restore artifacts produced by older code.
+ * Bump when content parser/plugin configuration, relevant parser dependencies, or cached derived
+ * data changes. Keeping this explicit lets unrelated deployments reuse immutable content artifacts.
  */
-export function contentCacheBase(sha: string): string {
-  const deploymentRef = process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID
-  return deploymentRef ? `content:${deploymentRef}:${sha}` : `content:${sha}`
-}
+export const CONTENT_PARSER_VERSION = 'v1'
 
-/** Per-deployment, per-content-SHA driver backing comark's manifest and parsed bodies. */
+/** Per-parser-version, per-content-SHA driver backing comark's manifest and parsed bodies. */
 export function cacheDriver(sha: string): Driver {
   if (!cacheAvailable()) return memoryDriver()
   return vercelRuntimeCache({
-    base: contentCacheBase(sha),
+    base: `content:${CONTENT_PARSER_VERSION}:${sha}`,
     ttl: TTL,
   })
 }

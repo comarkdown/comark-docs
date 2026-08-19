@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { contentCacheBase } from '../server/utils/cache'
 import { resolveContentSha } from '../server/utils/github'
 
 afterEach(() => {
@@ -40,18 +39,5 @@ describe('resolveContentSha', () => {
     await expect(resolveContentSha('test/refresh', 'docs/content', { refresh: true })).resolves.toBe('after')
     await expect(resolveContentSha('test/refresh', 'docs/content')).resolves.toBe('after')
     expect(fetch).toHaveBeenCalledTimes(2)
-  })
-})
-
-describe('contentCacheBase', () => {
-  it('isolates parsed artifacts by deployment code revision', () => {
-    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'deployment-sha')
-    expect(contentCacheBase('content-sha')).toBe('content:deployment-sha:content-sha')
-  })
-
-  it('falls back to the deployment id outside Git deployments', () => {
-    vi.stubEnv('VERCEL_GIT_COMMIT_SHA', '')
-    vi.stubEnv('VERCEL_DEPLOYMENT_ID', 'deployment-id')
-    expect(contentCacheBase('content-sha')).toBe('content:deployment-id:content-sha')
   })
 })

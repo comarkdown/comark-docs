@@ -18,7 +18,7 @@ Content is served at request time. Production is pinned to a commit SHA; any bra
 
 Raw markdown mirrors exist at `/raw/**` (and under `/tree/.../raw/` / `/blob/.../raw/`).
 
-Two cache tiers: ISR-cached page HTML at the edge, and a per-deployment, per-content-SHA runtime cache for parsed Markdown bodies. A GitHub push to the production branch hits `/api/revalidate` and purges ISR.
+Two cache tiers: ISR-cached page HTML at the edge, and a per-parser-version, per-content-SHA runtime cache for parsed Markdown bodies. A GitHub push to the production branch hits `/api/revalidate` and purges ISR.
 
 Keyboard shortcut `g` `h` toggles the version-history panel on a docs page.
 

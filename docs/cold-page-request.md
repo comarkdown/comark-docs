@@ -61,6 +61,7 @@ which writes the latest content SHA into the same shared ref cache before fannin
 purges for the affected pages, so a freshly-purged page's next render already
 sees the new SHA instead of waiting out the 60s TTL.
 
-Parsed manifests and bodies live under a deployment-revision + content-SHA namespace. Vercel
-Runtime Cache persists across deployments within an environment, so the deployment component keeps
-new parser or plugin code from restoring artifacts produced by an older deployment.
+Parsed manifests and bodies live under a parser-version + content-SHA namespace. Vercel
+Runtime Cache persists across deployments within an environment, so unrelated deployments can reuse
+immutable content artifacts. `CONTENT_PARSER_VERSION` must be bumped when parser/plugin configuration,
+relevant parser dependencies, or cached derived data changes.

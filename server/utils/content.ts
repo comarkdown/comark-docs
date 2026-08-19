@@ -15,6 +15,7 @@ import { contentTracer } from './tracer.ts'
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
 let content: Promise<ComarkContent> | undefined
 
+// Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
   rangi({ theme: { light: githubLight, dark: githubDark } }),
