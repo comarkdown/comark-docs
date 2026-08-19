@@ -5,10 +5,7 @@ const props = defineProps<{
   navigation: NavigationItem[]
 }>()
 
-// Setup runs on the server too (the `ClientOnly` is inside, around the palette), so `useSearch`'s
-// head-sha `useAsyncData` still resolves during SSR and ships in the payload.
 const { search, status } = useSearch()
-
 
 const appConfig = useAppConfig()
 
