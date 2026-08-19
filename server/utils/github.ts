@@ -39,16 +39,18 @@ export function githubToken(): string | undefined {
   return docs.githubToken || process.env.GITHUB_TOKEN || undefined
 }
 
-// Branch → commit SHA pointer, shared across every instance so only one pays for the GitHub API
-// call per TTL window. See `refCacheDriver()` for the single-region assumption this relies on.
+// Branch + content directory → content commit SHA pointer, shared across every instance so only one
+// pays for the GitHub API call per TTL window. See `refCacheDriver()` for the single-region assumption.
 const refStorage = createStorage({ driver: refCacheDriver() })
-const refKey = (branch: string) => `branch:${branch}`
+const normalizeContentDir = (contentDir: string) => contentDir.replace(/^\/+|\/+$/g, '')
+const refKey = (branch: string, contentDir: string) =>
+  `branch:${encodeURIComponent(branch)}:path:${encodeURIComponent(normalizeContentDir(contentDir))}`
 
-/** Sentinel for "this ref doesn't resolve" — see the negative caching in `resolveSha`. */
+/** Sentinel for "this ref doesn't resolve" — see the negative caching in `resolveContentSha`. */
 const UNRESOLVED = '\0unresolved'
 
 /**
- * Resolve a branch name to its tip commit SHA.
+ * Resolve a branch to the latest commit that touched `contentDir`.
  *
  * Callers serving attacker-supplied refs must set `cacheMisses`: `/tree/:branch` is public, so with
  * no negative entry every missing-branch request costs an authenticated GitHub call — an
@@ -56,45 +58,55 @@ const UNRESOLVED = '\0unresolved'
  * must not be negative-cached: GitHub answers 404, not 403, for a repo a token can't see, so a
  * rotated token looks like a missing ref and caching that downs the site for the TTL.
  */
-export async function resolveSha(branch: string, opts: { cacheMisses?: boolean } = {}): Promise<string> {
+export async function resolveContentSha(
+  branch: string,
+  contentDir: string,
+  opts: { cacheMisses?: boolean; refresh?: boolean } = {}
+): Promise<string> {
   if (import.meta.dev) return branch
 
-  const cached = await refStorage.getItem<string>(refKey(branch))
-  if (cached === UNRESOLVED) {
-    throw createError({ statusCode: 404, statusMessage: `Ref not found: ${branch}` })
+  const key = refKey(branch, contentDir)
+  if (!opts.refresh) {
+    const cached = await refStorage.getItem<string>(key)
+    if (cached === UNRESOLVED) {
+      throw createError({ statusCode: 404, statusMessage: `Ref not found: ${branch}` })
+    }
+    if (cached) return cached
   }
-  if (cached) return cached
 
   const token = githubToken()
-  let commit: { sha: string }
+  let commits: Array<{ sha: string }>
   try {
-    commit = await $fetch<{ sha: string }>(`https://api.github.com/repos/${githubRepo()}/commits/${branch}`, {
+    commits = await $fetch<Array<{ sha: string }>>(`https://api.github.com/repos/${githubRepo()}/commits`, {
       headers: {
         Accept: 'application/vnd.github+json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      query: {
+        sha: branch,
+        path: normalizeContentDir(contentDir),
+        per_page: 1,
+      },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Only a definitive 404 is cacheable; a 5xx, rate-limit 403 or network blip stays retryable.
-    const status = error?.statusCode ?? error?.response?.status
+    const failure = error as { statusCode?: number; response?: { status?: number } }
+    const status = failure.statusCode ?? failure.response?.status
     if (status === 404) {
-      if (opts.cacheMisses) await refStorage.setItem(refKey(branch), UNRESOLVED)
+      if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED)
       throw createError({ statusCode: 404, statusMessage: `Ref not found: ${branch}` })
     }
     throw error
   }
 
-  await refStorage.setItem(refKey(branch), commit.sha)
-  return commit.sha
-}
+  const sha = commits[0]?.sha
+  if (!sha) {
+    if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED)
+    throw createError({ statusCode: 404, statusMessage: `Content not found at ref: ${branch}` })
+  }
 
-/**
- * Write-through, so the revalidate webhook needn't wait for the next `resolveSha` TTL window — this
- * stops freshly-purged ISR pages re-rendering against a stale SHA. Reaches only the region running
- * it (see `refCacheDriver()`); other regions self-heal via TTL.
- */
-export async function cacheSha(branch: string, sha: string): Promise<void> {
-  await refStorage.setItem(refKey(branch), sha)
+  await refStorage.setItem(key, sha)
+  return sha
 }
 
 export interface PageCommit {
