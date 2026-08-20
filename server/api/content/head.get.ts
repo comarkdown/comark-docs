@@ -1,8 +1,9 @@
 /**
- * The commit SHA production content is pinned to, or `null` in dev
+ * The commit SHA production content is pinned to, or `null` in dev.
  */
-export default defineEventHandler(async () => {
-  await getProdContent()
+export default defineEventHandler(async (event) => {
+  if (import.meta.dev) return { sha: null }
 
-  return { sha: import.meta.dev ? null : getHeadRef() }
+  const { contentDir } = useRuntimeConfig(event).docs
+  return { sha: await resolveContentSha(targetBranch(), contentDir) }
 })
