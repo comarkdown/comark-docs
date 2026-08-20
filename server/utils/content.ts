@@ -73,7 +73,7 @@ export async function createSourceContent(
  */
 export async function warmSnapshot(content: ComarkContent): Promise<void> {
   await content.init({ partial: false })
-  const artifact = await content.cache.snapshot('content', { fresh: false })
+  const artifact = await content.cache.snapshot('content')
   console.log(`[content] snapshot artifact ${artifact ? `${artifact.size} bytes` : 'not produced'}`)
 }
 
