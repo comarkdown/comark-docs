@@ -33,6 +33,7 @@ export default defineNuxtConfig({
     resolve: {
       alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
     },
+    worker: { format: 'es' },
     optimizeDeps: {
       include: [
         'beautiful-mermaid',
@@ -42,6 +43,8 @@ export default defineNuxtConfig({
         'js-yaml',
         'markdown-exit',
       ],
+      // Pre-bundling would break the wasm/worker assets sqlite loads relative to its module URL.
+      exclude: ['@sqlite.org/sqlite-wasm'],
     },
   },
   nitro: {

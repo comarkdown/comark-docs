@@ -159,17 +159,18 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/logos': { isr },
         // Previews are served live (SSR) off Runtime Cache; `/blob/**` is immutable commit HTML.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
-        '/blob/**': { isr: true, robots: 'noindex, nofollow' },
+        '/blob/**': { isr: true, robots: 'noindex, nofollow' }, // Immutable since SHA-pinned
         // Raw markdown mirrors of every page, for agents.
         '/raw/**': { isr, robots: 'noindex' },
         // Global content indexes, purged by the push webhook on content changes.
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
         '/rss.xml': { isr },
-        // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
-        '/api/content/blob/*/search-sections': { isr: true },
-        '/api/content/tree/*/search-sections': { isr },
-        '/api/content/search-sections': { isr },
+        // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
+        '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
+        '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
+        '/api/content/tree/*/manifest.json': { isr },
+        '/api/content/tree/*/snapshot/*': { isr },
         '/api/code-explorer/**': { isr },
       }
 

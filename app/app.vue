@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
-import type { SearchSection } from './utils/search-sections'
 
 const { seo, docs } = useAppConfig()
 
@@ -9,25 +8,8 @@ const content = useDocsContent()
 const { data: navigation } = await useAsyncData('navigation', () => content.value.client.navigation(), {
   watch: [() => content.value.base],
 })
-const {
-  data: files,
-  status,
-  execute: loadSearchSections,
-} = useLazyAsyncData('search-sections', () => content.value.client.searchSections(), {
-  server: false,
-  watch: [() => content.value.base],
-  immediate: false,
-})
-
-onNuxtReady(() => loadSearchSections())
 
 const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
-const searchFiles = computed<SearchSection[]>(() =>
-  (files.value ?? []).map((section) => {
-    const [path, hash] = section.id.split('#')
-    return { ...section, id: prefixLink(path!, content.value.base) + (hash ? `#${hash}` : '') }
-  })
-)
 
 useHead({
   meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
@@ -89,14 +71,9 @@ defineShortcuts({
 
     <AppFooter />
 
+    <AppSearch :navigation="navTree" />
+
     <ClientOnly>
-      <LazyUContentSearch
-        :files="searchFiles"
-        :navigation="navTree"
-        :transition="false"
-        :loading="status !== 'success'"
-        :placeholder="status !== 'success' ? 'Loading...' : undefined"
-      />
       <LazyVersionHistory />
       <LazyAssistantChat v-if="assistant?.enabled && assistantMounted" />
     </ClientOnly>
