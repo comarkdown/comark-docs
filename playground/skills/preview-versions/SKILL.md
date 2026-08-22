@@ -22,4 +22,4 @@ Two cache tiers: ISR-cached page HTML at the edge, and a per-parser-version, per
 
 Keyboard shortcut `g` `h` toggles the version-history panel on a docs page.
 
-Read more: [Architecture](/concepts/architecture).
+Read more: [Architecture](/concepts/architecture), [Versioned previews](/concepts/versioned-previews).
