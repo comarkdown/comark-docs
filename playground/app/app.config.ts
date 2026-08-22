@@ -2,10 +2,10 @@
 // ecosystem popover, and the footer credit line.
 export default defineAppConfig({
   seo: {
-    siteName: 'Comark Docs',
+    siteName: 'Comark Docs Template',
   },
   header: {
-    title: 'Comark Docs',
+    title: 'Comark Docs Template',
     logo: {
       mark: 'comark',
     },
