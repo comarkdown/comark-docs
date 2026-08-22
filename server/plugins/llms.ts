@@ -34,6 +34,16 @@ export default defineNitroPlugin((nitroApp: NitroApp) => {
       links: introLinks,
     })
 
+    // Agent guidance first: tells an agent *when* to reach for this site before it reads the index.
+    const whenToUse = appConfig.docs?.llms?.whenToUse
+    if (whenToUse) {
+      options.sections.unshift({
+        title: `When to use ${siteName}`,
+        description: whenToUse,
+        links: [],
+      })
+    }
+
     for (const item of navigation) {
       if (!item.children?.length) continue
 

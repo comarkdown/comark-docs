@@ -73,10 +73,20 @@ export default defineNuxtSchema({
       llms: {
         /** Description emitted under the llms.txt heading. */
         description: '',
+        /**
+         * "When to use" guidance for agents, emitted as the first llms.txt section (markdown).
+         * Name the jobs the product is right for and how an agent should call it. Empty = no section.
+         */
+        whenToUse: '',
         /** Extra links appended to llms.txt. */
         links: [],
       },
-      /** schema.org SoftwareApplication identity, emitted as JSON-LD on the landing page. Empty = none. */
+      /**
+       * schema.org SoftwareApplication identity, emitted as JSON-LD on the landing page. Empty = none.
+       * The `organization` sub-key is emitted as a separate top-level Organization node — give it
+       * `contactPoint` (with `contactType` and an email or phone) and `address` (a `PostalAddress`)
+       * so agents can verify the business behind the site.
+       */
       schemaOrg: {},
       /** Extra links appended to the docs page aside. */
       asideLinks: [],

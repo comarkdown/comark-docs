@@ -110,7 +110,6 @@ const items = [
       :ui="{ list: 'gap-2.5' }"
     />
     <UButton
-      :disabled="content.mode !== 'prod'"
       :loading="copying"
       :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
       :color="copied ? 'success' : 'neutral'"

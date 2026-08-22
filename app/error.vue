@@ -22,13 +22,48 @@ const { data: files } = useLazyAsyncData('search-sections', () => prodContent.se
 })
 
 provide('navigation', navigation)
+
+// First real docs page, so a dead link still offers a way into the content.
+const docsLink = computed(() => findFirstPagePath(navigation.value ?? []) ?? '/')
+
+interface NavigationNode {
+  path?: string
+  page?: boolean
+  children?: NavigationNode[]
+}
+
+function findFirstPagePath(items: NavigationNode[]): string | undefined {
+  for (const item of items) {
+    if (item.page !== false && item.path && item.path !== '/') return item.path
+    if (item.children?.length) {
+      const child = findFirstPagePath(item.children)
+      if (child) return child
+    }
+  }
+}
 </script>
 
 <template>
   <UApp>
     <AppHeader />
 
-    <UError :error="error" />
+    <UError :error="error">
+      <template #links>
+        <UButton
+          size="lg"
+          color="primary"
+          label="Back to home"
+          to="/"
+        />
+        <UButton
+          size="lg"
+          color="neutral"
+          variant="outline"
+          label="Documentation"
+          :to="docsLink"
+        />
+      </template>
+    </UError>
 
     <AppFooter />
 
