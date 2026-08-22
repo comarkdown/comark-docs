@@ -22,3 +22,4 @@ minimumReleaseAgeExclude:
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
+  "@nuxt/cli": "https://pkg.pr.new/@nuxt/cli@1463"
