@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import shiki from '@comark/nuxt/plugins/shiki'
+import githubLight from '@shikijs/themes/github-light'
+import githubDark from '@shikijs/themes/github-dark'
 
 const props = defineProps<{
   /** Markdown source: shown highlighted in the source tab, rendered live in the output tab. */
@@ -8,7 +10,15 @@ const props = defineProps<{
   playground?: string
 }>()
 
-const plugins = [shiki()]
+const plugins = [
+  shiki({
+    themes: {
+      light: githubLight,
+      dark: githubDark
+    },
+    registerDefaultThemes: false
+  })
+]
 
 // Four-backtick fence so fenced code blocks inside the demo source don't close it early.
 const sourceAsCode = computed(() => ['````md', props.source, '````'].join('\n'))
