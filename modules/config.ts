@@ -158,8 +158,10 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Layer-owned page (not derived from content/); still SSRs the content navigation shell.
         '/logos': { isr },
         // Previews are served live (SSR) off Runtime Cache; `/blob/**` is immutable commit HTML.
+        // `/pr/**` follows the PR's head like `/tree/**` follows a branch, so it shares the short TTL.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
         '/blob/**': { isr: true, robots: 'noindex, nofollow' },
+        '/pr/**': { isr, robots: 'noindex, nofollow' },
         // Raw markdown mirrors of every page, for agents.
         '/raw/**': { isr, robots: 'noindex' },
         // Global content indexes, purged by the push webhook on content changes.
@@ -169,6 +171,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
         '/api/content/blob/*/search-sections': { isr: true },
         '/api/content/tree/*/search-sections': { isr },
+        '/api/content/pr/*/search-sections': { isr },
         '/api/content/search-sections': { isr },
         '/api/code-explorer/**': { isr },
       }

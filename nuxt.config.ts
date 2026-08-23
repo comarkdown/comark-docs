@@ -18,7 +18,7 @@ export default defineNuxtConfig({
   ignore: ['content/**'],
   ui: { content: true, prose: true },
   sitemap: {
-    sources: ['/api/__sitemap__/urls'], exclude: ['/tree/**', '/blob/**']
+    sources: ['/api/__sitemap__/urls'], exclude: ['/tree/**', '/blob/**', '/pr/**']
   },
   ogImage: { zeroRuntime: false },
   icon: {
