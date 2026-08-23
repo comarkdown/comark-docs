@@ -6,8 +6,6 @@
 }
 
 :root {
-  overscroll-behavior-y: none;
-
   --ui-container: 91.5rem;
 
   --ui-primary: var(--ui-color-neutral-900);
