@@ -5,11 +5,14 @@ navigation: false
 ---
 
 ::u-page-hero
+---
+orientation: horizontal
+---
 #title
 Docs that ship without a redeploy.
 
 #description
-The first Markdown-driven docs site where content goes live on `git push` — no rebuild, no redeploy. Served at request time through [Comark Content](https://content.comark.dev), cached at the edge, revalidated by a webhook. And every branch or commit is already a live preview.
+The first Markdown-driven docs site where content goes live on `git push`. No rebuild, no redeploy. Served at request time through [Comark Content](https://content.comark.dev), cached at the edge, revalidated by a webhook. And every branch or commit is already a live preview.
 
 #links
   :::u-button
@@ -30,6 +33,17 @@ The first Markdown-driven docs site where content goes live on `git push` — no
   ---
   How it works
   :::
+
+#default
+```ts [nuxt.config.ts]
+export default defineNuxtConfig({
+  extends: ['comark-docs'],
+  site: {
+    url: 'https://docs.example.com',
+    name: 'My Project',
+  },
+})
+```
 ::
 
 ::landing-features
