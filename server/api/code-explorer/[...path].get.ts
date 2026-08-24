@@ -3,7 +3,7 @@ import { parseMarkdown, type MarkdownDocument } from 'comark'
 import rangi from 'comark/plugins/rangi'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import { githubLight, githubDark } from 'rangi/themes'
+import { cssVariables } from 'rangi/themes'
 
 // A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
 // private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.
@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const highlightPlugin = rangi({
-    theme: { light: githubLight, dark: githubDark },
+    theme: cssVariables,
   })
   const fileResults: Record<string, MarkdownDocument> = {}
 

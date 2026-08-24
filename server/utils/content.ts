@@ -8,7 +8,7 @@ import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
 import yaml from 'comark-content/plugins/yaml'
 import tracingOtel from 'comark-content/plugins/tracing/otel'
-import { githubLight, githubDark } from 'rangi/themes'
+import { cssVariables } from 'rangi/themes'
 import { contentTracer } from './tracer.ts'
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
@@ -18,7 +18,7 @@ let content: Promise<ComarkContent> | undefined
 // Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
-  rangi({ theme: { light: githubLight, dark: githubDark } }),
+  rangi({ theme: cssVariables }),
   toc({ depth: 3 }),
   emoji(),
   security({
