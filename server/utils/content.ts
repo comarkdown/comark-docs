@@ -77,11 +77,6 @@ export async function createSourceContent(
   return instance
 }
 
-/** Production branch, resolved per request: content pushes skip redeploys (`vercel.json` `ignoreCommand`). */
-export function targetBranch(): string {
-  return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
-}
-
 // The content commit this instance is pinned to. Pinning GitHub reads to an immutable SHA rather
 // than the branch name bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
 let headRef: string | undefined

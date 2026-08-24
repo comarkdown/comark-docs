@@ -39,6 +39,11 @@ export function githubToken(): string | undefined {
   return docs.githubToken || process.env.GITHUB_TOKEN || undefined
 }
 
+/** Production branch, resolved per request: content pushes skip redeploys (`vercel.json` `ignoreCommand`). */
+export function targetBranch(): string {
+  return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
+}
+
 // Branch + content directory → content commit SHA pointer, shared across every instance so only one
 // pays for the GitHub API call per TTL window. See `refCacheDriver()` for the single-region assumption.
 const refStorage = createStorage({ driver: refCacheDriver() })
@@ -143,11 +148,6 @@ function pullAllowsPreview(pull: GitHubPullSummary): boolean {
   return (pull.labels ?? []).some((label) => label.name === PREVIEW_LABEL)
 }
 
-/** The branch production serves — same resolution as `targetBranch()`, inlined to keep this module standalone. */
-function baseBranch(): string {
-  return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
-}
-
 /**
  * Authorize a `/blob/:sha` preview and resolve it to the full 40-char SHA.
  *
@@ -200,7 +200,7 @@ export async function authorizePreviewSha(sha: string): Promise<string> {
   if (!allowed) {
     try {
       const comparison = await $fetch<{ status: string }>(
-        `https://api.github.com/repos/${githubRepo()}/compare/${encodeURIComponent(baseBranch())}...${fullSha}`,
+        `https://api.github.com/repos/${githubRepo()}/compare/${encodeURIComponent(targetBranch())}...${fullSha}`,
         { headers: githubHeaders() }
       )
       allowed = comparison.status === 'identical' || comparison.status === 'behind'
