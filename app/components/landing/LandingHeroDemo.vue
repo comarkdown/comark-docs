@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import rangi from 'comark/plugins/rangi'
-import { cssVariables } from 'rangi/themes'
+import { geistLight, geistDark } from 'rangi/themes'
 
 const props = defineProps<{
   /** Markdown source: shown highlighted in the source tab, rendered live in the output tab. */
@@ -9,7 +9,7 @@ const props = defineProps<{
   playground?: string
 }>()
 
-const plugins = [rangi({ theme: cssVariables })]
+const plugins = [rangi({ theme: { light: geistLight, dark: geistDark } })]
 
 // Four-backtick fence so fenced code blocks inside the demo source don't close it early.
 const sourceAsCode = computed(() => ['````md', props.source, '````'].join('\n'))
