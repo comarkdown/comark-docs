@@ -71,13 +71,12 @@ export default defineNuxtSchema({
         mark: 'wordmark',
       },
       llms: {
-        /** Description emitted under the llms.txt heading. */
-        description: '',
         /**
-         * "When to use" guidance for agents, emitted as the first llms.txt section (markdown).
-         * Name the jobs the product is right for and how an agent should call it. Empty = no section.
+         * Blockquote summary emitted under the llms.txt heading; empty = site description.
+         * Good place for "when to use" guidance: name the jobs the product is right for,
+         * so an agent knows when to reach for it before reading the index.
          */
-        whenToUse: '',
+        description: '',
         /** Extra links appended to llms.txt. */
         links: [],
       },
