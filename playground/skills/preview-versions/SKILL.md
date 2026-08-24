@@ -19,7 +19,7 @@ Content is served at request time. Production is pinned to a commit SHA; any bra
 
 Commit and PR previews are authorized: a `/blob/` SHA must be in production history or belong to a PR (same-repo, or a fork PR carrying the `preview:enabled` label), and `/pr/` applies the same rule. Unauthorized refs answer 404.
 
-Raw markdown mirrors exist at `/raw/**` (and under `/tree/.../raw/` / `/blob/.../raw/`).
+Raw markdown mirrors exist at `/raw/**` for production pages only — preview pages serve HTML.
 
 Two cache tiers: ISR-cached page HTML at the edge, and a per-parser-version, per-content-SHA runtime cache for parsed Markdown bodies. A GitHub push to the production branch hits `/api/revalidate` and purges ISR.
 

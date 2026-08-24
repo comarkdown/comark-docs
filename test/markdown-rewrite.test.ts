@@ -44,15 +44,17 @@ describe('buildMarkdownRewriteRoutes', () => {
     expect(rewrite(routes, '/writing')?.resolved).toBe('/raw/writing.md')
   })
 
-  it('sends versioned previews to the raw preview mirrors', () => {
-    expect(rewrite(routes, '/tree/main')?.resolved).toBe('/raw/tree/main/index.md')
-    expect(rewrite(routes, '/blob/a1b2c3d')?.resolved).toBe('/raw/blob/a1b2c3d/index.md')
-    expect(rewrite(routes, '/tree/release%2Fv1.2/writing/pages')?.resolved).toBe(
-      '/raw/tree/release%2Fv1.2/writing/pages.md'
-    )
-    expect(rewrite(routes, '/blob/a1b2c3d/getting-started/introduction')?.resolved).toBe(
-      '/raw/blob/a1b2c3d/getting-started/introduction.md'
-    )
+  it('never rewrites versioned previews (no raw mirrors, HTML only)', () => {
+    for (const path of [
+      '/tree/main',
+      '/tree/release%2Fv1.2/writing/pages',
+      '/blob/a1b2c3d',
+      '/blob/a1b2c3d/getting-started/introduction',
+      '/pr/28',
+      '/pr/28/getting-started/introduction',
+    ]) {
+      expect(rewrite(routes, path), path).toBeNull()
+    }
   })
 
   it('never rewrites the mirrors, APIs, internals or dotted paths', () => {

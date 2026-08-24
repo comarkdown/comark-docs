@@ -27,15 +27,12 @@ const MATCHERS: NonNullable<VercelRoute['has']>[] = [
 const REWRITES: Array<Pick<VercelRoute, 'src' | 'dest'>> = [
   // Landing page → the full docs index.
   { src: '^/$', dest: '/llms.txt' },
-  // Versioned preview landing pages (`/tree/:branch`, `/blob/:sha`).
-  { src: '^/(tree|blob)/([^/]+)/?$', dest: '/raw/$1/$2/index.md' },
-  // Versioned preview docs pages.
-  { src: '^/(tree|blob)/([^/]+)/([^.]+?)/?$', dest: '/raw/$1/$2/$3.md' },
   // Every other extensionless page → its raw markdown mirror. Excluded: the mirrors themselves, API
-  // routes, Nuxt/Nitro internals (`_nuxt`, `__nuxt_island`, …), the MCP endpoint and the layer-owned
-  // `/logos` page (not content-derived, so it has no mirror). `[^.]` also skips every dotted path:
-  // `llms.txt`, `sitemap.xml`, `robots.txt`, `favicon.ico`, `/.well-known/**`, …
-  { src: '^/(?!raw/|api/|tree/|blob/|mcp$|logos$|_)([^.]+?)/?$', dest: '/raw/$1.md' },
+  // routes, versioned previews (`/tree`, `/blob`, `/pr` serve HTML only), Nuxt/Nitro internals
+  // (`_nuxt`, `__nuxt_island`, …), the MCP endpoint and the layer-owned `/logos` page (not
+  // content-derived, so it has no mirror). `[^.]` also skips every dotted path: `llms.txt`,
+  // `sitemap.xml`, `robots.txt`, `favicon.ico`, `/.well-known/**`, …
+  { src: '^/(?!raw/|api/|tree/|blob/|pr/|mcp$|logos$|_)([^.]+?)/?$', dest: '/raw/$1.md' },
 ]
 
 /** The full route list to prepend to `.vercel/output/config.json`. */
