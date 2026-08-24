@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseBranchName, parseCommitSha } from '../server/utils/refs'
+import { parseBranchName, parseCommitSha, parsePullNumber } from '../server/utils/refs'
 
 /**
  * `/api/content/blob/:sha` and `/api/content/tree/:branch` are unauthenticated, and each distinct ref they accept costs
@@ -32,6 +32,30 @@ describe('preview ref boundary', () => {
   it('collapses SHA casing so one commit cannot occupy two registry slots', () => {
     const sha = '4f2a9c1e8b7d6a5f4e3c2b1a0f9e8d7c6b5a4938'
     expect(blobRoute(sha.toUpperCase())).toBe(blobRoute(sha))
+  })
+
+  // GitHub resolves `pull/<n>/head` and `refs/...` wherever a branch is accepted, which would let a
+  // fork PR's commits through `/tree/` without the label check `/pr/:number` enforces.
+  it('turns away the hidden pull/refs ref namespaces', () => {
+    for (const ref of ['pull/123/head', 'pull/123/merge', 'refs/pull/123/head', 'refs/heads/main']) {
+      expect(treeRoute(encodeURIComponent(ref))).toBeNull()
+    }
+    // A branch merely *containing* these words is still fine.
+    expect(treeRoute(encodeURIComponent('feat/pull-based-sync'))).toBe('feat/pull-based-sync')
+  })
+})
+
+/** `/api/content/pr/:number` is public too: only plausible PR numbers may reach the GitHub API. */
+describe('pr number boundary', () => {
+  it('accepts plausible PR numbers', () => {
+    expect(parsePullNumber('1')).toBe(1)
+    expect(parsePullNumber('4823')).toBe(4823)
+  })
+
+  it('turns away everything else', () => {
+    for (const junk of ['', '0', '007', '-1', '1.5', '1e3', 'abc', '12345678901', '123abc']) {
+      expect(parsePullNumber(junk)).toBeNull()
+    }
   })
 })
 

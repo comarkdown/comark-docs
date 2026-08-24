@@ -109,6 +109,149 @@ export async function resolveContentSha(
   return sha
 }
 
+/** Label a maintainer adds to a fork PR to make its commits previewable. */
+export const PREVIEW_LABEL = 'preview:enabled'
+
+interface GitHubPullSummary {
+  number: number
+  head?: { sha?: string; repo?: { full_name?: string } | null }
+  labels?: Array<{ name?: string }>
+}
+
+function githubHeaders(): Record<string, string> {
+  const token = githubToken()
+  return {
+    Accept: 'application/vnd.github+json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+}
+
+/** Whether a definitively missing resource caused this error (vs. a retryable failure). */
+function isNotFound(error: unknown): boolean {
+  const failure = error as { statusCode?: number; response?: { status?: number } }
+  const status = failure.statusCode ?? failure.response?.status
+  // 422 is GitHub's answer for a malformed/unknown object in `/compare` and short-SHA lookups.
+  return status === 404 || status === 422
+}
+
+/**
+ * A PR's commits may be previewed when the PR comes from the content repo itself (its authors could
+ * push a branch and use `/tree/` anyway) or when a maintainer vouched for it with the preview label.
+ */
+function pullAllowsPreview(pull: GitHubPullSummary): boolean {
+  if (pull.head?.repo?.full_name === githubRepo()) return true
+  return (pull.labels ?? []).some((label) => label.name === PREVIEW_LABEL)
+}
+
+/** The branch production serves — same resolution as `targetBranch()`, inlined to keep this module standalone. */
+function baseBranch(): string {
+  return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
+}
+
+/**
+ * Authorize a `/blob/:sha` preview and resolve it to the full 40-char SHA.
+ *
+ * GitHub shares git objects across the fork network: once a fork opens a PR, its head commit is
+ * fetchable through the *upstream* repo API — so a bare format check would render any fork's
+ * markdown on this domain. A SHA is previewable when:
+ *
+ * 1. an associated PR allows it (same-repo PR, or a fork PR carrying `preview:enabled`), or
+ * 2. the commit is in the production branch's history (version-history links).
+ *
+ * Decisions live in the short-TTL ref cache — positive ones too, so removing the label revokes
+ * access within a TTL. Skipped in dev, where refs resolve against the local checkout instead.
+ */
+export async function authorizePreviewSha(sha: string): Promise<string> {
+  if (import.meta.dev) return sha
+
+  const key = `preview:sha:${sha}`
+  const cached = await refStorage.getItem<string>(key)
+  if (cached === UNRESOLVED) {
+    throw createError({ statusCode: 404, statusMessage: `No preview available for commit: ${sha}` })
+  }
+  if (cached) return cached
+
+  const deny = async (): Promise<never> => {
+    await refStorage.setItem(key, UNRESOLVED)
+    throw createError({ statusCode: 404, statusMessage: `No preview available for commit: ${sha}` })
+  }
+
+  // Resolve short SHAs and confirm the commit exists in the repo network at all.
+  let fullSha: string
+  try {
+    const commit = await $fetch<{ sha: string }>(
+      `https://api.github.com/repos/${githubRepo()}/commits/${sha}`,
+      { headers: githubHeaders() }
+    )
+    fullSha = commit.sha
+  } catch (error: unknown) {
+    if (isNotFound(error)) return deny()
+    throw error
+  }
+
+  // PRs associated with the commit — this is how fork PR commits get vouched for.
+  const pulls = await $fetch<GitHubPullSummary[]>(
+    `https://api.github.com/repos/${githubRepo()}/commits/${fullSha}/pulls`,
+    { headers: githubHeaders(), query: { per_page: 30 } }
+  )
+  let allowed = pulls.some(pullAllowsPreview)
+
+  // No vouching PR: allow commits already in the production branch's history (version history links).
+  if (!allowed) {
+    try {
+      const comparison = await $fetch<{ status: string }>(
+        `https://api.github.com/repos/${githubRepo()}/compare/${encodeURIComponent(baseBranch())}...${fullSha}`,
+        { headers: githubHeaders() }
+      )
+      allowed = comparison.status === 'identical' || comparison.status === 'behind'
+    } catch (error: unknown) {
+      if (!isNotFound(error)) throw error
+    }
+  }
+
+  if (!allowed) return deny()
+
+  await refStorage.setItem(key, fullSha)
+  return fullSha
+}
+
+/**
+ * Authorize a `/pr/:number` preview and resolve it to the PR's head commit SHA.
+ *
+ * Same rule as `authorizePreviewSha`: same-repo PRs are always previewable, fork PRs only with the
+ * `preview:enabled` label. Cached in the short-TTL ref cache so the preview follows new pushes and
+ * label removal revokes it within a TTL.
+ */
+export async function resolvePullPreviewSha(number: number): Promise<string> {
+  const key = `preview:pr:${number}`
+  const cached = await refStorage.getItem<string>(key)
+  if (cached === UNRESOLVED) {
+    throw createError({ statusCode: 404, statusMessage: `No preview available for PR #${number}` })
+  }
+  if (cached) return cached
+
+  const deny = async (): Promise<never> => {
+    await refStorage.setItem(key, UNRESOLVED)
+    throw createError({ statusCode: 404, statusMessage: `No preview available for PR #${number}` })
+  }
+
+  let pull: GitHubPullSummary
+  try {
+    pull = await $fetch<GitHubPullSummary>(`https://api.github.com/repos/${githubRepo()}/pulls/${number}`, {
+      headers: githubHeaders(),
+    })
+  } catch (error: unknown) {
+    if (isNotFound(error)) return deny()
+    throw error
+  }
+
+  const sha = pull.head?.sha
+  if (!sha || !pullAllowsPreview(pull)) return deny()
+
+  await refStorage.setItem(key, sha)
+  return sha
+}
+
 export interface PageCommit {
   sha: string
   shortSha: string
