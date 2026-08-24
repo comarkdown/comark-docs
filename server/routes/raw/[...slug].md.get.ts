@@ -1,21 +1,18 @@
-import { withLeadingSlash } from 'ufo'
-
 export default defineEventHandler(async (event) => {
   const slug = getRouterParams(event)['slug.md']
   if (!slug?.endsWith('.md')) {
-    throw createError({ statusCode: 404, statusMessage: 'Page not found' })
+    return notFoundMarkdown(event, event.path)
   }
 
   const content = await getProdContent()
 
-  const stripped = slug.replace(/\.md$/, '')
-  const path = stripped === 'index' ? '/' : withLeadingSlash(stripped)
-
+  const path = pagePathFromRawSlug(slug)
   const markdown = await renderPageMarkdown(content, path)
   if (!markdown) {
-    throw createError({ statusCode: 404, statusMessage: 'Page not found' })
+    return notFoundMarkdown(event, path)
   }
 
   setHeader(event, 'Content-Type', 'text/markdown; charset=utf-8')
+  setHeader(event, 'Vary', 'Accept')
   return markdown
 })
