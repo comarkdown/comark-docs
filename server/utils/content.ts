@@ -92,14 +92,27 @@ export function getHeadRef(): string {
 }
 
 /**
+ * The SHA production should currently serve:
+ * - global config pin if one is set (production only)
+ * - latest commit touching the content directory via `resolveContentSha()`
+ */
+export async function resolveProdSha(): Promise<string> {
+  const { contentDir } = useRuntimeConfig().docs
+  if (process.env.VERCEL_ENV === 'production') {
+    const pinned = await getPinnedSha()
+    if (pinned) return pinned
+  }
+  return resolveContentSha(targetBranch(), contentDir)
+}
+
+/**
  * Shared content instance for the lifetime of this server instance, pinned to `headRef`. In production every
- * call resolves the latest commit touching the content directory via `resolveContentSha()` — a shared,
- * short-TTL cache, not a per-instance timer — and rebuilds when that advances. Previews stay pinned.
+ * call resolves the current head via `resolveProdSha()` — a shared, short-TTL cache, not a per-instance
+ * timer — and rebuilds when that advances. Previews stay pinned.
  */
 export async function getProdContent(): Promise<ComarkContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
-    const { contentDir } = useRuntimeConfig().docs
-    const sha = await resolveContentSha(targetBranch(), contentDir)
+    const sha = await resolveProdSha()
     if (sha !== getHeadRef()) {
       console.log(`[content] head ${getHeadRef()} -> ${sha}`)
       headRef = sha
