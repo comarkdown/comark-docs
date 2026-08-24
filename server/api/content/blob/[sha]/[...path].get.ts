@@ -15,7 +15,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid commit SHA' })
   }
 
-  const content = await getPreviewContent(sha, `/api/content/blob/${sha}`)
+  // Fork PR commits are fetchable through the upstream repo, so a well-formed SHA is not enough:
+  // only commits in upstream history or vouched for by a PR may render here (404 otherwise).
+  // Also resolves short SHAs so one commit pins one content instance.
+  const fullSha = await authorizePreviewSha(sha)
+
+  const content = await getPreviewContent(fullSha, `/api/content/blob/${sha}`)
 
   return await content.handler(toWebRequest(event))
 })

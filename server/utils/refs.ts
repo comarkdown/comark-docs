@@ -24,7 +24,18 @@ export function parseBranchName(value: string): string | null {
   if (branch.startsWith('-') || branch.startsWith('.')) return null
   if (branch.includes('..') || branch.includes('@{')) return null
   if (branch.endsWith('/') || branch.endsWith('.lock')) return null
+  // GitHub resolves the hidden `pull/<n>/head` refs (and fully-qualified `refs/...`) wherever a
+  // branch is accepted, which would let unreviewed fork commits through `/tree/` — PR previews go
+  // through `/pr/:number`, which enforces the authorization rules.
+  if (branch.startsWith('pull/') || branch.startsWith('refs/')) return null
   return branch
+}
+
+/** A pull request number: all digits, no leading zero, small enough to stay a safe integer. */
+export function parsePullNumber(value: string): number | null {
+  const trimmed = value.trim()
+  if (!/^[1-9]\d{0,9}$/.test(trimmed)) return null
+  return Number(trimmed)
 }
 
 /** Either a commit SHA or a branch name — whichever the value looks like. */
