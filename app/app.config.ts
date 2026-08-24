@@ -143,14 +143,14 @@ export default defineAppConfig({
       },
       codeGroup: {
         slots: {
-          list: 'bg-(--ds-background-200)',
+          list: 'bg-(--geist-background-200)',
         },
       },
       pre: {
         slots: {
           filename: 'text-[13px]/5',
-          header: 'bg-(--ds-background-200) border-muted',
-          base: 'bg-(--ds-background-100) border-muted **:[.line.highlight]:bg-(--ds-blue-300)! **:[.line.highlight]:[box-shadow:inset_2px_0_0_0_var(--ds-blue-900)] [font-variant-ligatures:none] text-[13px]/5',
+          header: 'bg-(--geist-background-200) border-muted',
+          base: 'bg-(--geist-background-100) border-muted **:[.line.highlight]:bg-(--geist-blue-300)! **:[.line.highlight]:[box-shadow:inset_2px_0_0_0_var(--geist-blue-900)] [font-variant-ligatures:none] text-[13px]/5',
         },
       },
       code: {
