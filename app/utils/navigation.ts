@@ -9,6 +9,7 @@ function prefetchPath(path?: string) {
   }
   nuxtApp = nuxtApp ?? useNuxtApp()
   prefetchedPaths.add(path)
+  console.log('prefetch', path)
   nuxtApp.hooks.callHook('link:prefetch', path)
 }
 

@@ -67,7 +67,7 @@ Everything a docs site needs
   Versioned previews
 
   #description
-  Every branch renders at `/tree/branch`, every commit at `/blob/sha` — full navigation and search, no deploy.
+  Every branch renders at `/tree/branch`, every commit at `/blob/sha` with full navigation and search, skip new deploys.
   :::
 
   :::landing-feature-card{icon="i-lucide-panels-top-left" to="/writing/components"}
