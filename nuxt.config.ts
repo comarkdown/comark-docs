@@ -37,10 +37,7 @@ export default defineNuxtConfig({
       include: [
         'beautiful-mermaid',
         'comark-docs > ai > @ai-sdk/gateway > @vercel/oidc',
-        'entities',
-        'htmlparser2',
-        'js-yaml',
-        'markdown-exit',
+        'js-yaml'
       ],
     },
   },

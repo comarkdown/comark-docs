@@ -7,10 +7,11 @@ const logger = useLogger('comark-docs')
 
 /**
  * Serve raw markdown to agents on the *page* URLs: `Accept: text/markdown` (or a curl user-agent) on
- * `/getting-started/installation` returns `/raw/getting-started/installation.md`, and `/` returns
- * `/llms.txt`. Implemented as Vercel routing-layer rewrites written into `.vercel/output/config.json`
- * after Nitro compiles — rewriting at the edge keeps the negotiation out of the ISR cache, which is
- * keyed per dest path and so can't serve the HTML variant to a markdown request (or vice versa).
+ * `/getting-started/installation` 307-redirects to `/raw/getting-started/installation.md`, and `/`
+ * to `/llms.txt`. Implemented as Vercel routing-layer redirects written into
+ * `.vercel/output/config.json` after Nitro compiles. Redirects (not rewrites) are required: the ISR
+ * cache is keyed on the request path only and ignores `Vary`, so a rewrite would let the HTML and
+ * markdown variants of the same URL poison each other's cache entry.
  */
 export default defineNuxtModule({
   meta: {

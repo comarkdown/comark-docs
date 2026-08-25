@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { buildMarkdownRewriteRoutes, type VercelRoute } from '../utils/markdown-rewrite'
 
-// Vercel resolves `$n` in `dest` from the capture groups of `src` — replicate that to assert on the
-// final rewritten path rather than on regex internals.
-function rewrite(routes: VercelRoute[], path: string): VercelRoute & { resolved: string } | null {
+// Vercel resolves `$n` in `headers.Location` from the capture groups of `src` — replicate that to
+// assert on the final redirect target rather than on regex internals.
+function redirect(routes: VercelRoute[], path: string): VercelRoute & { location: string } | null {
   for (const route of routes) {
     const match = path.match(new RegExp(route.src))
     if (!match) continue
-    const resolved = route.dest.replace(/\$(\d+)/g, (_, n) => match[Number(n)] ?? '')
-    return { ...route, resolved }
+    const location = (route.headers?.Location ?? '').replace(/\$(\d+)/g, (_, n) => match[Number(n)] ?? '')
+    return { ...route, location }
   }
   return null
 }
@@ -16,35 +16,36 @@ function rewrite(routes: VercelRoute[], path: string): VercelRoute & { resolved:
 const routes = buildMarkdownRewriteRoutes()
 
 describe('buildMarkdownRewriteRoutes', () => {
-  it('pairs every rewrite with an Accept matcher and a curl matcher', () => {
+  it('pairs every redirect with an Accept matcher and a curl matcher', () => {
     expect(routes.length % 2).toBe(0)
     const conditions = routes.map((route) => route.has?.[0])
     expect(conditions.filter((c) => c?.key === 'accept').length).toBe(routes.length / 2)
     expect(conditions.filter((c) => c?.key === 'user-agent').length).toBe(routes.length / 2)
   })
 
-  it('sets the markdown content type and varies on Accept', () => {
+  it('uses a 307 redirect (never a rewrite, which would share the ISR cache entry) and varies on Accept', () => {
     for (const route of routes) {
-      expect(route.headers?.['content-type']).toBe('text/markdown; charset=utf-8')
+      expect(route.status).toBe(307)
+      expect(route.headers?.Location).toBeTruthy()
       expect(route.headers?.vary).toBe('Accept')
     }
   })
 
   it('sends the landing page to llms.txt', () => {
-    expect(rewrite(routes, '/')?.resolved).toBe('/llms.txt')
+    expect(redirect(routes, '/')?.location).toBe('/llms.txt')
   })
 
   it('sends pages to their raw markdown mirror', () => {
-    expect(rewrite(routes, '/getting-started/installation')?.resolved).toBe(
+    expect(redirect(routes, '/getting-started/installation')?.location).toBe(
       '/raw/getting-started/installation.md'
     )
-    expect(rewrite(routes, '/getting-started/installation/')?.resolved).toBe(
+    expect(redirect(routes, '/getting-started/installation/')?.location).toBe(
       '/raw/getting-started/installation.md'
     )
-    expect(rewrite(routes, '/writing')?.resolved).toBe('/raw/writing.md')
+    expect(redirect(routes, '/writing')?.location).toBe('/raw/writing.md')
   })
 
-  it('never rewrites versioned previews (no raw mirrors, HTML only)', () => {
+  it('never redirects versioned previews (no raw mirrors, HTML only)', () => {
     for (const path of [
       '/tree/main',
       '/tree/release%2Fv1.2/writing/pages',
@@ -53,11 +54,11 @@ describe('buildMarkdownRewriteRoutes', () => {
       '/pr/28',
       '/pr/28/getting-started/introduction',
     ]) {
-      expect(rewrite(routes, path), path).toBeNull()
+      expect(redirect(routes, path), path).toBeNull()
     }
   })
 
-  it('never rewrites the mirrors, APIs, internals or dotted paths', () => {
+  it('never redirects the mirrors, APIs, internals or dotted paths', () => {
     for (const path of [
       '/raw/getting-started/installation.md',
       '/api/content/search-sections',
@@ -74,7 +75,7 @@ describe('buildMarkdownRewriteRoutes', () => {
       '/favicon.ico',
       '/.well-known/skills/index.json',
     ]) {
-      expect(rewrite(routes, path), path).toBeNull()
+      expect(redirect(routes, path), path).toBeNull()
     }
   })
 })
