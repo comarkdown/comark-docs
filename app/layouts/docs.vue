@@ -4,10 +4,14 @@ const navigationRef = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | undefined
 
 onMounted(() => {
-  observer = observeNavigation(navigationRef)
-  watch(sidebar, () => {
-    nextTick(() => {
-      observer = observeNavigation(navigationRef, observer)
+  // make sure Nuxt finished hydration before observing the navigation
+  onNuxtReady(() => {
+    console.log('on nuxt ready')
+    observer = observeNavigation(navigationRef)
+    watch(sidebar, () => {
+      nextTick(() => {
+        observer = observeNavigation(navigationRef, observer)
+      })
     })
   })
 })
