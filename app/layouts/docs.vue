@@ -6,7 +6,6 @@ let observer: IntersectionObserver | undefined
 onMounted(() => {
   // make sure Nuxt finished hydration before observing the navigation
   onNuxtReady(() => {
-    console.log('on nuxt ready')
     observer = observeNavigation(navigationRef)
     watch(sidebar, () => {
       nextTick(() => {
