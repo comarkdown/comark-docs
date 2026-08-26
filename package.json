@@ -69,6 +69,7 @@
     "pathe": "^2.0.3",
     "rangi": "^2.2.0",
     "satori": "^0.29.1",
+    "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.3.3",
     "ufo": "^1.6.4",
     "unstorage": "^1.17.5",

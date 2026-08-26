@@ -122,7 +122,7 @@ if (content.value.mode === 'prod') {
       <MarkdownDocument
         v-if="tree"
         :value="tree"
-        :components="{ Mermaid, CodeExplorer, Browser }"
+        :components="{ ...proseElements, Mermaid, CodeExplorer, Browser }"
       />
 
       <UContentSurround
