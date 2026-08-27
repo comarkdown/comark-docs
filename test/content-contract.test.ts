@@ -7,10 +7,12 @@
  */
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { comarkContent, defineContentPlugin } from 'comark-content'
+import { comarkContent, readArtifact } from 'comark-content'
 import fsSource from 'comark-content/sources/fs'
 import githubSource from 'comark-content/sources/github'
-import { createContentClient, defineContentClientPlugin } from 'comark-content/client'
+import { createContentClient } from 'comark-content/client'
+import sqliteWasm from 'comark-content/database/sqlite-wasm'
+import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import memoryDriver from 'unstorage/drivers/memory'
 
 const fixture = fileURLToPath(new URL('./fixtures/content-contract', import.meta.url))
@@ -33,7 +35,16 @@ function createFixtureContent() {
 
 describe('comark-content contract', () => {
   it('exposes every entrypoint the layer imports', () => {
-    for (const entry of [comarkContent, defineContentPlugin, fsSource, githubSource, createContentClient, defineContentClientPlugin]) {
+    for (const entry of [
+      comarkContent,
+      readArtifact,
+      fsSource,
+      githubSource,
+      createContentClient,
+      // Browser-only at runtime, but the subpaths resolve under node — enough to catch a rename.
+      sqliteWasm,
+      sqliteFullTextSearch,
+    ]) {
       expect(typeof entry).toBe('function')
     }
   })
@@ -66,24 +77,51 @@ describe('comark-content contract', () => {
     expect(cached!.nodes.length).toBeGreaterThan(0)
   })
 
-  it('dispatches plugin serve handlers through content.handler', async () => {
-    // Mirrors the `search-sections` plugin in server/utils/content.ts.
-    const ping = defineContentPlugin(() => ({
-      name: 'ping',
-      setup(ctx) {
-        ctx.addServeHandler('ping', async () => Response.json({ ok: true }))
+  it('produces a snapshot artifact on the revalidate warm-up', async () => {
+    const content = createFixtureContent()
+    await content.init(full)
+
+    // `warmSnapshot` logs `artifact.size`, so a shape change there degrades to "not produced".
+    const artifact = await content.cache.snapshot('content')
+    expect(artifact).not.toBeNull()
+    expect(artifact!.size).toBeGreaterThan(0)
+    expect(Object.keys(await readArtifact(artifact!)).length).toBeGreaterThan(0)
+  })
+
+  it('serves the manifest and snapshot artifacts through content.handler', async () => {
+    const content = createFixtureContent()
+    await content.init(full)
+
+    // The exact paths the search worker fetches and `modules/config.ts` declares ISR rules for.
+    for (const path of ['manifest.json', 'snapshot/content.json']) {
+      const response = await content.handler(new Request(`http://localhost/api/content/${path}`))
+      expect(response.status, path).toBe(200)
+      expect(Object.keys(await response.json()), path).toContain('checksum')
+    }
+  })
+
+  it('hydrates a sourceless instance from those artifacts', async () => {
+    const server = createFixtureContent()
+    await server.init(full)
+
+    const fetchArtifact = async (path: string) =>
+      await (await server.handler(new Request(`http://localhost/api/content/${path}`))).json()
+
+    // What `app/workers/search.worker.ts` does: no sources, no driver — the whole client-side
+    // search feature is this round-trip, so a break here is a silently empty search index.
+    const client = comarkContent({
+      cache: {
+        loadManifest: () => fetchArtifact('manifest.json'),
+        loadSnapshot: (source: string) => fetchArtifact(`snapshot/${source}.json`),
       },
-    }))
-
-    const content = comarkContent({
-      sources: { content: fsSource(fixture) },
-      cache: { driver: memoryDriver() },
-      plugins: [ping()],
     })
+    await client.init()
 
-    const response = await content.handler(new Request('http://localhost/api/content/ping'))
+    expect(Object.keys(client.manifest.items)).toEqual(['/'])
 
-    expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ ok: true })
+    // Bodies have to arrive parsed: the client has no source to read a document from.
+    const doc = await client.get('/')
+    expect(doc?.data?.title).toBe('Contract fixture')
+    expect(doc?.nodes?.length).toBeGreaterThan(0)
   })
 })
