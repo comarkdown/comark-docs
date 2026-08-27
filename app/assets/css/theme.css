@@ -6,9 +6,13 @@
 }
 
 :root {
-  overscroll-behavior-y: none;
-
   --ui-container: 91.5rem;
+
+  /* Code surfaces and syntax accents from the live Geist design system. */
+  --geist-background-100: #fff;
+  --geist-background-200: #fafafa;
+  --geist-blue-300: #e0efff;
+  --geist-blue-900: #0064e2;
 
   --ui-primary: var(--ui-color-neutral-900);
 
@@ -34,6 +38,11 @@
 }
 
 .dark {
+  --geist-background-100: #000;
+  --geist-background-200: #000;
+  --geist-blue-300: #002f62;
+  --geist-blue-900: #50a8ff;
+
   --ui-primary: var(--ui-color-neutral-100);
 
   --ui-text-dimmed: var(--ui-color-neutral-500);
@@ -154,5 +163,5 @@ html.dark .shiki span {
 }
 
 .mermaid {
-  @apply rounded overflow-hidden border border-muted;
+  @apply rounded overflow-hidden border border-muted bg-white dark:bg-muted;
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import shiki from '@comark/nuxt/plugins/shiki'
+import rangi from 'comark/plugins/rangi'
+import { geistTheme } from '../../../utils/geist-theme'
 
 const props = defineProps<{
   /** Markdown source: shown highlighted in the source tab, rendered live in the output tab. */
@@ -8,7 +9,7 @@ const props = defineProps<{
   playground?: string
 }>()
 
-const plugins = [shiki()]
+const plugins = [rangi({ theme: geistTheme })]
 
 // Four-backtick fence so fenced code blocks inside the demo source don't close it early.
 const sourceAsCode = computed(() => ['````md', props.source, '````'].join('\n'))

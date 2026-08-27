@@ -23,9 +23,9 @@ function getClient(basePath: string) {
 
 export interface ActiveContent {
   mode: ContentMode
-  /** The branch name (tree) or commit SHA (blob); `undefined` in prod. */
+  /** The branch name (tree), commit SHA (blob) or PR number (pr); `undefined` in prod. */
   ref?: string
-  /** Link prefix for this version (`/tree/<branch>`, `/blob/<sha>`, or `''` in prod). */
+  /** Link prefix for this version (`/tree/<branch>`, `/blob/<sha>`, `/pr/<number>`, or `''` in prod). */
   base: string
   /** The path within the content source (with leading slash). */
   path: string
@@ -56,6 +56,15 @@ export function useDocsContent(): ComputedRef<ActiveContent> {
         base: `/blob/${route.params.ref}`,
         path,
         client: getClient(`/api/content/blob/${route.params.ref}`),
+      }
+    }
+    if (route.params.number && route.path.startsWith('/pr/')) {
+      return {
+        mode: 'pr',
+        ref: route.params.number as string,
+        base: `/pr/${route.params.number}`,
+        path,
+        client: getClient(`/api/content/pr/${route.params.number}`),
       }
     }
     return { mode: 'prod', base: '', path, client: prodContent }

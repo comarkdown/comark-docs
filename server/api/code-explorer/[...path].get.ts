@@ -3,7 +3,7 @@ import { parseMarkdown, type MarkdownDocument } from 'comark'
 import rangi from 'comark/plugins/rangi'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import { githubLight, githubDark } from 'rangi/themes'
+import { geistTheme } from '../../../utils/geist-theme.ts'
 
 // A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
 // private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.
@@ -92,8 +92,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Same theme as the docs content pipeline (`server/utils/content.ts`): concrete inline colors
+  // with `--shiki-dark` pairs, handled by `html.dark .shiki span` in `theme.css`. The previous
+  // `cssVariables` theme emitted `color:var(--shj-*)` which no stylesheet defines, so file
+  // contents rendered without visible highlighting.
   const highlightPlugin = rangi({
-    theme: { light: githubLight, dark: githubDark },
+    theme: geistTheme,
   })
   const fileResults: Record<string, MarkdownDocument> = {}
 

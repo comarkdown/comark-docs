@@ -147,9 +147,3 @@ function onSelect(e: Event, item: CodeExplorerTreeItem) {
   height: 100%;
 }
 </style>
-<!--
-  No global `.dark .shiki span` override here: `app/assets/css/theme.css` already
-  maps every `--shiki-dark-*` custom property for the whole site. A second,
-  narrower copy in this component leaked to every code block on the page and
-  would drift from the canonical one.
--->

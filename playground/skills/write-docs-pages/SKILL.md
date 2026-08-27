@@ -41,4 +41,4 @@ Nuxt UI components in Markdown need the `u-` prefix (`::u-page-hero`, `:::u-butt
 
 Code fences support `{1-3}` line highlights and `[filename.ts]` labels. Mermaid fences render as diagrams.
 
-See [Markdown](/getting-started/markdown) for the full syntax, and [references/page-skeleton.md](references/page-skeleton.md) for a starter page.
+See [Markdown](/writing/markdown) for the full syntax, [Components](/writing/components) for the available blocks, and [references/page-skeleton.md](references/page-skeleton.md) for a starter page.

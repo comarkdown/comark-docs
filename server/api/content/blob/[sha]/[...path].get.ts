@@ -15,12 +15,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid commit SHA' })
   }
 
+  // Fork PR commits are fetchable through the upstream repo, so a well-formed SHA is not enough:
+  // only commits in upstream history or vouched for by a PR may render here (404 otherwise).
+  // Also resolves short SHAs so one commit pins one content instance.
+  const fullSha = await authorizePreviewSha(sha)
+
   // Head-of-branch requests reuse the shared prod instance (same source ref, same per-SHA cache
   // namespace) instead of minting a duplicate preview instance that would pin an LRU slot with a
   // clone of production. Re-checked after `getProdContent()`, which may advance the head.
-  if (sha === getHeadRef()) {
+  if (fullSha === getHeadRef()) {
     const prod = await getProdContent()
-    if (sha === getHeadRef()) {
+    if (fullSha === getHeadRef()) {
       const request = toWebRequest(event)
       const url = new URL(request.url)
       url.pathname = url.pathname.replace(`/blob/${rawSha}`, '')
@@ -28,7 +33,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const content = await getPreviewContent(sha, `/api/content/blob/${sha}`)
+  const content = await getPreviewContent(fullSha, `/api/content/blob/${sha}`)
 
   return await content.handler(toWebRequest(event))
 })

@@ -110,6 +110,9 @@ export default defineAppConfig({
       },
     },
     prose: {
+      a: {
+        base: 'rounded-none border-current hover:text-muted hover:border-current [&>code]:border-current hover:[&>code]:text-muted hover:[&>code]:border-current',
+      },
       codePreview: {
         slots: {
           preview: 'flex-col *:w-full [&_a]:w-fit',
@@ -133,16 +136,21 @@ export default defineAppConfig({
         vite: 'i-logos-vite-icon',
         angular: 'i-logos-angular-icon',
         ansi: 'i-lucide-terminal',
+        typescript: 'i-vscode-icons-file-type-typescript-official',
+        ts: 'i-vscode-icons-file-type-typescript-official',
+        yaml: 'i-vscode-icons-file-type-light-yaml-official',
+        yml: 'i-vscode-icons-file-type-light-yaml-official'
       },
       codeGroup: {
         slots: {
-          list: 'bg-muted',
+          list: 'bg-(--geist-background-200)',
         },
       },
       pre: {
         slots: {
-          header: 'bg-muted border-muted',
-          base: 'bg-white dark:bg-default border-muted **:[.line.highlight]:bg-elevated/50! dark:**:[.line.highlight]:bg-accented/80! [font-variant-ligatures:none]',
+          filename: 'text-[13px]/5',
+          header: 'bg-(--geist-background-200) border-muted',
+          base: 'bg-(--geist-background-100) border-muted **:[.line.highlight]:bg-(--geist-blue-300)! **:[.line.highlight]:[box-shadow:inset_2px_0_0_0_var(--geist-blue-900)] [font-variant-ligatures:none] text-[13px]/5',
         },
       },
       code: {

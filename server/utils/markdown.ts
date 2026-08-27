@@ -1,18 +1,11 @@
 import type { ComarkContent } from 'comark-content'
 import { renderMarkdown } from 'comark/render'
 
-/** Render a content document as plain markdown with a `# title` / `> description` lead. */
 export async function renderPageMarkdown(content: ComarkContent, path: string): Promise<string | null> {
   const item = await content.get(path)
   if (!item || item.meta.kind !== 'document') return null
 
-  const fm = (item.data as any) ?? {}
-  const lead = [fm.title ? `# ${fm.title}` : '', fm.description ? `> ${fm.description}` : '']
-    .filter(Boolean)
-    .join('\n\n')
-
-  const body = await renderMarkdown({ nodes: item.nodes, frontmatter: item.data })
-  return [lead, body].filter(Boolean).join('\n\n')
+  return await renderMarkdown({ nodes: item.nodes, frontmatter: item.data })
 }
 
 /** Page path → raw markdown URL (`/` → `/raw/index.md`). */

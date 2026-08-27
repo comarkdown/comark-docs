@@ -8,8 +8,8 @@ import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
 import yaml from 'comark-content/plugins/yaml'
 import tracingOtel from 'comark-content/plugins/tracing/otel'
-import { githubLight, githubDark } from 'rangi/themes'
 import { contentTracer } from './tracer.ts'
+import { geistTheme } from '../../utils/geist-theme.ts'
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
@@ -18,7 +18,7 @@ let content: Promise<ComarkContent> | undefined
 // Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
 const comarkPlugins = [
   mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
-  rangi({ theme: { light: githubLight, dark: githubDark } }),
+  rangi({ theme: geistTheme }),
   toc({ depth: 3 }),
   emoji(),
   security({
@@ -77,10 +77,6 @@ export async function warmSnapshot(content: ComarkContent): Promise<void> {
   console.log(`[content] snapshot artifact ${artifact ? `${artifact.size} bytes` : 'not produced'}`)
 }
 
-/** Production branch, resolved per request: content pushes skip redeploys (`vercel.json` `ignoreCommand`). */
-export function targetBranch(): string {
-  return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
-}
 
 // The content commit this instance is pinned to. Pinning GitHub reads to an immutable SHA rather
 // than the branch name bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
@@ -92,14 +88,27 @@ export function getHeadRef(): string {
 }
 
 /**
+ * The SHA production should currently serve:
+ * - global config pin if one is set (production only)
+ * - latest commit touching the content directory via `resolveContentSha()`
+ */
+export async function resolveProdSha(): Promise<string> {
+  const { contentDir } = useRuntimeConfig().docs
+  if (process.env.VERCEL_ENV === 'production') {
+    const pinned = await getPinnedSha()
+    if (pinned) return pinned
+  }
+  return resolveContentSha(targetBranch(), contentDir)
+}
+
+/**
  * Shared content instance for the lifetime of this server instance, pinned to `headRef`. In production every
- * call resolves the latest commit touching the content directory via `resolveContentSha()` — a shared,
- * short-TTL cache, not a per-instance timer — and rebuilds when that advances. Previews stay pinned.
+ * call resolves the current head via `resolveProdSha()` — a shared, short-TTL cache, not a per-instance
+ * timer — and rebuilds when that advances. Previews stay pinned.
  */
 export async function getProdContent(): Promise<ComarkContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
-    const { contentDir } = useRuntimeConfig().docs
-    const sha = await resolveContentSha(targetBranch(), contentDir)
+    const sha = await resolveProdSha()
     if (sha !== getHeadRef()) {
       console.log(`[content] head ${getHeadRef()} -> ${sha}`)
       headRef = sha

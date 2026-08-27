@@ -18,7 +18,7 @@ export default defineNuxtConfig({
   ignore: ['content/**'],
   ui: { content: true, prose: true },
   sitemap: {
-    sources: ['/api/__sitemap__/urls'], exclude: ['/tree/**', '/blob/**']
+    sources: ['/api/__sitemap__/urls'], exclude: ['/tree/**', '/blob/**', '/pr/**']
   },
   ogImage: { zeroRuntime: false },
   icon: {
@@ -38,10 +38,7 @@ export default defineNuxtConfig({
       include: [
         'beautiful-mermaid',
         'comark-docs > ai > @ai-sdk/gateway > @vercel/oidc',
-        'entities',
-        'htmlparser2',
-        'js-yaml',
-        'markdown-exit',
+        'js-yaml'
       ],
       // Pre-bundling would break the wasm/worker assets sqlite loads relative to its module URL.
       exclude: ['@sqlite.org/sqlite-wasm'],

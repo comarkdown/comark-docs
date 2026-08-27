@@ -55,24 +55,27 @@ if (content.value.mode === 'prod') {
     description: fm.value.seo?.description || fm.value.description,
   })
 
-  // Optional schema.org SoftwareApplication identity, configured through
-  // `docs.schemaOrg` in app.config; nothing is emitted when unset.
+  // Optional schema.org identity, configured through `docs.schemaOrg` in app.config; nothing is
+  // emitted when unset. `organization` becomes its own top-level node (with contactPoint/address it
+  // is what agents check to verify the business); everything else describes the SoftwareApplication.
   const { seo, docs } = useAppConfig()
-  const schemaOrg = docs?.schemaOrg as Record<string, unknown> | undefined
-  if (schemaOrg && Object.keys(schemaOrg).length) {
+  const { organization, ...softwareApp } = (docs?.schemaOrg ?? {}) as Record<string, unknown> & {
+    organization?: Record<string, unknown>
+  }
+  const identity = { name: seo?.siteName, url: site.url }
+  const nodes: Record<string, unknown>[] = []
+  if (Object.keys(softwareApp).length) {
+    nodes.push({ '@type': 'SoftwareApplication', ...identity, ...softwareApp })
+  }
+  if (organization && Object.keys(organization).length) {
+    nodes.push({ '@type': 'Organization', ...identity, ...organization })
+  }
+  if (nodes.length) {
     useHead({
-      script: [
-        {
-          type: 'application/ld+json',
-          innerHTML: jsonLd({
-            '@context': 'https://schema.org',
-            '@type': 'SoftwareApplication',
-            name: seo?.siteName,
-            url: site.url,
-            ...schemaOrg,
-          }),
-        },
-      ],
+      script: nodes.map((node) => ({
+        type: 'application/ld+json',
+        innerHTML: jsonLd({ '@context': 'https://schema.org', ...node }),
+      })),
     })
   }
 }

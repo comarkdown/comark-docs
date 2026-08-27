@@ -18,7 +18,13 @@ const { data: page } = await useAsyncData(`${content.value.base}:${content.value
   content.value.client.get(content.value.path)
 )
 if (!page.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+  // A directory without an index page (e.g. /getting-started) redirects to its first page.
+  const firstLeaf = findFirstLeaf(navigation?.value, prefixLink(content.value.path, content.value.base))
+  if (firstLeaf) {
+    await navigateTo(firstLeaf, { redirectCode: 302 })
+  } else {
+    throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+  }
 }
 
 const selfPath = computed(() => prefixLink(content.value.path, content.value.base))
