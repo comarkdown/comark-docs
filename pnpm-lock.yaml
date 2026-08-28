@@ -3912,7 +3912,7 @@ packages:
     resolution: {integrity: sha512-Z3UPUKasUVDFCDYAjP2fmlVRf1jFHJv1izAmPjiOa0OCIw1W7iC8PZ2GsoDa8uZv+mKyWopxxStT9q05+27h7w==}
 
   comark-content@https://pkg.pr.new/comark-content@67c137f:
-    resolution: {tarball: https://pkg.pr.new/comark-content@67c137f}
+    resolution: {integrity: sha512-X6IbRRKi2IU8COgDCpoHtLZ8wiFprgQpIrm3UWyp9K3F/omo03w/lko+uGSE9SMoakFtfJS74pswUJDLcy05tw==, tarball: https://pkg.pr.new/comark-content@67c137f}
     version: 0.3.0
     hasBin: true
 
