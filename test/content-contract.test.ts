@@ -107,8 +107,7 @@ describe('comark-content contract', () => {
     const fetchArtifact = async (path: string) =>
       await (await server.handler(new Request(`http://localhost/api/content/${path}`))).json()
 
-    // What `app/workers/search.worker.ts` does: no sources, no driver — the whole client-side
-    // search feature is this round-trip, so a break here is a silently empty search index.
+    // The search feature is this round-trip, so a break here is a silently empty search index.
     const client = comarkContent({
       cache: {
         loadManifest: () => fetchArtifact('manifest.json'),

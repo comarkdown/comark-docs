@@ -67,6 +67,7 @@
     "nuxt-llms": "^0.2.0",
     "nuxt-og-image": "^6.7.8",
     "nuxt-seo-utils": "^8.4.2",
+    "nuxt-workers": "^0.1.0",
     "pathe": "^2.0.3",
     "rangi": "^2.2.0",
     "satori": "^0.29.1",

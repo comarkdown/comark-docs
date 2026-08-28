@@ -1,10 +1,7 @@
 /**
- * Logging for the search worker: the `?debug=search` switch, the phase-timing helpers, and the
- * {@link Logger} handed to `comarkContent()` so the package's own diagnostics come out under this
- * prefix. Separate from `search.worker.ts` to keep the hydration path free of instrumentation.
+ * Logging for the search worker.
  *
- * Worker-side only. The main thread has its own `[search]` lines in `useSearch`, which is also where
- * the switch is resolved — a worker cannot see the page URL, so the flag arrives with `warmup`.
+ * Triggered by `?debug=search` param.
  */
 import type { ContentFile, Logger, RelationalDatabase } from 'comark-content'
 

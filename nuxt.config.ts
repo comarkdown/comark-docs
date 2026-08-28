@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     'nuxt-og-image',
     '@nuxtjs/mcp-toolkit',
     'nuxt-llms',
+    'nuxt-workers',
   ],
   ignore: ['content/**'],
   ui: { content: true, prose: true },
