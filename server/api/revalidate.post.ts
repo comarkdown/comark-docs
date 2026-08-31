@@ -122,7 +122,7 @@ export default defineEventHandler(async (event) => {
     try {
       const oldContent = await createSourceContent(beforeSha)
       await oldContent.init()
-      oldItems = oldContent.manifest.items
+      oldItems = (await oldContent.manifest()).items
     } catch (err) {
       const message = err instanceof Error ? err.message : err
       console.warn(`${tag} no before-manifest (${beforeSha}) — treating as full revalidate:`, message)
@@ -133,7 +133,7 @@ export default defineEventHandler(async (event) => {
   // production instances will read even when later commits in this push only changed code.
   const headContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(contentSha) } })
   await headContent.init()
-  const newItems = headContent.manifest.items
+  const newItems = (await headContent.manifest()).items
 
   const oldPaths = new Set(Object.keys(oldItems))
   const newPaths = Object.keys(newItems)

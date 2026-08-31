@@ -11,9 +11,19 @@ import tracingOtel from 'comark-content/plugins/tracing/otel'
 import { contentTracer } from './tracer.ts'
 import { geistTheme } from '../../utils/geist-theme.ts'
 
+/**
+ * The layer builds one unnamed instance, so its name is the literal `default`.
+ *
+ * Spell that out rather than writing the bare `ComarkContent`: the instance name
+ * is a type parameter that reaches `get()`'s argument, so `ComarkContent`
+ * (name widened to `string`) is not a supertype of a concrete instance and
+ * nothing is assignable to it.
+ */
+export type DocsContent = ComarkContent<Record<string, unknown>, 'default'>
+
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
-let content: Promise<ComarkContent> | undefined
+let content: Promise<DocsContent> | undefined
 
 // Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
 const comarkPlugins = [
@@ -31,7 +41,7 @@ const comarkPlugins = [
 const searchSectionsPlugin = defineContentPlugin(() => ({
   name: 'search-sections',
   setup(ctx) {
-    ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(ctx as unknown as ComarkContent)))
+    ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(ctx as unknown as DocsContent)))
   },
 }))()
 
@@ -51,9 +61,7 @@ export async function createSourceContent(
     markdown: {
       plugins: comarkPlugins,
     },
-    sources: {
-      content: contentSource(ref, { remote: opts.remote }),
-    },
+    source: contentSource(ref, { remote: opts.remote }),
     plugins: [
       yaml(), // enable .navigation.yml to be detected
       searchSectionsPlugin,
@@ -105,7 +113,7 @@ export async function resolveProdSha(): Promise<string> {
  * call resolves the current head via `resolveProdSha()` — a shared, short-TTL cache, not a per-instance
  * timer — and rebuilds when that advances. Previews stay pinned.
  */
-export async function getProdContent(): Promise<ComarkContent> {
+export async function getProdContent(): Promise<DocsContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveProdSha()
     if (sha !== getHeadRef()) {
@@ -150,14 +158,14 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */
-const contentPreviewInstances = new Map<string, Promise<ComarkContent>>()
+const contentPreviewInstances = new Map<string, Promise<DocsContent>>()
 
 // Bound required: each entry is a content instance with its own manifest and parsed bodies, and public
 // `/tree/:branch` / `/blob/:sha` let a crawler mint one per SHA. Evicted refs just rebuild, their
 // bodies surviving in the per-SHA Runtime Cache.
 const MAX_PREVIEW_INSTANCES = 8
 
-export function getPreviewContent(sha: string, basePath: string): Promise<ComarkContent> {
+export function getPreviewContent(sha: string, basePath: string): Promise<DocsContent> {
   const key = `${basePath}::${sha}`
   const existing = contentPreviewInstances.get(key)
   if (existing) {

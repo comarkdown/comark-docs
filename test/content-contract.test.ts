@@ -19,14 +19,17 @@ const fixture = fileURLToPath(new URL('./fixtures/content-contract', import.meta
  * The warm-up options from `server/api/revalidate.post.ts` — keep the two in step.
  * This object has to keep meaning "full init" on whichever build is installed.
  */
-const full = { partial: false, metaOnly: false }
+const full = { partial: false }
 
-/** `<source>:<path-in-source>` — the cache key comark-content writes a parsed body under. */
-const bodyKey = 'content:index.md'
+/**
+ * `<name>:<path-in-source>` — the cache key comark-content writes a parsed body
+ * under. The prefix is the *instance* name, which defaults to `default`.
+ */
+const bodyKey = 'default:index.md'
 
 function createFixtureContent() {
   return comarkContent({
-    sources: { content: fsSource(fixture) },
+    source: fsSource(fixture),
     cache: { driver: memoryDriver() },
   })
 }
@@ -42,8 +45,10 @@ describe('comark-content contract', () => {
     const content = createFixtureContent()
     await content.init()
 
-    expect(Object.keys(content.manifest.items)).toHaveLength(1)
-    expect(content.manifest.items['/']?.data?.title).toBe('Contract fixture')
+    // `manifest` is an async method returning saveable data, not a live property.
+    const manifest = await content.manifest()
+    expect(Object.keys(manifest.items)).toHaveLength(1)
+    expect(manifest.items['/']?.data?.title).toBe('Contract fixture')
   })
 
   it('writes parsed bodies to the cache on the revalidate warm-up init', async () => {
@@ -76,7 +81,7 @@ describe('comark-content contract', () => {
     }))
 
     const content = comarkContent({
-      sources: { content: fsSource(fixture) },
+      source: fsSource(fixture),
       cache: { driver: memoryDriver() },
       plugins: [ping()],
     })
