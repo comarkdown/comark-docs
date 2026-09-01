@@ -1,4 +1,4 @@
-import { defineContentPlugin, type ComarkContent, type CacheOptions, comarkContent  } from 'comark-content';
+import { defineContentPlugin, type CacheOptions, comarkContent  } from 'comark-content';
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import rangi from 'comark/plugins/rangi'
@@ -12,14 +12,16 @@ import { contentTracer } from './tracer.ts'
 import { geistTheme } from '../../utils/geist-theme.ts'
 
 /**
- * The layer builds one unnamed instance, so its name is the literal `default`.
+ * The instance this layer builds, derived from the factory rather than written
+ * out.
  *
- * Spell that out rather than writing the bare `ComarkContent`: the instance name
- * is a type parameter that reaches `get()`'s argument, so `ComarkContent`
- * (name widened to `string`) is not a supertype of a concrete instance and
- * nothing is assignable to it.
+ * `ComarkContent` is the *unnarrowed* shape: its instance-name parameter drives
+ * the conditional types behind `get()` and `list()`, so a concrete instance is
+ * not assignable to it. Deriving instead of annotating keeps the narrowing that
+ * `comark-content prepare` generates — `get('/known/path')` stays typed all the
+ * way through the layer.
  */
-export type DocsContent = ComarkContent<Record<string, unknown>, 'default'>
+export type DocsContent = Awaited<ReturnType<typeof createSourceContent>>
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
