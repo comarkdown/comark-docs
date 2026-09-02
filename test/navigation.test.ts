@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findBreadcrumb, findPageHeadline, findSurroundLinks } from '../app/utils/navigation'
+import { findBreadcrumb, findNavigationLayout, findPageHeadline, findSurroundLinks } from '../app/utils/navigation'
 import type { NavigationItem } from 'comark-content'
 
 const nav = [
@@ -73,6 +73,67 @@ describe('findBreadcrumb', () => {
   it('returns empty when the page is not in the tree', () => {
     expect(findBreadcrumb(nav, '/nope')).toEqual([])
     expect(findBreadcrumb(nav, undefined)).toEqual([])
+  })
+})
+
+describe('findNavigationLayout', () => {
+  const navigation = [
+    {
+      title: 'Examples',
+      path: '/examples',
+      page: false,
+      layout: 'page',
+      children: [
+        { title: 'Overview', path: '/examples/overview' },
+        {
+          title: 'API',
+          path: '/examples/api',
+          page: false,
+          layout: 'docs',
+          children: [{ title: 'Reference', path: '/examples/api/reference' }],
+        },
+      ],
+    },
+    { title: 'Examples extended', path: '/examples-extended', layout: 'docs' },
+  ] as unknown as NavigationItem[]
+
+  it('inherits a directory layout for its pages, including hidden pages', () => {
+    expect(findNavigationLayout(navigation, '/examples/overview')).toBe('page')
+    expect(findNavigationLayout(navigation, '/examples/hidden')).toBe('page')
+  })
+
+  it('lets a nested directory override an inherited layout', () => {
+    expect(findNavigationLayout(navigation, '/examples/api/reference')).toBe('docs')
+  })
+
+  it('does not inherit a layout from a partial path segment match', () => {
+    expect(findNavigationLayout(navigation, '/examples-extended/page')).toBe('docs')
+  })
+
+  it('supports navigation paths prefixed for version previews', () => {
+    const previewNavigation = [{
+      title: 'Examples',
+      path: '/tree/feature/examples',
+      page: false,
+      layout: 'page',
+      children: [{ title: 'Overview', path: '/tree/feature/examples/overview' }],
+    }] as unknown as NavigationItem[]
+
+    expect(findNavigationLayout(previewNavigation, '/tree/feature/examples/overview')).toBe('page')
+  })
+
+  it('falls back to docs without a matching supported layout', () => {
+    expect(findNavigationLayout(navigation, '/unknown')).toBe('docs')
+    expect(findNavigationLayout(
+      [{ title: 'Custom', path: '/custom', layout: 'custom' }] as unknown as NavigationItem[],
+      '/custom'
+    )).toBe('docs')
+  })
+
+  it('returns undefined for the landing page or without enough navigation context', () => {
+    expect(findNavigationLayout(navigation, '/')).toBeUndefined()
+    expect(findNavigationLayout([], '/examples')).toBeUndefined()
+    expect(findNavigationLayout(null, undefined)).toBeUndefined()
   })
 })
 
