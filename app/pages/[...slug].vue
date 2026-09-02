@@ -12,7 +12,7 @@ definePageMeta({
 const { toc, seo } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
 const content = useDocsContent()
-const layout = inject('layout')
+const layout = inject<Ref<NavigationLayout>>('layout')
 
 const { data: page } = await useAsyncData(`${content.value.base}:${content.value.path}`, () =>
   content.value.client.get(content.value.path)

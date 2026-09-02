@@ -106,8 +106,8 @@ describe('findNavigationLayout', () => {
     expect(findNavigationLayout(navigation, '/examples/api/reference')).toBe('docs')
   })
 
-  it('matches complete path segments only', () => {
-    expect(findNavigationLayout(navigation, '/examples-extended/page')).toBeUndefined()
+  it('does not inherit a layout from a partial path segment match', () => {
+    expect(findNavigationLayout(navigation, '/examples-extended/page')).toBe('docs')
   })
 
   it('supports navigation paths prefixed for version previews', () => {
@@ -122,12 +122,16 @@ describe('findNavigationLayout', () => {
     expect(findNavigationLayout(previewNavigation, '/tree/feature/examples/overview')).toBe('page')
   })
 
-  it('returns undefined without a matching layout', () => {
-    expect(findNavigationLayout(navigation, '/unknown')).toBeUndefined()
+  it('falls back to docs without a matching supported layout', () => {
+    expect(findNavigationLayout(navigation, '/unknown')).toBe('docs')
     expect(findNavigationLayout(
       [{ title: 'Custom', path: '/custom', layout: 'custom' }] as unknown as NavigationItem[],
       '/custom'
-    )).toBeUndefined()
+    )).toBe('docs')
+  })
+
+  it('returns undefined for the landing page or without enough navigation context', () => {
+    expect(findNavigationLayout(navigation, '/')).toBeUndefined()
     expect(findNavigationLayout([], '/examples')).toBeUndefined()
     expect(findNavigationLayout(null, undefined)).toBeUndefined()
   })
