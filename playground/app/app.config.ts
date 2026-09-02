@@ -12,6 +12,7 @@ export default defineAppConfig({
     ecosystem: [{ mark: 'comark-content', to: 'https://content.comark.dev', label: 'Comark Content' }],
     nav: [
       { label: 'Documentation', sections: ['getting-started', 'writing', 'concepts', 'deployment'] },
+      { label: 'Page', to: '/page' }
     ],
   },
   footer: {

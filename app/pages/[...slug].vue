@@ -6,13 +6,13 @@ import CodeExplorer from '../components/CodeExplorer.vue'
 import Browser from '../components/Browser.vue'
 
 definePageMeta({
-  layout: 'docs',
   path: '/:slug(.+)',
 })
 
 const { toc, seo } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
 const content = useDocsContent()
+const layout = inject('layout')
 
 const { data: page } = await useAsyncData(`${content.value.base}:${content.value.path}`, () =>
   content.value.client.get(content.value.path)
@@ -126,6 +126,7 @@ if (content.value.mode === 'prod') {
       />
 
       <UContentSurround
+        v-if="layout === 'docs'"
         :surround="surroundLinks as any"
         :ui="{ root: !surroundLinks[0] ? 'sm:grid-cols-1' : 'sm:grid-cols-2' }"
       />
