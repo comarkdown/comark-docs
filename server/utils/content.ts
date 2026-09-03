@@ -9,6 +9,7 @@ import mermaid from 'comark/plugins/mermaid'
 import yaml from 'comark-content/plugins/yaml'
 import tracingOtel from 'comark-content/plugins/tracing/otel'
 import { contentTracer } from './tracer.ts'
+import { elements } from './comark-elements.ts'
 import { geistTheme } from '../../utils/geist-theme.ts'
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
@@ -25,6 +26,8 @@ const comarkPlugins = [
     blockedTags: ['script', 'iframe', 'embed', 'form', 'base', 'meta', 'link', 'style'],
     allowDataImages: false,
   }),
+  // Last: bakes prose classes into static tags (after `toc` assigned heading ids).
+  elements(),
 ]
 
 // Bound to THIS instance so a preview content instance serves its own version's sections, not production's.

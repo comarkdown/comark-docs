@@ -23,6 +23,9 @@ export default defineNuxtModule({
 
     const sources = [
       resolver.resolve('../app'),
+      // The `elements` comark plugin bakes prose classes into parsed trees at runtime; scanning
+      // `server/` keeps those literals covered even if they drift from the Nuxt UI prose theme.
+      resolver.resolve('../server'),
       nuxt.options.srcDir,
       resolve(nuxt.options.rootDir, 'content'),
     ].map((dir) => `${dir}/**/*`.replace(/\\/g, '/'))

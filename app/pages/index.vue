@@ -8,6 +8,7 @@ import LandingCta from '../components/landing/LandingCta.vue'
 import LandingHeroDemo from '../components/landing/LandingHeroDemo.vue'
 
 const landingComponents = {
+  ...proseElements,
   LandingStack,
   LandingTabs,
   LandingFeatures,
