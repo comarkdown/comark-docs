@@ -6,10 +6,13 @@ import security from 'comark/plugins/security'
 import emoji from 'comark/plugins/emoji'
 import toc from 'comark/plugins/toc'
 import mermaid from 'comark/plugins/mermaid'
+import markdown from 'comark-content/plugins/markdown'
 import yaml from 'comark-content/plugins/yaml'
 import tracingOtel from 'comark-content/plugins/tracing/otel'
 import { contentTracer } from './tracer.ts'
 import { geistTheme } from '../../utils/geist-theme.ts'
+
+const DEFAULT_LISTING_FIELDS = ['title', 'description', 'navigation', 'icon', 'layout']
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
@@ -28,26 +31,28 @@ const comarkPlugins = [
 ]
 
 /**
- * Create a new content instance reading content at `ref` (a commit SHA or branch). `remote` forces the
- * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
+ * Create a new content instance reading content at `ref` (a commit SHA or branch).
+ * - `remote` forces the GitHub source
+ * - `cache` overrides comark's (in-memory by default)
+ * - `basePath` is the base path for the content instance
+ * - `watch` is dev file watching
  */
 export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-  // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
-  // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
-  // argument would erase the source and plugin types `comarkContent` infers from the literal.
   const tracer = contentTracer()
+  const listingFields = useRuntimeConfig().docs.listingFields ?? DEFAULT_LISTING_FIELDS
   const instance = comarkContent({
-    markdown: {
-      plugins: comarkPlugins,
-    },
     sources: {
       content: contentSource(ref, { remote: opts.remote }),
     },
     plugins: [
-      yaml(), // enable .navigation.yml to be detected
+      markdown({
+        comark: { plugins: comarkPlugins },
+        listingFields,
+      }),
+      yaml({ listingFields }),
       tracer && tracingOtel({ tracer }),
     ],
     cache: opts.cache,
@@ -69,12 +74,17 @@ export async function createSourceContent(
 }
 
 /**
- * Fully parse and persist the snapshot artifact into this instance's per-SHA cache.
+ * Fully parse and persist every source's snapshot artifact into this instance's per-SHA cache, so
+ * the next reader (a fresh instance sharing the same cache namespace) pays a cache read instead of
+ * re-parsing from GitHub. `snapshot()` defaults to `fresh: true` — it re-parses and persists.
  */
-export async function warmSnapshot(content: ComarkContent): Promise<void> {
+export async function warmArtifacts(content: ComarkContent): Promise<void> {
   await content.init({ partial: false })
-  const artifact = await content.cache.snapshot('content')
-  console.log(`[content] snapshot artifact ${artifact ? `${artifact.size} bytes` : 'not produced'}`)
+  for (const source of content.manifest.sources) {
+    const artifact = await content.cache.snapshot(source)
+    if (artifact) console.log(`[content] snapshot artifact "${source}" ${artifact.size} bytes`)
+    else console.warn(`[content] no snapshot artifact produced for source "${source}"`)
+  }
 }
 
 

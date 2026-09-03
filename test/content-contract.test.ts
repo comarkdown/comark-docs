@@ -81,7 +81,7 @@ describe('comark-content contract', () => {
     const content = createFixtureContent()
     await content.init(full)
 
-    // `warmSnapshot` logs `artifact.size`, so a shape change there degrades to "not produced".
+    // `warmArtifacts` logs `artifact.size`, so a shape change there degrades to "not produced".
     const artifact = await content.cache.snapshot('content')
     expect(artifact).not.toBeNull()
     expect(artifact!.size).toBeGreaterThan(0)

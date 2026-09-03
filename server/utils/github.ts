@@ -13,6 +13,7 @@ export interface GitHubPushPayload {
   before?: string
   commits?: GitHubCommit[]
   head_commit?: GitHubCommit & { id?: string }
+  repository?: { full_name?: string }
 }
 
 /** Constant-time string comparison. */
