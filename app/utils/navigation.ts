@@ -64,6 +64,35 @@ export interface BreadcrumbItem {
   path?: string
 }
 
+export type NavigationLayout = 'docs' | 'page'
+
+/** Layout declared by the nearest matching page or directory navigation node. */
+export function findNavigationLayout(
+  navigation: NavigationItem[] | undefined | null,
+  path: string | undefined
+): NavigationLayout | undefined {
+  if (!navigation?.length || !path || path === '/') return undefined
+
+  let layout: NavigationLayout | undefined
+  const visit = (items: NavigationItem[]) => {
+    for (const item of items) {
+      const isPage = item.path === path
+      const isDirectory = Boolean(
+        item.children?.length
+        && item.path !== '/'
+        && path.startsWith(`${item.path}/`)
+      )
+      if (!isPage && !isDirectory) continue
+
+      if (item.layout === 'docs' || item.layout === 'page') layout = item.layout
+      if (item.children?.length) visit(item.children)
+    }
+  }
+
+  visit(navigation)
+  return layout || 'docs'
+}
+
 /** Trail of navigation items leading to `path`, including the page itself. */
 export function findBreadcrumb(
   navigation: NavigationItem[] | undefined | null,
