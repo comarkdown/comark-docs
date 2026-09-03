@@ -1,4 +1,5 @@
 import { verify } from '@octokit/webhooks-methods'
+import { DEFAULT_CONTENT_NAME } from 'comark-content'
 import { waitUntil } from '@vercel/functions'
 
 /** Each re-render hits this same deployment, so the ceiling is about not stampeding ourselves. */
@@ -84,13 +85,13 @@ export default defineEventHandler(async (event) => {
   const { headSha, freshContent, newItems, pagePaths, navChanged } = await timings.time('rebuild', async () => {
     const outdated = await getProdContent()
     await outdated.init()
-    const oldItems = { ...outdated.manifest.items }
+    const oldItems = { ...(await outdated.manifest()).items }
 
     // Refresh the content SHA
     const headSha = await resolveContentSha(branch, contentDir, { refresh: true })
     const freshContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
     await freshContent.init()
-    const newItems = freshContent.manifest.items
+    const newItems = (await freshContent.manifest()).items
 
     return { headSha, freshContent, newItems, ...diffContent(changes, oldItems, newItems) }
   })
@@ -114,7 +115,7 @@ export default defineEventHandler(async (event) => {
   // Per-commit search artifacts (ISR, immutable).
   const artifactBase = `/api/content/blob/${headSha}`
   const manifestPath = `${artifactBase}/manifest.json`
-  const snapshotPath = `${artifactBase}/snapshot/content.json`
+  const snapshotPath = `${artifactBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`
   addPath('artifact', manifestPath)
   addPath('artifact', snapshotPath)
   const artifactPaths = new Set([manifestPath, snapshotPath])

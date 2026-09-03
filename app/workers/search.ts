@@ -3,15 +3,40 @@
  *
  * Hydrated from the per-commit snapshot artifacts.
  */
-import { comarkContent, readArtifact } from 'comark-content'
+import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
+import snapshot from 'comark-content/sources/snapshot'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import { ofetch } from 'ofetch'
 import { describeArtifact, indexedRows, isDebug, log, logger, setDebug, since } from './internal/search-logger'
-import type { CacheArtifact, ComarkContent, SearchOptions, SearchResult } from 'comark-content'
-import type { SqliteFullTextSearchMethods } from 'comark-content/plugins/sqlite-full-text-search'
+import type { CacheArtifact, SearchOptions, SearchResult } from 'comark-content'
 
-type SearchInstance = ComarkContent & SqliteFullTextSearchMethods
+/**
+ * Factored out so `SearchInstance` can be derived from its return type instead of annotated —
+ * `ComarkContent`'s instance-name parameter reaches `get()`'s argument type, so a bare
+ * `ComarkContent & SqliteFullTextSearchMethods` annotation isn't a supertype of a concrete
+ * instance (fails under `strictFunctionTypes`, same reason as `DocsContent` in
+ * `server/utils/content.ts`).
+ */
+function createSearchInstance(fetchArtifact: (path: string) => Promise<CacheArtifact>, apiBase: string) {
+  const database = sqliteWasm()
+  return {
+    database,
+    content: comarkContent({
+      // The first (full-body) tier is what the index is built from; the second (manifest) tier
+      // is the light one `init()` prefers, so a bare `init()` below doesn't download bodies that
+      // `search()` is about to fetch anyway via the snapshot tier.
+      source: snapshot(
+        () => fetchArtifact(`${apiBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`),
+        () => fetchArtifact(`${apiBase}/manifest.json`)
+      ),
+      plugins: [sqliteFullTextSearch({ database })],
+      logger,
+    }),
+  }
+}
+
+type SearchInstance = ReturnType<typeof createSearchInstance>['content']
 
 let instance: SearchInstance | undefined
 
@@ -60,21 +85,13 @@ async function loadDatabase(apiBase: string, origin: string): Promise<void> {
       }
     }
 
-    const database = sqliteWasm()
-    const content = comarkContent({
-      cache: {
-        loadManifest: () => fetchArtifact(`${apiBase}/manifest.json`),
-        loadSnapshot: (source: string) => fetchArtifact(`${apiBase}/snapshot/${source}.json`),
-      },
-      plugins: [sqliteFullTextSearch({ database })],
-      logger,
-    })
+    const { database, content } = createSearchInstance(fetchArtifact, apiBase)
 
     await content.init()
 
     const indexStarted = performance.now()
-    await content.search(['content'], '') // pulls the snapshot in and builds the FTS index
-    log(`index built in ${since(indexStarted)} — ${await indexedRows(database, 'content')} row(s)`)
+    await content.search('') // pulls the snapshot in and builds the FTS index
+    log(`index built in ${since(indexStarted)} — ${await indexedRows(database, DEFAULT_CONTENT_NAME)} row(s)`)
 
     instance = content
     log(`ready in ${since(started)}`)
@@ -91,7 +108,7 @@ export async function searchContent(query: string, opts?: SearchOptions): Promis
     return []
   }
   const queryStarted = performance.now()
-  const results = await instance.search(['content'], query, {
+  const results = await instance.search(query, {
     limit: 25,
     snippet: { columns: ['content'] },
     ...opts,

@@ -1,10 +1,10 @@
-import type { ContentListFile } from 'comark-content'
+import { DEFAULT_CONTENT_NAME, type ContentListFile } from 'comark-content'
 import type { GitHubCommit } from './github'
 import { hashManifestItem } from './json'
 
 /** How a push changed the content source, already filtered to `contentDir`. */
 export interface ContentChanges {
-  /** Manifest keys (`content/<stem><ext>`) of files added or modified. */
+  /** Manifest keys (`default/<stem><ext>`) of files added or modified. */
   upserted: string[]
   /** Manifest keys of files removed — only the previous manifest can resolve their paths. */
   removed: string[]
@@ -15,11 +15,11 @@ export interface ContentChanges {
 /** Files the content source can actually serve — matches the parsers installed in `content.ts`. */
 const CONTENT_EXTENSIONS = ['.md', '.yml', '.yaml', '.json']
 
-/** The manifest's hardcoded source name (see `contentSource()` in `content.ts`). */
-const SOURCE_NAME = 'content'
+/** The content instance's name (see `createSourceContent()` in `content.ts`) — unnamed, so `default`. */
+const SOURCE_NAME = DEFAULT_CONTENT_NAME
 
 /**
- * A push's changed content files, named by their manifest key (`content/<stem><ext>`) — the
+ * A push's changed content files, named by their manifest key (`default/<stem><ext>`) — the
  * reverse of `meta.key`, so a diff against `manifest.items` doesn't need to re-derive file → URL
  * mappings that comark already owns.
  */
@@ -72,7 +72,7 @@ export function payloadUrlForPage(path: string, buildId?: string): string {
   return buildId ? `${base}?_b=${buildId}` : base
 }
 
-/** `content/<stem><ext>` (a manifest key) → page path, the reverse of what the path-keyed manifest gives. */
+/** `default/<stem><ext>` (a manifest key) → page path, the reverse of what the path-keyed manifest gives. */
 export function indexByFileKey(items: Record<string, ContentListFile>): Map<string, string> {
   const index = new Map<string, string>()
   for (const item of Object.values(items)) index.set(item.meta.key, item.path)

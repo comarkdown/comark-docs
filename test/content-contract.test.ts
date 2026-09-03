@@ -7,9 +7,10 @@
  */
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { comarkContent, readArtifact } from 'comark-content'
+import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content'
 import fsSource from 'comark-content/sources/fs'
 import githubSource from 'comark-content/sources/github'
+import snapshot from 'comark-content/sources/snapshot'
 import { createContentClient } from 'comark-content/client'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
@@ -21,14 +22,17 @@ const fixture = fileURLToPath(new URL('./fixtures/content-contract', import.meta
  * The warm-up options from `server/api/revalidate.post.ts` — keep the two in step.
  * This object has to keep meaning "full init" on whichever build is installed.
  */
-const full = { partial: false, metaOnly: false }
+const full = { partial: false }
 
-/** `<source>:<path-in-source>` — the cache key comark-content writes a parsed body under. */
-const bodyKey = 'content:index.md'
+/**
+ * `<name>:<path-in-source>` — the cache key comark-content writes a parsed body
+ * under. The prefix is the *instance* name, which defaults to `default`.
+ */
+const bodyKey = 'default:index.md'
 
 function createFixtureContent() {
   return comarkContent({
-    sources: { content: fsSource(fixture) },
+    source: fsSource(fixture),
     cache: { driver: memoryDriver() },
   })
 }
@@ -53,8 +57,10 @@ describe('comark-content contract', () => {
     const content = createFixtureContent()
     await content.init()
 
-    expect(Object.keys(content.manifest.items)).toHaveLength(1)
-    expect(content.manifest.items['/']?.data?.title).toBe('Contract fixture')
+    // `manifest` is an async method returning saveable data, not a live property.
+    const manifest = await content.manifest()
+    expect(Object.keys(manifest.items)).toHaveLength(1)
+    expect(manifest.items['/']?.data?.title).toBe('Contract fixture')
   })
 
   it('writes parsed bodies to the cache on the revalidate warm-up init', async () => {
@@ -77,26 +83,21 @@ describe('comark-content contract', () => {
     expect(cached!.nodes.length).toBeGreaterThan(0)
   })
 
-  it('produces a snapshot artifact on the revalidate warm-up', async () => {
-    const content = createFixtureContent()
-    await content.init(full)
-
-    // `warmArtifacts` logs `artifact.size`, so a shape change there degrades to "not produced".
-    const artifact = await content.cache.snapshot('content')
-    expect(artifact).not.toBeNull()
-    expect(artifact!.size).toBeGreaterThan(0)
-    expect(Object.keys(await readArtifact(artifact!)).length).toBeGreaterThan(0)
-  })
-
   it('serves the manifest and snapshot artifacts through content.handler', async () => {
+    // 0.4 has no public equivalent of 0.3's `cache.snapshot(source)` — `warmArtifacts()`
+    // (server/utils/content.ts) warms this same route by self-requesting the handler. That's the
+    // mechanism this test pins: a shape change here is a shape change to what the browser search
+    // worker fetches.
     const content = createFixtureContent()
     await content.init(full)
 
     // The exact paths the search worker fetches and `modules/config.ts` declares ISR rules for.
-    for (const path of ['manifest.json', 'snapshot/content.json']) {
+    for (const path of ['manifest.json', `snapshot/${DEFAULT_CONTENT_NAME}.json`]) {
       const response = await content.handler(new Request(`http://localhost/api/content/${path}`))
       expect(response.status, path).toBe(200)
-      expect(Object.keys(await response.json()), path).toContain('checksum')
+      const artifact = await response.json()
+      expect(Object.keys(artifact), path).toContain('checksum')
+      expect(Object.keys(await readArtifact(artifact)).length, path).toBeGreaterThan(0)
     }
   })
 
@@ -108,15 +109,17 @@ describe('comark-content contract', () => {
       await (await server.handler(new Request(`http://localhost/api/content/${path}`))).json()
 
     // The search feature is this round-trip, so a break here is a silently empty search index.
+    // `snapshot()`'s first argument is the full-body tier; the second (optional) manifest tier
+    // lets a bare `init()` skip downloading bodies until a document is actually requested.
     const client = comarkContent({
-      cache: {
-        loadManifest: () => fetchArtifact('manifest.json'),
-        loadSnapshot: (source: string) => fetchArtifact(`snapshot/${source}.json`),
-      },
+      source: snapshot(
+        () => fetchArtifact(`snapshot/${DEFAULT_CONTENT_NAME}.json`),
+        () => fetchArtifact('manifest.json')
+      ),
     })
     await client.init()
 
-    expect(Object.keys(client.manifest.items)).toEqual(['/'])
+    expect(Object.keys((await client.manifest()).items)).toEqual(['/'])
 
     // Bodies have to arrive parsed: the client has no source to read a document from.
     const doc = await client.get('/')

@@ -1,4 +1,4 @@
-import { type ComarkContent, type CacheOptions, comarkContent } from 'comark-content';
+import { type CacheOptions, comarkContent } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import rangi from 'comark/plugins/rangi'
@@ -12,11 +12,23 @@ import tracingOtel from 'comark-content/plugins/tracing/otel'
 import { contentTracer } from './tracer.ts'
 import { geistTheme } from '../../utils/geist-theme.ts'
 
+/**
+ * The instance this layer builds, derived from the factory rather than written
+ * out.
+ *
+ * `ComarkContent` is the *unnarrowed* shape: its instance-name parameter drives
+ * the conditional types behind `get()` and `list()`, so a concrete instance is
+ * not assignable to it. Deriving instead of annotating keeps the narrowing that
+ * `comark-content prepare` generates — `get('/known/path')` stays typed all the
+ * way through the layer.
+ */
+export type DocsContent = Awaited<ReturnType<typeof createSourceContent>>
+
 const DEFAULT_LISTING_FIELDS = ['title', 'description', 'navigation', 'icon', 'layout']
 
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
-let content: Promise<ComarkContent> | undefined
+let content: Promise<DocsContent> | undefined
 
 // Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
 const comarkPlugins = [
@@ -44,10 +56,11 @@ export async function createSourceContent(
   const tracer = contentTracer()
   const listingFields = useRuntimeConfig().docs.listingFields ?? DEFAULT_LISTING_FIELDS
   const instance = comarkContent({
-    sources: {
-      content: contentSource(ref, { remote: opts.remote }),
-    },
+    source: contentSource(ref, { remote: opts.remote }),
     plugins: [
+      // Registers the `.md` parser itself, so the top-level `markdown:` option (which can't take
+      // `listingFields`) would just be dead config here — this plugin call is the only one comarkContent
+      // needs.
       markdown({
         comark: { plugins: comarkPlugins },
         listingFields,
@@ -74,19 +87,24 @@ export async function createSourceContent(
 }
 
 /**
- * Fully parse and persist every source's snapshot artifact into this instance's per-SHA cache, so
- * the next reader (a fresh instance sharing the same cache namespace) pays a cache read instead of
- * re-parsing from GitHub. `snapshot()` defaults to `fresh: true` — it re-parses and persists.
+ * Fully parse the content into this instance's per-SHA cache, then persist the served manifest and
+ * snapshot artifacts so the next reader (a fresh instance sharing the same cache namespace, or the
+ * search worker's fetch) pays a single cache read instead of a rebuild.
+ *
+ * comark-content 0.4 keeps artifact building internal (`ArtifactStore`, reachable only through
+ * `content.handler()`) — there's no public equivalent of 0.3's `cache.snapshot(source)`. Self-requesting
+ * the instance's own handler hits the same build-then-persist path the browser's first fetch would,
+ * just warmed ahead of time.
  */
-export async function warmArtifacts(content: ComarkContent): Promise<void> {
+export async function warmArtifacts(content: DocsContent): Promise<void> {
   await content.init({ partial: false })
-  for (const source of content.manifest.sources) {
-    const artifact = await content.cache.snapshot(source)
-    if (artifact) console.log(`[content] snapshot artifact "${source}" ${artifact.size} bytes`)
-    else console.warn(`[content] no snapshot artifact produced for source "${source}"`)
+  const basePath = content.options.basePath ?? '/api/content'
+  for (const section of ['manifest', `snapshot/${content.name}`]) {
+    const response = await content.handler(new Request(`http://local${basePath}/${section}`))
+    if (response.ok) console.log(`[content] warmed "${section}" artifact`)
+    else console.warn(`[content] failed to warm "${section}" artifact: ${response.status}`)
   }
 }
-
 
 // The content commit this instance is pinned to. Pinning GitHub reads to an immutable SHA rather
 // than the branch name bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
@@ -116,7 +134,7 @@ export async function resolveProdSha(): Promise<string> {
  * call resolves the current head via `resolveProdSha()` — a shared, short-TTL cache, not a per-instance
  * timer — and rebuilds when that advances. Previews stay pinned.
  */
-export async function getProdContent(): Promise<ComarkContent> {
+export async function getProdContent(): Promise<DocsContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveProdSha()
     if (sha !== getHeadRef()) {
@@ -161,14 +179,14 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */
-const contentPreviewInstances = new Map<string, Promise<ComarkContent>>()
+const contentPreviewInstances = new Map<string, Promise<DocsContent>>()
 
 // Bound required: each entry is a content instance with its own manifest and parsed bodies, and public
 // `/tree/:branch` / `/blob/:sha` let a crawler mint one per SHA. Evicted refs just rebuild, their
 // bodies surviving in the per-SHA Runtime Cache.
 const MAX_PREVIEW_INSTANCES = 8
 
-export function getPreviewContent(sha: string, basePath: string): Promise<ComarkContent> {
+export function getPreviewContent(sha: string, basePath: string): Promise<DocsContent> {
   const key = `${basePath}::${sha}`
   const existing = contentPreviewInstances.get(key)
   if (existing) {

@@ -1,4 +1,4 @@
-import type { ComarkContent } from 'comark-content'
+import type { DocsContent } from './content'
 
 interface SearchSection {
   id: string
@@ -21,14 +21,14 @@ const SEARCH_SECTIONS_KEY = 'search-sections'
  * instance watches the working tree, so content changes under a stable ref. Called from
  * `watch:file:update`.
  */
-export function invalidateSearchSections(content: ComarkContent): void {
+export function invalidateSearchSections(content: DocsContent): void {
   void content.cache.invalidate(SEARCH_SECTIONS_KEY).catch(() => {})
 }
 
 /**
  * Keyword-score the search index against `query` and return the best sections.
  */
-export async function searchDocSections(content: ComarkContent, query: string, limit = 10): Promise<SearchSection[]> {
+export async function searchDocSections(content: DocsContent, query: string, limit = 10): Promise<SearchSection[]> {
   const sections = await buildSearchSections(content)
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
 
@@ -50,7 +50,7 @@ export async function searchDocSections(content: ComarkContent, query: string, l
 }
 
 /** Walk every document's AST, one section per heading — the shape `UContentSearch` takes as `files`. */
-export async function buildSearchSections(content: ComarkContent): Promise<SearchSection[]> {
+export async function buildSearchSections(content: DocsContent): Promise<SearchSection[]> {
   const cached = await content.cache.get<SearchSection[]>(SEARCH_SECTIONS_KEY)
   if (cached) return cached
 
@@ -60,8 +60,8 @@ export async function buildSearchSections(content: ComarkContent): Promise<Searc
   return sections
 }
 
-async function collectSearchSections(content: ComarkContent): Promise<SearchSection[]> {
-  const docs = await content.list(['content'])
+async function collectSearchSections(content: DocsContent): Promise<SearchSection[]> {
+  const docs = await content.list()
   const sections: SearchSection[] = []
 
   // Parsed up front rather than one await per iteration; the walk below is order-dependent.

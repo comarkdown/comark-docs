@@ -16,8 +16,8 @@ describe('changesForPush', () => {
       }),
     ]
     expect(changesForPush('content', commits)).toEqual({
-      upserted: ['content/1.guide/2.intro.md', 'content/index.md'],
-      removed: ['content/old.md'],
+      upserted: ['default/1.guide/2.intro.md', 'default/index.md'],
+      removed: ['default/old.md'],
       navTouched: false,
     })
   })
@@ -32,7 +32,7 @@ describe('changesForPush', () => {
 
   it('follows a nested content dir', () => {
     expect(changesForPush('docs/content', [commit({ modified: ['docs/content/x.md'] })])).toEqual({
-      upserted: ['content/x.md'],
+      upserted: ['default/x.md'],
       removed: [],
       navTouched: false,
     })
@@ -41,9 +41,9 @@ describe('changesForPush', () => {
   it('covers every parser extension, not just markdown', () => {
     const commits = [commit({ added: ['content/data.yml', 'content/data.yaml', 'content/data.json'] })]
     expect(changesForPush('content', commits).upserted).toEqual([
-      'content/data.yml',
-      'content/data.yaml',
-      'content/data.json',
+      'default/data.yml',
+      'default/data.yaml',
+      'default/data.json',
     ])
   })
 
@@ -55,7 +55,7 @@ describe('changesForPush', () => {
   it('treats a path removed and re-added in the same push as an upsert', () => {
     const commits = [commit({ added: ['content/index.md'], removed: ['content/index.md'] })]
     expect(changesForPush('content', commits)).toEqual({
-      upserted: ['content/index.md'],
+      upserted: ['default/index.md'],
       removed: [],
       navTouched: false,
     })
