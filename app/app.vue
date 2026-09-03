@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
+import { useRoute } from 'vue-router'
 
 const { seo, docs } = useAppConfig()
 
 const content = useDocsContent()
+const route = useRoute()
 
 const { data: navigation } = await useAsyncData('navigation', () => content.value.client.navigation(), {
   watch: [() => content.value.base],
 })
 
+const nuxtApp = useNuxtApp()
 const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
+const navigationLayout = ref(findNavigationLayout(navTree.value, route.path))
+onNuxtReady(() => {
+  nuxtApp.hook('page:finish', () => {
+    navigationLayout.value = findNavigationLayout(navTree.value, route.path)
+  })
+})
 
 useHead({
   meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
@@ -34,6 +43,7 @@ useSeoMeta({
 })
 
 provide('navigation', navTree)
+provide('layout', navigationLayout)
 
 // const colorMode = useColorMode()
 const historyOpen = useVersionHistory()
@@ -64,9 +74,17 @@ defineShortcuts({
     <AppHeader />
 
     <UMain>
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
+      <Suspense>
+        <LayoutsPage v-if="navigationLayout === 'page'">
+          <NuxtPage />
+        </LayoutsPage>
+        <LayoutsDocs v-else-if="navigationLayout === 'docs'">
+          <NuxtPage />
+        </LayoutsDocs>
+        <UContainer v-else>
+          <NuxtPage />
+        </UContainer>
+      </Suspense>
     </UMain>
 
     <AppFooter />
