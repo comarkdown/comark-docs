@@ -2,7 +2,8 @@
 import { DefaultChatTransport, isReasoningUIPart, isTextUIPart, isToolUIPart, getToolName, type ToolUIPart, type DynamicToolUIPart, type UIMessage } from 'ai'
 import { useChat } from '@ai-sdk/vue'
 import { isPartStreaming, isToolStreaming } from '@nuxt/ui/utils/ai'
-import highlight from '@comark/nuxt/plugins/highlight'
+import rangi from 'comark/plugins/rangi'
+import { geistTheme } from '../../utils/geist-theme'
 
 const MAX_INPUT = 1000
 
@@ -14,7 +15,7 @@ const { messages, status, error, sendMessage, regenerate, stop } = useChat({
   transport: new DefaultChatTransport({ api: '/api/assistant' }),
 })
 
-const plugins = [highlight()]
+const plugins = [rangi({ theme: geistTheme })]
 
 // Suggestions grouped by category, shown before the first message.
 const questions = computed(() => assistant?.faqQuestions ?? [])
