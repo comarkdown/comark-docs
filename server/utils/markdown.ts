@@ -1,7 +1,7 @@
-import type { ComarkContent } from 'comark-content'
+import type { DocsContent } from './content'
 import { renderMarkdown } from 'comark/render'
 
-export async function renderPageMarkdown(content: ComarkContent, path: string): Promise<string | null> {
+export async function renderPageMarkdown(content: DocsContent, path: string): Promise<string | null> {
   const item = await content.get(path)
   if (!item || item.meta.kind !== 'document') return null
 
