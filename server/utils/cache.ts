@@ -17,7 +17,7 @@ function cacheAvailable(): boolean {
  * Bump when content parser/plugin configuration, relevant parser dependencies, or cached derived
  * data changes. Keeping this explicit lets unrelated deployments reuse immutable content artifacts.
  */
-export const CONTENT_PARSER_VERSION = 'v2'
+export const CONTENT_PARSER_VERSION = 'v3'
 
 /** Per-parser-version, per-content-SHA driver backing comark's manifest and parsed bodies. */
 export function cacheDriver(sha: string): Driver {
