@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { createStorage } from 'unstorage'
+import { fetchLastContentCommit } from '../../utils/github'
 
 export interface GitHubCommit {
   added?: string[]
@@ -80,19 +81,15 @@ export async function resolveContentSha(
     if (cached) return cached
   }
 
-  const token = githubToken()
-  let commits: Array<{ sha: string }>
+  // Shared with the build-time seed, which walks the built commit instead of a branch — see
+  // `fetchLastContentCommit()`. One query, so the two cannot drift apart.
+  let sha: string | undefined
   try {
-    commits = await $fetch<Array<{ sha: string }>>(`https://api.github.com/repos/${githubRepo()}/commits`, {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      query: {
-        sha: branch,
-        path: normalizeContentDir(contentDir),
-        per_page: 1,
-      },
+    sha = await fetchLastContentCommit({
+      repo: githubRepo(),
+      path: contentDir,
+      ref: branch,
+      token: githubToken(),
     })
   } catch (error: unknown) {
     // Only a definitive 404 is cacheable; a 5xx, rate-limit 403 or network blip stays retryable.
@@ -105,7 +102,6 @@ export async function resolveContentSha(
     throw error
   }
 
-  const sha = commits[0]?.sha
   if (!sha) {
     if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED)
     throw createError({ statusCode: 404, statusMessage: `Content not found at ref: ${branch}` })

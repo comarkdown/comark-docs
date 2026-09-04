@@ -57,7 +57,7 @@ function walk(items: NavigationItem[], path: string): boolean {
 }
 
 // Shared with the server-side `/raw/**` mirror (server/routes/raw/[...slug].md.get.ts).
-export { findFirstLeaf } from '../../utils/first-leaf'
+export { findFirstLeaf } from '../../utils/navigation'
 
 export interface BreadcrumbItem {
   title: string

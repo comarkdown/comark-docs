@@ -1,16 +1,8 @@
-import { type CacheOptions, comarkContent } from 'comark-content'
+import { type CacheOptions, type ContentSource, DEFAULT_CONTENT_NAME } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import rangi from 'comark/plugins/rangi'
-import security from 'comark/plugins/security'
-import emoji from 'comark/plugins/emoji'
-import toc from 'comark/plugins/toc'
-import mermaid from 'comark/plugins/mermaid'
-import markdown from 'comark-content/plugins/markdown'
-import yaml from 'comark-content/plugins/yaml'
-import tracingOtel from 'comark-content/plugins/tracing/otel'
-import { contentTracer } from './tracer.ts'
-import { geistTheme } from '../../utils/geist-theme.ts'
+import { withSnapshot } from 'comark-content/sources/snapshot'
+import { createRuntimeContentInstance } from '../../utils/content.ts'
 
 /**
  * The instance this layer builds, derived from the factory rather than written
@@ -24,23 +16,9 @@ import { geistTheme } from '../../utils/geist-theme.ts'
  */
 export type DocsContent = Awaited<ReturnType<typeof createSourceContent>>
 
-const DEFAULT_LISTING_FIELDS = ['title', 'description', 'navigation', 'icon', 'layout']
-
 // Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
 let content: Promise<DocsContent> | undefined
-
-// Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
-const comarkPlugins = [
-  mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
-  rangi({ theme: geistTheme }),
-  toc({ depth: 3 }),
-  emoji(),
-  security({
-    blockedTags: ['script', 'iframe', 'embed', 'form', 'base', 'meta', 'link', 'style'],
-    allowDataImages: false,
-  }),
-]
 
 /**
  * Create a new content instance reading content at `ref` (a commit SHA or branch).
@@ -53,21 +31,8 @@ export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-  const tracer = contentTracer()
-  const listingFields = useRuntimeConfig().docs.listingFields ?? DEFAULT_LISTING_FIELDS
-  const instance = comarkContent({
+  const instance = createRuntimeContentInstance({
     source: contentSource(ref, { remote: opts.remote }),
-    plugins: [
-      // Registers the `.md` parser itself, so the top-level `markdown:` option (which can't take
-      // `listingFields`) would just be dead config here — this plugin call is the only one comarkContent
-      // needs.
-      markdown({
-        comark: { plugins: comarkPlugins },
-        listingFields,
-      }),
-      yaml({ listingFields }),
-      tracer && tracingOtel({ tracer }),
-    ],
     cache: opts.cache,
     basePath: opts.basePath,
   })
@@ -139,7 +104,7 @@ export async function getProdContent(): Promise<DocsContent> {
   return content
 }
 
-function contentSource(ref: string, opts: { remote?: boolean } = {}) {
+function contentSource(ref: string, opts: { remote?: boolean } = {}): ContentSource {
   const { docs } = useRuntimeConfig()
 
   if (import.meta.dev) {
@@ -148,7 +113,7 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
     return fs(docs.contentPath)
   }
 
-  return github({
+  const source = github({
     repo: githubRepo(),
     branch: ref,
     path: docs.contentDir,
@@ -156,6 +121,11 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
     // `ref` is an immutable commit SHA => we can cache hard.
     ttl: 60 * 60 * 24,
   })
+
+  // The snapshot shipped during build by `modules/snapshot/`.
+  return withSnapshot(source, () =>
+    useStorage('assets:comark-content').get<string>(`${ref}/${DEFAULT_CONTENT_NAME}/snapshot.json`)
+  )
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */

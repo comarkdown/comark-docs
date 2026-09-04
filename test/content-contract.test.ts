@@ -5,12 +5,15 @@
  * which is how comark-content#77's `metaOnly` -> `partial` rename silently degraded
  * the webhook's body warm-up. This exercises the surface the layer depends on.
  */
+import { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content'
+import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact, writeSnapshots } from 'comark-content'
 import fsSource from 'comark-content/sources/fs'
 import githubSource from 'comark-content/sources/github'
-import snapshot from 'comark-content/sources/snapshot'
+import snapshot, { withSnapshot } from 'comark-content/sources/snapshot'
 import { createContentClient } from 'comark-content/client'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
@@ -87,7 +90,7 @@ describe('comark-content contract', () => {
     const content = createFixtureContent()
     await content.init(full)
 
-    // The exact paths the search worker fetches and `modules/config.ts` declares ISR rules for.
+    // The exact paths the search worker fetches and `modules/config/` declares ISR rules for.
     for (const path of ['manifest.json', `snapshot/${DEFAULT_CONTENT_NAME}.json`]) {
       const response = await content.handler(new Request(`http://localhost/api/content/${path}`))
       expect(response.status, path).toBe(200)
@@ -121,5 +124,62 @@ describe('comark-content contract', () => {
     const doc = await client.get('/')
     expect(doc?.data?.title).toBe('Contract fixture')
     expect(doc?.nodes?.length).toBeGreaterThan(0)
+  })
+
+  describe('build-time seed', () => {
+    /**
+     * `modules/snapshot/` writes the seed with `writeSnapshots()`, and
+     * `server/utils/content.ts` reads it back through a Nitro server asset. Two things here are
+     * layout, not behaviour, and both are silent when wrong: the per-instance subdirectory, and
+     * the fact that a server asset hands back JSON *text*.
+     */
+    async function writeSeed() {
+      const dir = await mkdtemp(join(tmpdir(), 'comark-seed-'))
+      await writeSnapshots(createFixtureContent(), { dir })
+      // One directory per instance, named after it — ours is unnamed, so `default`.
+      const read = (file: string) => readFile(join(dir, DEFAULT_CONTENT_NAME, file), 'utf8')
+      return { snapshot: () => read('snapshot.json'), manifest: () => read('manifest.json') }
+    }
+
+    it('hydrates a withSnapshot instance from the seed without reading the source', async () => {
+      const seed = await writeSeed()
+
+      // A source that throws on any read: hydrating from the seed must not touch it. This is the
+      // cold start being bought — in production the reads it stands in for are GitHub API calls.
+      const unreachable = {
+        ...fsSource(fixture),
+        keys: () => {
+          throw new Error('the origin was walked')
+        },
+      }
+
+      const content = comarkContent({
+        source: withSnapshot(unreachable, seed.snapshot, seed.manifest),
+        cache: { driver: memoryDriver() },
+      })
+      await content.init(full)
+
+      expect(Object.keys((await content.manifest()).items)).toEqual(['/'])
+      const doc = await content.get('/')
+      expect(doc?.data?.title).toBe('Contract fixture')
+      expect(doc?.nodes?.length).toBeGreaterThan(0)
+    })
+
+    it('falls back to the source when no seed is stored', async () => {
+      // What every ref other than the build commit gets: loaders return `null`, so the origin is
+      // the only provider. A seed that cannot prove it belongs to this ref must never be used.
+      const content = comarkContent({
+        source: withSnapshot(
+          fsSource(fixture),
+          () => null,
+          () => null
+        ),
+        cache: { driver: memoryDriver() },
+      })
+      await content.init(full)
+
+      expect(Object.keys((await content.manifest()).items)).toEqual(['/'])
+      expect((await content.get('/'))?.data?.title).toBe('Contract fixture')
+    })
   })
 })

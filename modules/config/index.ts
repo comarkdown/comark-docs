@@ -1,10 +1,9 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
-import { resolveContentDir } from '../utils/content-dir'
-import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
-import { LAYER_ICON_COLLECTIONS } from '../utils/icons'
-import { getPackageJsonMetadata, inferSiteURL } from '../utils/meta'
+import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
+import { LAYER_ICON_COLLECTIONS } from '../../utils/icons'
+import { getPackageJsonMetadata, inferSiteURL, resolveContentDir } from './utils'
 
 const logger = useLogger('comark-docs')
 
@@ -22,11 +21,6 @@ export interface ComarkDocsOptions {
    * push webhook all resolve to a path that doesn't exist. Also settable as `NUXT_DOCS_CONTENT_DIR`.
    */
   contentDir?: string
-  /**
-   * Frontmatter fields kept in the manifest (visible to `list()` and `navigation()`) and the push webhook's nav-changed diff.
-   * @default ['title', 'description', 'navigation', 'icon', 'layout']
-   */
-  listingFields?: string[]
   codeExplorer?: {
     /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
@@ -124,7 +118,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
       contentDir,
       contentPath,
       repoRoot,
-      listingFields: options.listingFields || ['title', 'description', 'navigation', 'icon', 'layout'],
       codeExplorer: {
         allowRepos: options.codeExplorer?.allowRepos || [],
       },

@@ -1,4 +1,4 @@
-import { findFirstLeaf } from '../../../utils/first-leaf'
+import { findFirstLeaf } from '../../../utils/navigation'
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParams(event)['slug.md']
