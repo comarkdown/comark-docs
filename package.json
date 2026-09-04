@@ -42,7 +42,7 @@
     "@iconify-json/vscode-icons": "^1.2.74",
     "@iconify/vue": "^5.0.1",
     "@nuxt/kit": "^4.5.2",
-    "@nuxt/ui": "^4.11.0",
+    "@nuxt/ui": "https://pkg.pr.new/@nuxt/ui@fbb9e22",
     "@nuxtjs/mcp-toolkit": "^0.18.1",
     "@nuxtjs/robots": "^6.2.0",
     "@nuxtjs/sitemap": "^8.5.0",
