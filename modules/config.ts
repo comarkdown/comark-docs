@@ -174,6 +174,12 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/api/content/pr/*/search-sections': { isr },
         '/api/content/search-sections': { isr },
         '/api/code-explorer/**': { isr },
+        '/_payload.json': {
+          headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },
+        },
+        '/**/_payload.json': {
+          headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },
+        },
       }
 
       if (existsSync(contentPath)) {
