@@ -36,8 +36,8 @@ importers:
         specifier: ^4.5.2
         version: 4.5.2(magic-string@1.2.3)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.5)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)))
       '@nuxt/ui':
-        specifier: https://pkg.pr.new/@nuxt/ui@f2a5789
-        version: https://pkg.pr.new/@nuxt/ui@f2a5789(7fbc16f2b6c23b42dc4bd9c4885c5233)
+        specifier: https://pkg.pr.new/@nuxt/ui@fbb9e22
+        version: https://pkg.pr.new/@nuxt/ui@fbb9e22(7fbc16f2b6c23b42dc4bd9c4885c5233)
       '@nuxtjs/mcp-toolkit':
         specifier: ^0.18.1
         version: 0.18.1(@vue/compiler-sfc@3.5.41)(h3@1.15.11)(magic-string@1.2.3)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.5)(rollup@4.62.5)(supports-color@10.2.2)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)))(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))(zod@4.4.3)
@@ -1263,8 +1263,8 @@ packages:
       zod:
         optional: true
 
-  '@nuxt/ui@https://pkg.pr.new/@nuxt/ui@f2a5789':
-    resolution: {integrity: sha512-/x/1UqjY05xXosdl/UI2pt7xqCc2NyNXNnO4f8lkGXBAgoNDdbyV1dM0rwJy0jn05rHNW3TXde7TIZLrj0W0FQ==, tarball: https://pkg.pr.new/@nuxt/ui@f2a5789}
+  '@nuxt/ui@https://pkg.pr.new/@nuxt/ui@fbb9e22':
+    resolution: {integrity: sha512-/Jso4/TOeffrAdGOR9AYTHWVYAMMmxR+oH5duIB4n7H2Itg6X7l7AhRXNbk3yL8cO47oIuolfgT74GFuXKKp+A==, tarball: https://pkg.pr.new/@nuxt/ui@fbb9e22}
     version: 4.11.0
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -8113,7 +8113,7 @@ snapshots:
       - vue
       - webpack
 
-  '@nuxt/ui@https://pkg.pr.new/@nuxt/ui@f2a5789(7fbc16f2b6c23b42dc4bd9c4885c5233)':
+  '@nuxt/ui@https://pkg.pr.new/@nuxt/ui@fbb9e22(7fbc16f2b6c23b42dc4bd9c4885c5233)':
     dependencies:
       '@floating-ui/dom': 1.8.0
       '@iconify/vue': 5.0.1(vue@3.5.41(typescript@6.0.3))
