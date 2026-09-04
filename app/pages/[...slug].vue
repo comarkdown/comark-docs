@@ -2,12 +2,115 @@
 import { joinURL } from 'ufo'
 import type { NavigationItem } from 'comark-content'
 import { Mermaid } from '@comark/nuxt/plugins/mermaid'
+import {
+  ProseA,
+  ProseAccordion,
+  ProseAccordionItem,
+  ProseBadge,
+  ProseBlockquote,
+  ProseCallout,
+  ProseCard,
+  ProseCardGroup,
+  ProseCaution,
+  ProseCode,
+  ProseCodeCollapse,
+  ProseCodeGroup,
+  ProseCodeIcon,
+  ProseCodePreview,
+  ProseCodeTree,
+  ProseCollapsible,
+  ProseEm,
+  ProseField,
+  ProseFieldGroup,
+  ProseH1,
+  ProseH2,
+  ProseH3,
+  ProseH4,
+  ProseHr,
+  ProseIcon,
+  ProseImg,
+  ProseKbd,
+  ProseLi,
+  ProseNote,
+  ProseOl,
+  ProseP,
+  ProsePre,
+  ProsePrompt,
+  ProseScript,
+  ProseSteps,
+  ProseStrong,
+  ProseTable,
+  ProseTabs,
+  ProseTabsItem,
+  ProseTbody,
+  ProseTd,
+  ProseTh,
+  ProseThead,
+  ProseTip,
+  ProseTr,
+  ProseUl,
+  ProseWarning,
+} from '#components'
 import CodeExplorer from '../components/CodeExplorer.vue'
 import Browser from '../components/Browser.vue'
 
 definePageMeta({
   path: '/:slug(.+)',
 })
+
+// Resolve prose eagerly with the docs route instead of the global async components.
+const components = {
+  ProseA,
+  ProseAccordion,
+  ProseAccordionItem,
+  ProseBadge,
+  ProseBlockquote,
+  ProseCallout,
+  ProseCard,
+  ProseCardGroup,
+  ProseCaution,
+  ProseCode,
+  ProseCodeCollapse,
+  ProseCodeGroup,
+  ProseCodeIcon,
+  ProseCodePreview,
+  ProseCodeTree,
+  ProseCollapsible,
+  ProseEm,
+  ProseField,
+  ProseFieldGroup,
+  ProseH1,
+  ProseH2,
+  ProseH3,
+  ProseH4,
+  ProseHr,
+  ProseIcon,
+  ProseImg,
+  ProseKbd,
+  ProseLi,
+  ProseNote,
+  ProseOl,
+  ProseP,
+  ProsePre,
+  ProsePrompt,
+  ProseScript,
+  ProseSteps,
+  ProseStrong,
+  ProseTable,
+  ProseTabs,
+  ProseTabsItem,
+  ProseTbody,
+  ProseTd,
+  ProseTh,
+  ProseThead,
+  ProseTip,
+  ProseTr,
+  ProseUl,
+  ProseWarning,
+  Mermaid,
+  CodeExplorer,
+  Browser,
+}
 
 const { toc, seo } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
@@ -122,7 +225,7 @@ if (content.value.mode === 'prod') {
       <MarkdownDocument
         v-if="tree"
         :value="tree"
-        :components="{ Mermaid, CodeExplorer, Browser }"
+        :components="components"
       />
 
       <UContentSurround
