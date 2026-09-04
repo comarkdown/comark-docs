@@ -84,10 +84,6 @@ describe('comark-content contract', () => {
   })
 
   it('serves the manifest and snapshot artifacts through content.handler', async () => {
-    // 0.4 has no public equivalent of 0.3's `cache.snapshot(source)` — `warmArtifacts()`
-    // (server/utils/content.ts) warms this same route by self-requesting the handler. That's the
-    // mechanism this test pins: a shape change here is a shape change to what the browser search
-    // worker fetches.
     const content = createFixtureContent()
     await content.init(full)
 

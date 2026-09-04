@@ -86,26 +86,6 @@ export async function createSourceContent(
   return instance
 }
 
-/**
- * Fully parse the content into this instance's per-SHA cache, then persist the served manifest and
- * snapshot artifacts so the next reader (a fresh instance sharing the same cache namespace, or the
- * search worker's fetch) pays a single cache read instead of a rebuild.
- *
- * comark-content 0.4 keeps artifact building internal (`ArtifactStore`, reachable only through
- * `content.handler()`) — there's no public equivalent of 0.3's `cache.snapshot(source)`. Self-requesting
- * the instance's own handler hits the same build-then-persist path the browser's first fetch would,
- * just warmed ahead of time.
- */
-export async function warmArtifacts(content: DocsContent): Promise<void> {
-  await content.init({ partial: false })
-  const basePath = content.options.basePath ?? '/api/content'
-  for (const section of ['manifest', `snapshot/${content.name}`]) {
-    const response = await content.handler(new Request(`http://local${basePath}/${section}`))
-    if (response.ok) console.log(`[content] warmed "${section}" artifact`)
-    else console.warn(`[content] failed to warm "${section}" artifact: ${response.status}`)
-  }
-}
-
 // The content commit this instance is pinned to. Pinning GitHub reads to an immutable SHA rather
 // than the branch name bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
 let headRef: string | undefined

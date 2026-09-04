@@ -6,10 +6,10 @@ import { waitUntil } from '@vercel/functions'
 const REVALIDATE_CONCURRENCY = 8
 
 /** Why a route was purged — one value per `addPath` call site below. */
-type PurgeReason = 'page' | 'payload' | 'raw' | 'nav' | 'artifact' | 'global'
+type PurgeReason = 'page' | 'payload' | 'raw' | 'nav' | 'global'
 
 /** Display/response order. */
-const REASON_ORDER: PurgeReason[] = ['page', 'payload', 'raw', 'nav', 'artifact', 'global']
+const REASON_ORDER: PurgeReason[] = ['page', 'payload', 'raw', 'nav', 'global']
 
 /** `nav` is the only unbounded reason (the whole site can be thousands of pages) — cap what the log prints. */
 const MAX_LOGGED_PATHS_PER_REASON = 5
@@ -82,7 +82,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Diffed against the live prod instance, already warm
-  const { headSha, freshContent, newItems, pagePaths, navChanged } = await timings.time('rebuild', async () => {
+  const { headSha, newItems, pagePaths, navChanged } = await timings.time('rebuild', async () => {
     const outdated = await getProdContent()
     await outdated.init()
     const oldItems = { ...(await outdated.manifest()).items }
@@ -90,10 +90,11 @@ export default defineEventHandler(async (event) => {
     // Refresh the content SHA
     const headSha = await resolveContentSha(branch, contentDir, { refresh: true })
     const freshContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
+    // Partial init: the diff needs the index (cache will be reused by the warm below)
     await freshContent.init()
     const newItems = (await freshContent.manifest()).items
 
-    return { headSha, freshContent, newItems, ...diffContent(changes, oldItems, newItems) }
+    return { headSha, newItems, ...diffContent(changes, oldItems, newItems) }
   })
 
   for (const path of pagePaths) {
@@ -114,11 +115,7 @@ export default defineEventHandler(async (event) => {
 
   // Per-commit search artifacts (ISR, immutable).
   const artifactBase = `/api/content/blob/${headSha}`
-  const manifestPath = `${artifactBase}/manifest.json`
-  const snapshotPath = `${artifactBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`
-  addPath('artifact', manifestPath)
-  addPath('artifact', snapshotPath)
-  const artifactPaths = new Set([manifestPath, snapshotPath])
+  const pathsToWarm = [`${artifactBase}/manifest.json`, `${artifactBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`]
 
   // Any content change invalidates the global indexes: each is rebuilt from the whole tree.
   for (const path of ['/llms.txt', '/llms-full.txt', '/rss.xml', '/sitemap.xml']) {
@@ -128,53 +125,57 @@ export default defineEventHandler(async (event) => {
   console.log(
     `${tag} navChanged=${navChanged} ` +
       `(upserted=${changes.upserted.length}, removed=${changes.removed.length}, navConfig=${changes.navTouched}) | ` +
-      `${pathsToPurge.size} route(s) | ${timings.format()}`
+      `${pathsToPurge.size} to purge, ${pathsToWarm.length} to warm | ${timings.format()}`
   )
 
   logBreakdown(tag, byReason)
+  for (const path of pathsToWarm) console.log(`${tag}   warm\t${path}`)
 
   // Dev has no ISR cache to purge
   if (import.meta.dev) {
-    return { ok: true, requestId, deliveryId, navChanged, routes: routesBreakdown(byReason), dev: true }
+    return {
+      ok: true,
+      requestId,
+      deliveryId,
+      navChanged,
+      routes: routesBreakdown(byReason),
+      warm: pathsToWarm.length,
+      dev: true,
+    }
   }
 
   const protocol = getRequestProtocol(event)
   const host = getRequestHost(event, { xForwardedHost: true })
   const baseURL = `${protocol}://${host}`
 
-  // `x-prerender-revalidate` purges the ISR cache entry for the URL being fetched.
-  const headers: Record<string, string> = { 'x-prerender-revalidate': bypassToken }
   // Lets the deployment call itself while Vercel Authentication is on (preview deploys).
-  if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
-    headers['x-vercel-protection-bypass'] = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-  }
+  const selfCall: Record<string, string> = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+    ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
+    : {}
+
+  // `x-prerender-revalidate` regenerates the ISR entry for the URL being fetched.
+  const purgeHeaders = { ...selfCall, 'x-prerender-revalidate': bypassToken }
 
   // Vercel's native waitUntil, not Nitro's `event.waitUntil` — that one can orphan async work here.
   waitUntil(
     (async () => {
       const absent: string[] = []
 
-      // Warms the per-SHA body cache and persists the snapshot artifact the fetches below read.
-      await timings.time('warm', () =>
-        warmArtifacts(freshContent).catch((error) => {
-          console.error(`${tag} artifact warm failed`, error?.message ?? error)
-        })
+      // The warm runs first:
+      // - ISR cache manifest and snapshot for the new SHA
+      // - Cache parsed items for the pages to purge and re-render
+      const warmResults = await timings.time('warm', () =>
+        settleInBatches(pathsToWarm, REVALIDATE_CONCURRENCY, (path) =>
+          $fetch(path, { baseURL, method: 'GET', headers: selfCall }).catch((error) => {
+            console.error(`${tag}   ✗ ${path}`, error?.statusCode ?? error?.message ?? error)
+            throw error
+          })
+        )
       )
 
-      const revalidate = (path: string) =>
-        $fetch(path, { baseURL, method: 'GET', headers }).catch((error) => {
-          console.error(`${tag}   ✗ ${path}`, error?.statusCode ?? error?.message ?? error)
-          throw error
-        })
-
-      const artifactResults = await timings.time('artifact', () =>
-        settleInBatches([...artifactPaths], REVALIDATE_CONCURRENCY, revalidate)
-      )
-
-      const pagePathsToPurge = [...pathsToPurge].filter((path) => !artifactPaths.has(path))
-      const pageResults = await timings.time('purge', () =>
-        settleInBatches(pagePathsToPurge, REVALIDATE_CONCURRENCY, (path) =>
-          $fetch(path, { baseURL, method: 'GET', headers }).catch((error) => {
+      const purgeResults = await timings.time('purge', () =>
+        settleInBatches([...pathsToPurge], REVALIDATE_CONCURRENCY, (path) =>
+          $fetch(path, { baseURL, method: 'GET', headers: purgeHeaders }).catch((error) => {
             // Content with no page of its own (e.g. a partial) has nothing cached to purge.
             if (error?.statusCode === 404) {
               absent.push(path)
@@ -186,10 +187,11 @@ export default defineEventHandler(async (event) => {
         )
       )
 
-      const results = [...artifactResults, ...pageResults]
-      const failed = results.filter((r) => r.status === 'rejected').length
+      const warmed = warmResults.filter((r) => r.status === 'fulfilled').length
+      const failed = [...warmResults, ...purgeResults].filter((r) => r.status === 'rejected').length
+      const purged = purgeResults.filter((r) => r.status === 'fulfilled').length - absent.length
       console.log(
-        `${tag} complete: ${results.length - failed - absent.length} purged, ${absent.length} absent, ` +
+        `${tag} complete: ${warmed} warmed, ${purged} purged, ${absent.length} absent, ` +
           `${failed} failed | ${timings.format()} | total=${timings.since()}ms`
       )
       logAbsent(tag, absent)
