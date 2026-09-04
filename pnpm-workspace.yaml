@@ -18,6 +18,7 @@ minimumReleaseAgeExclude:
   - '@comark/vue@0.6.0 || 0.6.1 || 0.6.2'
   - comark@0.6.0 || 0.6.1 || 0.6.2
   - comark-content@0.3.0
+  - nuxt-agent-discovery@0.5.0
 
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.

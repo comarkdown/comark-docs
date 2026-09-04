@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
+import type { McpServerCardOptions } from 'nuxt-agent-discovery'
 import { resolveContentDir } from '../utils/content-dir'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
 import { LAYER_ICON_COLLECTIONS } from '../utils/icons'
@@ -26,14 +27,6 @@ export interface ComarkDocsOptions {
     /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
   }
-  skills?: {
-    /**
-     * Directory, relative to the app root, scanned at build time for Agent Skills.
-     * Each subdirectory with a `SKILL.md` is published at `/.well-known/skills/`.
-     * @default 'skills'
-     */
-    dir?: string
-  }
 }
 
 export default defineNuxtModule<ComarkDocsOptions>({
@@ -49,7 +42,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
-      site?: { url?: string; name?: string }
+      site?: { url?: string; name?: string; description?: string }
       appConfig: Record<string, unknown>
     }
 
@@ -145,10 +138,20 @@ export default defineNuxtModule<ComarkDocsOptions>({
     })
 
     const mcpOptions = (nuxt.options as { mcp?: { name?: string; version?: string } }).mcp
-    ;(nuxt.options as { mcp?: { name?: string; version?: string } }).mcp = defu(mcpOptions, {
+    const mcp = defu(mcpOptions, {
       name: `${siteName} Docs`,
       version: '1.0.0',
     })
+    ;(nuxt.options as { mcp?: typeof mcp }).mcp = mcp
+
+    // The MCP server card is declared in the layer's nuxt.config (nuxt-agent-discovery reads its options before
+    // this module runs); the fields that depend on the site name land in its runtime config here.
+    const card: McpServerCardOptions | undefined = nuxt.options.runtimeConfig.agentDiscoveryMcp
+    if (card) {
+      card.name ||= mcp.name
+      card.version ||= mcp.version
+      card.description ||= nuxtOptions.site?.description
+    }
 
     // ISR rules here (not `$production`) so they merge cleanly across npm layers; content sections need a redeploy.
     if (!nuxt.options.dev && options.isr !== false) {
@@ -167,6 +170,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Global content indexes, purged by the push webhook on content changes.
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
+        '/sitemap.md': { isr },
         '/rss.xml': { isr },
         // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
         '/api/content/blob/*/search-sections': { isr: true },

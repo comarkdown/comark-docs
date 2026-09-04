@@ -10,6 +10,7 @@ import {
 import { gateway } from '@ai-sdk/gateway'
 import { z } from 'zod'
 import type { NavigationItem } from 'comark-content'
+import { getAgentDocument } from '#agent-discovery'
 
 /** Keep the context bounded on a public endpoint: only the tail of long conversations is forwarded. */
 const MAX_MESSAGES = 20
@@ -96,8 +97,10 @@ ${pageIndex(navigation)}`,
           path: z.string().describe('Page path, e.g. /getting-started/installation'),
         }),
         execute: async ({ path }) => {
-          const markdown = await renderPageMarkdown(content, path.startsWith('/') ? path : `/${path}`)
-          return markdown ?? `Page not found: ${path}. Use a path from the page index.`
+          const document = await getAgentDocument(event, path.startsWith('/') ? path : `/${path}`)
+          if (!document) return `Page not found: ${path}. Use a path from the page index.`
+          if ('redirect' in document) return `${path} is a section, not a page. Read ${document.redirect} instead.`
+          return document.markdown
         },
       }),
     },

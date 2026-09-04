@@ -56,7 +56,6 @@ function walk(items: NavigationItem[], path: string): boolean {
   return false
 }
 
-// Shared with the server-side `/raw/**` mirror (server/routes/raw/[...slug].md.get.ts).
 export { findFirstLeaf } from '../../utils/first-leaf'
 
 export interface BreadcrumbItem {

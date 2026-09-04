@@ -150,8 +150,9 @@ export default defineEventHandler(async (event) => {
   // URL the browser loads (`…/_payload.json?<buildId>`).
   const buildId = useRuntimeConfig(event).app.buildId
 
-  // Any content change invalidates the llms indexes, the feed, and the body-derived search index.
-  const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/rss.xml', '/api/content/search-sections'])
+  // Any content change invalidates the llms indexes, the markdown sitemap, the feed, and the body-derived
+  // search index.
+  const paths = new Set<string>(['/llms.txt', '/llms-full.txt', '/sitemap.md', '/rss.xml', '/api/content/search-sections'])
   for (const f of changedFiles) {
     const pageUrl = pageUrlForPath(f)
     if (pageUrl) {
