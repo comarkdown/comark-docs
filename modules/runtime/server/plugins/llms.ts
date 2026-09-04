@@ -5,8 +5,8 @@ import { useAppConfig } from 'nitropack/runtime'
 
 /**
  * Builds `llms.txt` from the content navigation: one section per top-level directory, in sidebar
- * order, plus the `docs.llms.links` extras. Listed in the layer's `nitro.plugins` rather than scanned
- * from `server/plugins/` so it runs ahead of the nuxt-agent-discovery bridge, which leaves sections
+ * order, plus the `docs.llms.links` extras. Registered from modules/config.ts rather than scanned from
+ * `server/plugins/` so it runs ahead of the nuxt-agent-discovery bridge, which leaves sections
  * that carry links alone apart from rewriting every page link to its raw markdown twin, and renders
  * `llms-full.txt` from the same content adapter.
  */

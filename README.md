@@ -12,7 +12,7 @@ Content lives as Markdown in your repo and is served **at request time** — par
 - **Versioned previews** — any branch (`/tree/:branch`) or commit (`/blob/:sha`) can be previewed through versioned URLs.
 - Docs UI built with [Nuxt UI](https://ui.nuxt.com): sidebar navigation, search (`⌘K`), TOC, prev/next links, version history panel.
 - SEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, RSS.
-- Markdown for agents through [nuxt-agent-discovery](https://github.com/benjamincanac/nuxt-agent-discovery): content negotiation on every page URL, raw markdown mirrors (`/raw/**`), `llms.txt` / `llms-full.txt`, `sitemap.md`, `/.well-known/api-catalog`, an MCP server (`/mcp`) with its server card, Agent Skills discovery (`/.well-known/skills/`).
+- Markdown for agents through [nuxt-agent-discovery](https://github.com/benjamincanac/nuxt-agent-discovery): content negotiation on every page URL, raw markdown mirrors (`/raw/**`), `llms.txt` / `llms-full.txt`, `sitemap.md`, `/openapi.json`, `/.well-known/api-catalog`, an MCP server (`/mcp`) with its server card, Agent Skills discovery (`/.well-known/skills/`).
 
 ## Quick start
 

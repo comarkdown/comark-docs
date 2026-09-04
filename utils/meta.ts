@@ -18,10 +18,12 @@ export function inferSiteURL(): string | undefined {
   return url ? withHttps(url) : undefined
 }
 
-export async function getPackageJsonMetadata(dir: string): Promise<{ name?: string; description?: string }> {
+export async function getPackageJsonMetadata(
+  dir: string
+): Promise<{ name?: string; description?: string; version?: string }> {
   try {
     const parsed = JSON.parse(await readFile(resolve(dir, 'package.json'), 'utf-8'))
-    return { name: parsed.name, description: parsed.description }
+    return { name: parsed.name, description: parsed.description, version: parsed.version }
   } catch {
     return {}
   }
