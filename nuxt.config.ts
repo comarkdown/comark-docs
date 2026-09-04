@@ -14,6 +14,7 @@ export default defineNuxtConfig({
     'nuxt-og-image',
     '@nuxtjs/mcp-toolkit',
     'nuxt-llms',
+    'nuxt-workers',
   ],
   ignore: ['content/**'],
   ui: { content: true, prose: true },
@@ -33,12 +34,15 @@ export default defineNuxtConfig({
     resolve: {
       alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
     },
+    worker: { format: 'es' },
     optimizeDeps: {
       include: [
         'beautiful-mermaid',
         'comark-docs > ai > @ai-sdk/gateway > @vercel/oidc',
         'js-yaml'
       ],
+      // Pre-bundling would break the wasm/worker assets sqlite loads relative to its module URL.
+      exclude: ['@sqlite.org/sqlite-wasm'],
     },
   },
   nitro: {

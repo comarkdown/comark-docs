@@ -1,15 +1,8 @@
-import { defineContentPlugin, type CacheOptions, comarkContent  } from 'comark-content';
+import { type CacheOptions, type ContentSource, DEFAULT_CONTENT_NAME } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import rangi from 'comark/plugins/rangi'
-import security from 'comark/plugins/security'
-import emoji from 'comark/plugins/emoji'
-import toc from 'comark/plugins/toc'
-import mermaid from 'comark/plugins/mermaid'
-import yaml from 'comark-content/plugins/yaml'
-import tracingOtel from 'comark-content/plugins/tracing/otel'
-import { contentTracer } from './tracer.ts'
-import { geistTheme } from '../../utils/geist-theme.ts'
+import { withSnapshot } from 'comark-content/sources/snapshot'
+import { createRuntimeContentInstance } from '../../utils/content.ts'
 
 /**
  * The instance this layer builds, derived from the factory rather than written
@@ -27,48 +20,19 @@ export type DocsContent = Awaited<ReturnType<typeof createSourceContent>>
 // assignment lands after the await, so two requests on a cold instance would each build a CMS.
 let content: Promise<DocsContent> | undefined
 
-// Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
-const comarkPlugins = [
-  mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
-  rangi({ theme: geistTheme }),
-  toc({ depth: 3 }),
-  emoji(),
-  security({
-    blockedTags: ['script', 'iframe', 'embed', 'form', 'base', 'meta', 'link', 'style'],
-    allowDataImages: false,
-  }),
-]
-
-// Bound to THIS instance so a preview content instance serves its own version's sections, not production's.
-const searchSectionsPlugin = defineContentPlugin(() => ({
-  name: 'search-sections',
-  setup(ctx) {
-    ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(ctx as unknown as DocsContent)))
-  },
-}))()
-
 /**
- * Create a new content instance reading content at `ref` (a commit SHA or branch). `remote` forces the
- * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
+ * Create a new content instance reading content at `ref` (a commit SHA or branch).
+ * - `remote` forces the GitHub source
+ * - `cache` overrides comark's (in-memory by default)
+ * - `basePath` is the base path for the content instance
+ * - `watch` is dev file watching
  */
 export async function createSourceContent(
   ref: string,
   opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
 ) {
-  // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
-  // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
-  // argument would erase the source and plugin types `comarkContent` infers from the literal.
-  const tracer = contentTracer()
-  const instance = comarkContent({
-    markdown: {
-      plugins: comarkPlugins,
-    },
+  const instance = createRuntimeContentInstance({
     source: contentSource(ref, { remote: opts.remote }),
-    plugins: [
-      yaml(), // enable .navigation.yml to be detected
-      searchSectionsPlugin,
-      tracer && tracingOtel({ tracer }),
-    ],
     cache: opts.cache,
     basePath: opts.basePath,
   })
@@ -140,7 +104,7 @@ export async function getProdContent(): Promise<DocsContent> {
   return content
 }
 
-function contentSource(ref: string, opts: { remote?: boolean } = {}) {
+function contentSource(ref: string, opts: { remote?: boolean } = {}): ContentSource {
   const { docs } = useRuntimeConfig()
 
   if (import.meta.dev) {
@@ -149,7 +113,7 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
     return fs(docs.contentPath)
   }
 
-  return github({
+  const source = github({
     repo: githubRepo(),
     branch: ref,
     path: docs.contentDir,
@@ -157,6 +121,11 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}) {
     // `ref` is an immutable commit SHA => we can cache hard.
     ttl: 60 * 60 * 24,
   })
+
+  // The snapshot shipped during build by `modules/snapshot/`.
+  return withSnapshot(source, () =>
+    useStorage('assets:comark-content').get<string>(`${ref}/${DEFAULT_CONTENT_NAME}/snapshot.json`)
+  )
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */

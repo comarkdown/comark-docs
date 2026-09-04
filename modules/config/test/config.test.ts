@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { resolveContentDir } from '../utils/content-dir'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { inferSiteURL, resolveContentDir } from '../utils'
 
 describe('resolveContentDir', () => {
   it('relativises against the git root for an app in a subdirectory', () => {
@@ -62,5 +62,56 @@ describe('resolveContentDir', () => {
         expect(resolveContentDir({ rootDir: '/repo/docs', explicit: input }).contentDir).toBe('docs/content')
       }
     })
+  })
+})
+
+describe('inferSiteURL', () => {
+  const keys = [
+    'NUXT_PUBLIC_SITE_URL',
+    'NUXT_SITE_URL',
+    'VERCEL_PROJECT_PRODUCTION_URL',
+    'VERCEL_BRANCH_URL',
+    'VERCEL_URL',
+    'URL',
+    'CI_PAGES_URL',
+    'CF_PAGES_URL',
+  ]
+  let saved: Record<string, string | undefined>
+
+  // `Reflect.deleteProperty` rather than `delete process.env[key]`: same effect,
+  // without tripping `no-dynamic-delete`.
+  const unset = (key: string) => Reflect.deleteProperty(process.env, key)
+
+  beforeEach(() => {
+    saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
+    for (const key of keys) unset(key)
+  })
+
+  afterEach(() => {
+    for (const [key, value] of Object.entries(saved)) {
+      if (value === undefined) unset(key)
+      else process.env[key] = value
+    }
+  })
+
+  it('returns undefined when nothing is set', () => {
+    expect(inferSiteURL()).toBeUndefined()
+  })
+
+  it('adds https to a bare Vercel host', () => {
+    process.env.VERCEL_URL = 'my-app-abc123.vercel.app'
+    expect(inferSiteURL()).toBe('https://my-app-abc123.vercel.app')
+  })
+
+  it('prefers the explicit override over the platform value', () => {
+    process.env.VERCEL_URL = 'my-app-abc123.vercel.app'
+    process.env.NUXT_PUBLIC_SITE_URL = 'https://docs.example.com'
+    expect(inferSiteURL()).toBe('https://docs.example.com')
+  })
+
+  it('prefers the production URL over the per-branch one', () => {
+    process.env.VERCEL_BRANCH_URL = 'branch.vercel.app'
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = 'docs.comark.dev'
+    expect(inferSiteURL()).toBe('https://docs.comark.dev')
   })
 })

@@ -1,6 +1,9 @@
+import { execFileSync } from 'node:child_process'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { parseGitRemote } from '../utils/git'
-import { inferSiteURL } from '../utils/meta'
+import { getLastCommit, getTreeSha, hasParent, parseGitRemote } from '../utils/git'
 
 describe('parseGitRemote', () => {
   it('parses SSH remotes', () => {
@@ -31,53 +34,76 @@ describe('parseGitRemote', () => {
   })
 })
 
-describe('inferSiteURL', () => {
-  const keys = [
-    'NUXT_PUBLIC_SITE_URL',
-    'NUXT_SITE_URL',
-    'VERCEL_PROJECT_PRODUCTION_URL',
-    'VERCEL_BRANCH_URL',
-    'VERCEL_URL',
-    'URL',
-    'CI_PAGES_URL',
-    'CF_PAGES_URL',
-  ]
-  let saved: Record<string, string | undefined>
 
-  // `Reflect.deleteProperty` rather than `delete process.env[key]`: same effect,
-  // without tripping `no-dynamic-delete`.
-  const unset = (key: string) => Reflect.deleteProperty(process.env, key)
+describe('commit and tree helpers', () => {
+  let repo: string
 
-  beforeEach(() => {
-    saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]))
-    for (const key of keys) unset(key)
+  const run = (...args: string[]) => execFileSync('git', args, { cwd: repo, stdio: 'ignore' })
+  const write = async (file: string, body: string) => {
+    await mkdir(dirname(join(repo, file)), { recursive: true })
+    await writeFile(join(repo, file), body, 'utf8')
+  }
+
+  beforeEach(async () => {
+    repo = await mkdtemp(join(tmpdir(), 'comark-git-'))
+    run('init', '-q', '-b', 'main')
+    run('config', 'user.email', 'test@example.com')
+    run('config', 'user.name', 'Test')
+
+    await write('content/index.md', '# one\n')
+    run('add', '-A')
+    run('commit', '-qm', 'add content')
+
+    // A later commit that leaves `content/` untouched, so HEAD is not the last content commit.
+    await write('src/app.ts', 'export const a = 1\n')
+    run('add', '-A')
+    run('commit', '-qm', 'add code')
   })
 
-  afterEach(() => {
-    for (const [key, value] of Object.entries(saved)) {
-      if (value === undefined) unset(key)
-      else process.env[key] = value
-    }
+  afterEach(async () => {
+    await rm(repo, { recursive: true, force: true })
   })
 
-  it('returns undefined when nothing is set', () => {
-    expect(inferSiteURL()).toBeUndefined()
+  it('finds the last commit touching a directory, not HEAD', () => {
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf8' }).trim()
+    const last = getLastCommit(repo, 'content')
+
+    expect(last).toMatch(/^[0-9a-f]{40}$/)
+    expect(last).not.toBe(head)
   })
 
-  it('adds https to a bare Vercel host', () => {
-    process.env.VERCEL_URL = 'my-app-abc123.vercel.app'
-    expect(inferSiteURL()).toBe('https://my-app-abc123.vercel.app')
+  it('returns the same tree for a ref whose content matches HEAD', () => {
+    // The whole safety property of the build-time seed: the commit it is labelled with has to hold
+    // the content that was parsed. Here the code commit did not touch `content/`, so both agree.
+    const last = getLastCommit(repo, 'content')!
+    expect(getTreeSha(repo, last, 'content')).toBe(getTreeSha(repo, 'HEAD', 'content'))
   })
 
-  it('prefers the explicit override over the platform value', () => {
-    process.env.VERCEL_URL = 'my-app-abc123.vercel.app'
-    process.env.NUXT_PUBLIC_SITE_URL = 'https://docs.example.com'
-    expect(inferSiteURL()).toBe('https://docs.example.com')
+  it('returns a different tree once the content changes', async () => {
+    const before = getTreeSha(repo, 'HEAD', 'content')!
+
+    await write('content/index.md', '# two\n')
+    run('add', '-A')
+    run('commit', '-qm', 'edit content')
+
+    expect(getTreeSha(repo, 'HEAD', 'content')).not.toBe(before)
+    // A stale label is what the seed must never be written under.
+    expect(getTreeSha(repo, 'HEAD~1', 'content')).toBe(before)
   })
 
-  it('prefers the production URL over the per-branch one', () => {
-    process.env.VERCEL_BRANCH_URL = 'branch.vercel.app'
-    process.env.VERCEL_PROJECT_PRODUCTION_URL = 'docs.comark.dev'
-    expect(inferSiteURL()).toBe('https://docs.comark.dev')
+  it('returns undefined for a ref or path outside the checkout', () => {
+    expect(getTreeSha(repo, 'HEAD', 'nope')).toBeUndefined()
+    expect(getTreeSha(repo, 'a'.repeat(40), 'content')).toBeUndefined()
+    expect(getLastCommit(repo, 'nope')).toBeUndefined()
+  })
+
+  it('reports a missing parent at the root commit', () => {
+    const root = execFileSync('git', ['rev-list', '--max-parents=0', 'HEAD'], {
+      cwd: repo,
+      encoding: 'utf8',
+    }).trim()
+
+    expect(hasParent(repo, 'HEAD')).toBe(true)
+    expect(hasParent(repo, root)).toBe(false)
   })
 })

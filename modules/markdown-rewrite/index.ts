@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { resolve } from 'pathe'
-import { buildMarkdownRewriteRoutes } from '../utils/markdown-rewrite'
+import { buildMarkdownRewriteRoutes } from './utils'
 
 const logger = useLogger('comark-docs')
 

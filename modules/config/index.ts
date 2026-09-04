@@ -1,10 +1,9 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
-import { resolveContentDir } from '../utils/content-dir'
-import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
-import { LAYER_ICON_COLLECTIONS } from '../utils/icons'
-import { getPackageJsonMetadata, inferSiteURL } from '../utils/meta'
+import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
+import { LAYER_ICON_COLLECTIONS } from '../../utils/icons'
+import { getPackageJsonMetadata, inferSiteURL, resolveContentDir } from './utils'
 
 const logger = useLogger('comark-docs')
 
@@ -160,7 +159,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Previews are served live (SSR) off Runtime Cache; `/blob/**` is immutable commit HTML.
         // `/pr/**` follows the PR's head like `/tree/**` follows a branch, so it shares the short TTL.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
-        '/blob/**': { isr: true, robots: 'noindex, nofollow' },
+        '/blob/**': { isr: true, robots: 'noindex, nofollow' }, // Immutable since SHA-pinned
         '/pr/**': { isr, robots: 'noindex, nofollow' },
         // Raw markdown mirrors of every page, for agents.
         '/raw/**': { isr, robots: 'noindex' },
@@ -168,11 +167,14 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
         '/rss.xml': { isr },
-        // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
-        '/api/content/blob/*/search-sections': { isr: true },
-        '/api/content/tree/*/search-sections': { isr },
-        '/api/content/pr/*/search-sections': { isr },
-        '/api/content/search-sections': { isr },
+        // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
+        '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
+        '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
+        '/api/content/tree/*/manifest.json': { isr },
+        '/api/content/tree/*/snapshot/*': { isr },
+        // `/pr/*` follows the PR head, so it gets the short TTL like `/tree/*`.
+        '/api/content/pr/*/manifest.json': { isr },
+        '/api/content/pr/*/snapshot/*': { isr },
         '/api/code-explorer/**': { isr },
         '/_payload.json': {
           headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },

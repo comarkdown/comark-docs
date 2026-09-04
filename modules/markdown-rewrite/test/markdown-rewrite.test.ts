@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildMarkdownRewriteRoutes, type VercelRoute } from '../utils/markdown-rewrite'
+import { buildMarkdownRewriteRoutes, type VercelRoute } from '../utils'
 
 // Vercel resolves `$n` in `headers.Location` from the capture groups of `src` — replicate that to
 // assert on the final redirect target rather than on regex internals.

@@ -5,12 +5,18 @@
  * which is how comark-content#77's `metaOnly` -> `partial` rename silently degraded
  * the webhook's body warm-up. This exercises the surface the layer depends on.
  */
+import { mkdtemp, readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { comarkContent, defineContentPlugin } from 'comark-content'
+import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact, writeSnapshots } from 'comark-content'
 import fsSource from 'comark-content/sources/fs'
 import githubSource from 'comark-content/sources/github'
-import { createContentClient, defineContentClientPlugin } from 'comark-content/client'
+import snapshot, { withSnapshot } from 'comark-content/sources/snapshot'
+import { createContentClient } from 'comark-content/client'
+import sqliteWasm from 'comark-content/database/sqlite-wasm'
+import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import memoryDriver from 'unstorage/drivers/memory'
 
 const fixture = fileURLToPath(new URL('./fixtures/content-contract', import.meta.url))
@@ -36,7 +42,16 @@ function createFixtureContent() {
 
 describe('comark-content contract', () => {
   it('exposes every entrypoint the layer imports', () => {
-    for (const entry of [comarkContent, defineContentPlugin, fsSource, githubSource, createContentClient, defineContentClientPlugin]) {
+    for (const entry of [
+      comarkContent,
+      readArtifact,
+      fsSource,
+      githubSource,
+      createContentClient,
+      // Browser-only at runtime, but the subpaths resolve under node — enough to catch a rename.
+      sqliteWasm,
+      sqliteFullTextSearch,
+    ]) {
       expect(typeof entry).toBe('function')
     }
   })
@@ -71,24 +86,100 @@ describe('comark-content contract', () => {
     expect(cached!.nodes.length).toBeGreaterThan(0)
   })
 
-  it('dispatches plugin serve handlers through content.handler', async () => {
-    // Mirrors the `search-sections` plugin in server/utils/content.ts.
-    const ping = defineContentPlugin(() => ({
-      name: 'ping',
-      setup(ctx) {
-        ctx.addServeHandler('ping', async () => Response.json({ ok: true }))
-      },
-    }))
+  it('serves the manifest and snapshot artifacts through content.handler', async () => {
+    const content = createFixtureContent()
+    await content.init(full)
 
-    const content = comarkContent({
-      source: fsSource(fixture),
-      cache: { driver: memoryDriver() },
-      plugins: [ping()],
+    // The exact paths the search worker fetches and `modules/config/` declares ISR rules for.
+    for (const path of ['manifest.json', `snapshot/${DEFAULT_CONTENT_NAME}.json`]) {
+      const response = await content.handler(new Request(`http://localhost/api/content/${path}`))
+      expect(response.status, path).toBe(200)
+      const artifact = await response.json()
+      expect(Object.keys(artifact), path).toContain('checksum')
+      expect(Object.keys(await readArtifact(artifact)).length, path).toBeGreaterThan(0)
+    }
+  })
+
+  it('hydrates a sourceless instance from those artifacts', async () => {
+    const server = createFixtureContent()
+    await server.init(full)
+
+    const fetchArtifact = async (path: string) =>
+      await (await server.handler(new Request(`http://localhost/api/content/${path}`))).json()
+
+    // The search feature is this round-trip, so a break here is a silently empty search index.
+    // `snapshot()`'s first argument is the full-body tier; the second (optional) manifest tier
+    // lets a bare `init()` skip downloading bodies until a document is actually requested.
+    const client = comarkContent({
+      source: snapshot(
+        () => fetchArtifact(`snapshot/${DEFAULT_CONTENT_NAME}.json`),
+        () => fetchArtifact('manifest.json')
+      ),
+    })
+    await client.init()
+
+    expect(Object.keys((await client.manifest()).items)).toEqual(['/'])
+
+    // Bodies have to arrive parsed: the client has no source to read a document from.
+    const doc = await client.get('/')
+    expect(doc?.data?.title).toBe('Contract fixture')
+    expect(doc?.nodes?.length).toBeGreaterThan(0)
+  })
+
+  describe('build-time seed', () => {
+    /**
+     * `modules/snapshot/` writes the seed with `writeSnapshots()`, and
+     * `server/utils/content.ts` reads it back through a Nitro server asset. Two things here are
+     * layout, not behaviour, and both are silent when wrong: the per-instance subdirectory, and
+     * the fact that a server asset hands back JSON *text*.
+     */
+    async function writeSeed() {
+      const dir = await mkdtemp(join(tmpdir(), 'comark-seed-'))
+      await writeSnapshots(createFixtureContent(), { dir })
+      // One directory per instance, named after it — ours is unnamed, so `default`.
+      const read = (file: string) => readFile(join(dir, DEFAULT_CONTENT_NAME, file), 'utf8')
+      return { snapshot: () => read('snapshot.json'), manifest: () => read('manifest.json') }
+    }
+
+    it('hydrates a withSnapshot instance from the seed without reading the source', async () => {
+      const seed = await writeSeed()
+
+      // A source that throws on any read: hydrating from the seed must not touch it. This is the
+      // cold start being bought — in production the reads it stands in for are GitHub API calls.
+      const unreachable = {
+        ...fsSource(fixture),
+        keys: () => {
+          throw new Error('the origin was walked')
+        },
+      }
+
+      const content = comarkContent({
+        source: withSnapshot(unreachable, seed.snapshot, seed.manifest),
+        cache: { driver: memoryDriver() },
+      })
+      await content.init(full)
+
+      expect(Object.keys((await content.manifest()).items)).toEqual(['/'])
+      const doc = await content.get('/')
+      expect(doc?.data?.title).toBe('Contract fixture')
+      expect(doc?.nodes?.length).toBeGreaterThan(0)
     })
 
-    const response = await content.handler(new Request('http://localhost/api/content/ping'))
+    it('falls back to the source when no seed is stored', async () => {
+      // What every ref other than the build commit gets: loaders return `null`, so the origin is
+      // the only provider. A seed that cannot prove it belongs to this ref must never be used.
+      const content = comarkContent({
+        source: withSnapshot(
+          fsSource(fixture),
+          () => null,
+          () => null
+        ),
+        cache: { driver: memoryDriver() },
+      })
+      await content.init(full)
 
-    expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ ok: true })
+      expect(Object.keys((await content.manifest()).items)).toEqual(['/'])
+      expect((await content.get('/'))?.data?.title).toBe('Contract fixture')
+    })
   })
 })
