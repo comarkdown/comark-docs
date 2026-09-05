@@ -12,19 +12,7 @@ const title = computed(() => mainNavigation.value.find((item) => item.active)?.l
 
 const menuDrawerOpen = ref(false)
 const tocDrawerOpen = ref(false)
-const navigationRef = ref<HTMLElement | null>(null)
-let observer: IntersectionObserver | undefined
 const layout = inject('layout')
-
-watch(menuDrawerOpen, (open) => {
-  nextTick(() => {
-    if (open) {
-      observer = observeNavigation(navigationRef)
-    } else {
-      observer?.disconnect()
-    }
-  })
-})
 </script>
 
 <template>
@@ -54,13 +42,11 @@ watch(menuDrawerOpen, (open) => {
       />
 
       <template #body>
-        <div ref="navigationRef">
-          <UContentNavigation
-            :navigation="sidebarNavigation"
-            variant="link"
-            :collapsible="false"
-          />
-        </div>
+        <UContentNavigation
+          :navigation="sidebarNavigation"
+          variant="link"
+          :collapsible="false"
+        />
       </template>
     </UDrawer>
 

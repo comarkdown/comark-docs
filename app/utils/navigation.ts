@@ -1,39 +1,5 @@
 import type { NavigationItem } from 'comark-content'
 
-const prefetchedPaths = new Set<string>()
-let nuxtApp: ReturnType<typeof useNuxtApp>
-
-function prefetchPath(path?: string) {
-  if (!path || prefetchedPaths.has(path)) {
-    return
-  }
-  nuxtApp = nuxtApp ?? useNuxtApp()
-  prefetchedPaths.add(path)
-  nuxtApp.hooks.callHook('link:prefetch', path)
-}
-
-export function observeNavigation(navigationRef: Ref<HTMLElement | null>, observer?: IntersectionObserver) {
-  if (!navigationRef.value || !window.IntersectionObserver) {
-    return
-  }
-  if (observer) {
-    observer.disconnect()
-  }
-
-  const prefetchObserver = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) {
-        continue
-      }
-
-      prefetchPath((entry.target as HTMLAnchorElement).href.replace(window.location.origin, ''))
-      prefetchObserver?.unobserve(entry.target)
-    }
-  })
-  navigationRef.value.querySelectorAll<HTMLElement>('a').forEach((element) => prefetchObserver?.observe(element))
-  return prefetchObserver
-}
-
 export function findPageHeadline(
   navigation: NavigationItem[] | undefined | null,
   path: string | undefined
