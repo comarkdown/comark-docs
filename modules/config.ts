@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { defineNuxtModule, useLogger } from '@nuxt/kit'
+import { addServerPlugin, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
+import type { ModuleOptions as AgentDiscoveryOptions } from 'nuxt-agent-discovery'
 import { resolveContentDir } from '../utils/content-dir'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
 import { LAYER_ICON_COLLECTIONS } from '../utils/icons'
@@ -26,12 +27,8 @@ export interface ComarkDocsOptions {
     /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
   }
+  /** @deprecated Use `agentDiscovery.skills` instead. */
   skills?: {
-    /**
-     * Directory, relative to the app root, scanned at build time for Agent Skills.
-     * Each subdirectory with a `SKILL.md` is published at `/.well-known/skills/`.
-     * @default 'skills'
-     */
     dir?: string
   }
 }
@@ -49,12 +46,13 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
-      site?: { url?: string; name?: string }
+      site?: { url?: string; name?: string; description?: string }
       appConfig: Record<string, unknown>
     }
 
-    // Static module defaults live in the layer's nuxt.config: seeding them here makes module order
-    // load-bearing. Only build-time discoveries (git, env, the consumer's content dir) belong below.
+    // This module is listed first in the layer's nuxt.config, so what is seeded below (`site`, `mcp`,
+    // `agentDiscovery`) is in place before the modules that read it at setup. Static defaults still belong in
+    // nuxt.config; only build-time discoveries (git, env, the consumer's content dir) are resolved here.
 
     const url = inferSiteURL()
     const meta = await getPackageJsonMetadata(rootDir)
@@ -111,6 +109,8 @@ export default defineNuxtModule<ComarkDocsOptions>({
       githubToken: '',
       webhookSecret: '',
       bypassToken: '',
+      // Feeds the OpenAPI document.
+      version: meta.version || '0.0.0',
       github: {
         owner: gitInfo?.owner || '',
         repo: gitInfo?.name || '',
@@ -144,11 +144,38 @@ export default defineNuxtModule<ComarkDocsOptions>({
       }
     })
 
-    const mcpOptions = (nuxt.options as { mcp?: { name?: string; version?: string } }).mcp
-    ;(nuxt.options as { mcp?: { name?: string; version?: string } }).mcp = defu(mcpOptions, {
+    const rawMcpOptions = (nuxt.options as { mcp?: false | { name?: string; version?: string; route?: string } }).mcp
+    const mcp = defu(rawMcpOptions || undefined, {
       name: `${siteName} Docs`,
       version: '1.0.0',
     })
+    ;(nuxt.options as { mcp?: typeof mcp }).mcp = mcp
+
+    // What nuxt-agent-discovery cannot know: the MCP server card describing the toolkit's endpoint under the
+    // same name, and the deprecated `comarkDocs.skills` alias.
+    if (options.skills) {
+      logger.warn('`comarkDocs.skills` is deprecated. Move it to `agentDiscovery.skills` in nuxt.config.ts.')
+    }
+    const agentDiscovery = (nuxt.options as { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery
+    ;(nuxt.options as { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery = defu(agentDiscovery, {
+      discovery: {
+        mcpServerCard:
+          rawMcpOptions === false
+            ? false
+            : {
+                endpoint: mcp.route || '/mcp',
+                name: mcp.name,
+                version: mcp.version,
+                ...(nuxtOptions.site?.description ? { description: nuxtOptions.site.description } : {}),
+              },
+      },
+      ...(options.skills ? { skills: options.skills } : {}),
+    }) as AgentDiscoveryOptions
+
+    // `llms.txt` sections come from the content navigation at request time. Registered here rather than
+    // scanned from `server/plugins/` so the hook runs ahead of the nuxt-agent-discovery bridge (see the plugin).
+    const { resolve } = createResolver(import.meta.url)
+    addServerPlugin(resolve('./runtime/server/plugins/llms'))
 
     // ISR rules here (not `$production`) so they merge cleanly across npm layers; content sections need a redeploy.
     if (!nuxt.options.dev && options.isr !== false) {
@@ -167,6 +194,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Global content indexes, purged by the push webhook on content changes.
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
+        '/sitemap.md': { isr },
         '/rss.xml': { isr },
         // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
         '/api/content/blob/*/search-sections': { isr: true },

@@ -11,7 +11,8 @@ Content lives as Markdown in your repo and is served **at request time** — par
 - **Instant production content** — GitHub-sourced content pinned to a commit SHA, ISR-cached HTML, revalidated on push by a GitHub webhook (`/api/revalidate`).
 - **Versioned previews** — any branch (`/tree/:branch`) or commit (`/blob/:sha`) can be previewed through versioned URLs.
 - Docs UI built with [Nuxt UI](https://ui.nuxt.com): sidebar navigation, search (`⌘K`), TOC, prev/next links, version history panel.
-- SEO & AEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, `llms.txt` / `llms-full.txt`, raw markdown mirrors (`/raw/**`), RSS, MCP server (`/mcp`), Agent Skills discovery (`/.well-known/skills/`).
+- SEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, RSS.
+- Markdown for agents through [nuxt-agent-discovery](https://github.com/benjamincanac/nuxt-agent-discovery): content negotiation on every page URL, raw markdown mirrors (`/raw/**`), `llms.txt` / `llms-full.txt`, `sitemap.md`, `/openapi.json`, `/.well-known/api-catalog`, an MCP server (`/mcp`) with its server card, Agent Skills discovery (`/.well-known/skills/`).
 
 ## Quick start
 
@@ -44,13 +45,13 @@ From there, the docs cover everything:
 
 ## Agent Skills
 
-Drop skills into a `skills/` directory at the app root and the layer serves them at `/.well-known/skills/`, following the [Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) (v0.1). Users install them with:
+Drop skills into a `skills/` directory at the app root and [nuxt-agent-discovery](https://github.com/benjamincanac/nuxt-agent-discovery) serves them at `/.well-known/skills/`, following the [Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) (v0.1). Users install them with:
 
 ```bash
 npx skills add https://your-docs-domain.com
 ```
 
-Each skill is a directory with a `SKILL.md` whose frontmatter includes a `description`; `name` defaults to the directory name. Skills are scanned at build time from the filesystem (they ship with the app, not with GitHub-sourced content), so a skill change needs a redeploy. Override the directory with `comarkDocs.skills.dir`.
+Each skill is a directory with a `SKILL.md` whose frontmatter includes a `description`; `name` defaults to the directory name. Skills are scanned at build time from the filesystem (they ship with the app, not with GitHub-sourced content), so a skill change needs a redeploy. Override the directory with `agentDiscovery.skills.dir`.
 
 ## Keyboard shortcuts
 
