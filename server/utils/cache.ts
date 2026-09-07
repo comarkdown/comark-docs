@@ -19,8 +19,22 @@ function cacheAvailable(): boolean {
  */
 export const CONTENT_PARSER_VERSION = 'v3'
 
-/** Per-parser-version, per-content-SHA driver backing comark's manifest and parsed bodies. */
-export function cacheDriver(sha: string): Driver {
+/**
+ * The driver behind comark's index, parsed bodies and artifacts, for every commit. One namespace
+ * per parser version; `content.withRef(sha)` adds a per-commit namespace on top, so instances
+ * pinned to different commits share this driver without reading each other's entries. Bumping
+ * the parser version leaves every commit's entries behind at once.
+ */
+export function contentCacheDriver(): Driver {
+  if (!cacheAvailable()) return memoryDriver()
+  return vercelRuntimeCache({
+    base: `content:${CONTENT_PARSER_VERSION}`,
+    ttl: TTL,
+  })
+}
+
+/** Per-SHA driver for non-content data. */
+function shaCacheDriver(sha: string): Driver {
   if (!cacheAvailable()) return memoryDriver()
   return vercelRuntimeCache({
     base: `content:${CONTENT_PARSER_VERSION}:${sha}`,
@@ -29,12 +43,11 @@ export function cacheDriver(sha: string): Driver {
 }
 
 /**
- * Ad-hoc per-SHA storage for non-content data (commit history, RSS dates). Shares comark's
- * `cacheDriver(sha)` namespace rather than a separate unconfigured mount; `gh:...` keys can't
- * collide with comark's `<source>:<path>`.
+ * Ad-hoc per-SHA storage for non-content data (commit history, RSS dates). Its own namespace: comark's
+ * entries live under `contentCacheDriver()` with a `ref:` prefix, so `gh:...` keys never meet them.
  */
 export function shaCacheStorage(sha: string): Storage {
-  return createStorage({ driver: cacheDriver(sha) })
+  return createStorage({ driver: shaCacheDriver(sha) })
 }
 
 /**
