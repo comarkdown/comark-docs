@@ -95,11 +95,18 @@ export async function getProdContent(): Promise<DocsContent> {
       cache: {
         driver: cacheDriver(getHeadRef()),
       },
-    }).catch((error) => {
-      // Don't memoize a failed build — the next request should retry.
-      content = undefined
-      throw error
     })
+      .then(async (instance) => {
+        const startedAt = performance.now()
+        await instance.init()
+        recordDuration('content.init.ms', startedAt)
+        return instance
+      })
+      .catch((error) => {
+        // Don't memoize a failed build — the next request should retry.
+        content = undefined
+        throw error
+      })
   }
   return content
 }
@@ -122,10 +129,28 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}): ContentSou
     ttl: 60 * 60 * 24,
   })
 
-  // Untyped read: unstorage runs every value through `destr`, so this arrives already parsed.
-  return withSnapshot(source, () =>
-    useStorage('assets:comark-content').get(`${ref}/${DEFAULT_CONTENT_NAME}/snapshot.json`)
-  )
+  // The snapshot shipped during build by `modules/snapshot/`.
+  return withSnapshot(source, () => readSnapshot(ref))
+}
+
+/**
+ * Read the build-time snapshot stored under `ref`, or nothing when this deployment did not ship one.
+ *
+ * Timed because the duration is the point: the lazy import of the bundled chunk plus its JSON parse.
+ */
+async function readSnapshot(ref: string): Promise<unknown> {
+  const span = contentTracer()?.startSpan('snapshot:read', { attributes: { 'comark.ref': ref } })
+  const startedAt = performance.now()
+  try {
+    // Untyped read: unstorage runs every value through `destr`, so this arrives already parsed.
+    const data = await useStorage('assets:comark-content').get(`${ref}/${DEFAULT_CONTENT_NAME}/snapshot.json`)
+    const hit = data != null
+    span?.setAttribute('comark.snapshot.hit', hit)
+    recordDuration('content.snapshot.read.ms', startedAt, { hit: String(hit) })
+    return data
+  } finally {
+    span?.end()
+  }
 }
 
 /** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */

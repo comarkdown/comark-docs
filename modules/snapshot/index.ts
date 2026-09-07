@@ -1,6 +1,6 @@
-import { mkdir } from 'node:fs/promises'
+import { mkdir, stat } from 'node:fs/promises'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
-import { writeSnapshots } from 'comark-content'
+import { DEFAULT_CONTENT_NAME, writeSnapshots } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import { join } from 'pathe'
 import { createBuildContentInstance } from '../../utils/content'
@@ -35,6 +35,7 @@ export default defineNuxtModule({
       const { docs } = nuxt.options.runtimeConfig
       const { repoRoot, contentDir, contentPath, github } = docs
 
+      const resolveStart = performance.now()
       const sha = await resolveSnapshotSha({
         repoRoot,
         contentDir,
@@ -42,6 +43,7 @@ export default defineNuxtModule({
         token: docs.githubToken || process.env.NUXT_DOCS_GITHUB_TOKEN || process.env.GITHUB_TOKEN,
         warn: (message) => logger.warn(message),
       })
+      const resolveMs = Math.round(performance.now() - resolveStart)
       if (!sha) {
         logger.warn(
           'No commit in this checkout could be confirmed to hold the content being built, ' +
@@ -53,8 +55,17 @@ export default defineNuxtModule({
       const content = createBuildContentInstance({ source: fs(contentPath) })
 
       try {
+        const writeStart = performance.now()
         await writeSnapshots(content, { dir: join(dir, sha), manifest: false })
-        logger.success(`Content snapshot: ${sha.slice(0, 7)}`)
+        const writeMs = Math.round(performance.now() - writeStart)
+
+        // Size is the number to watch: the snapshot is inlined into the bundle as a string.
+        // Every cold start that reads it pays for that.
+        const { size } = await stat(join(dir, sha, DEFAULT_CONTENT_NAME, 'snapshot.json'))
+        logger.success(
+          `Content snapshot ${sha.slice(0, 7)}: ${Math.round(size / 1024)} kB parsed and written in ${writeMs}ms ` +
+            `(ref resolved in ${resolveMs}ms)`
+        )
       } catch (error) {
         logger.warn('Could not write the content snapshot — cold starts will walk the content repository.', error)
       }
