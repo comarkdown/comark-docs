@@ -13,10 +13,17 @@ const { data: navigation } = await useAsyncData('navigation', () => content.valu
 
 const nuxtApp = useNuxtApp()
 const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
-const navigationLayout = ref(findNavigationLayout(navTree.value, route.path))
+const resolveNavigationLayout = () => {
+  if (route.meta.layout === false) return undefined
+  if (route.meta.layout === 'docs' || route.meta.layout === 'page') return route.meta.layout
+  const layout = findNavigationLayout(navTree.value, route.path)
+  if (!layout && route.matched?.[0]?.name === 'slug') return 'docs'
+  return layout
+}
+const navigationLayout = ref(resolveNavigationLayout())
 onNuxtReady(() => {
   nuxtApp.hook('page:finish', () => {
-    navigationLayout.value = findNavigationLayout(navTree.value, route.path)
+    navigationLayout.value = resolveNavigationLayout()
   })
 })
 
@@ -81,9 +88,7 @@ defineShortcuts({
         <LayoutsDocs v-else-if="navigationLayout === 'docs'">
           <NuxtPage />
         </LayoutsDocs>
-        <UContainer v-else>
-          <NuxtPage />
-        </UContainer>
+        <NuxtPage v-else />
       </Suspense>
     </UMain>
 
