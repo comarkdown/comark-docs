@@ -20,34 +20,27 @@ function cacheAvailable(): boolean {
 export const CONTENT_PARSER_VERSION = 'v3'
 
 /**
- * The driver behind comark's index, parsed bodies and artifacts, for every commit. One namespace
- * per parser version; `content.withRef(sha)` adds a per-commit namespace on top, so instances
- * pinned to different commits share this driver without reading each other's entries. Bumping
- * the parser version leaves every commit's entries behind at once.
+ * The driver behind everything cached per parser version, under `content:<version>`:
+ *
+ * - without `sha`, comark's index, parsed bodies and artifacts for every commit. An instance pinned
+ *   with `content.withRef(sha)` adds its own `ref:<sha>:` prefix, so instances pinned to different
+ *   commits share this driver without reading each other's entries;
+ * - with `sha`, ad-hoc per-commit data (commit history, RSS dates) under `content:<version>:<sha>`.
+ *   Those keys start with `gh:` and never meet comark's.
+ *
+ * Bumping the parser version leaves every commit's entries behind at once.
  */
-export function contentCacheDriver(): Driver {
+export function contentCacheDriver(sha?: string): Driver {
   if (!cacheAvailable()) return memoryDriver()
   return vercelRuntimeCache({
-    base: `content:${CONTENT_PARSER_VERSION}`,
+    base: sha ? `content:${CONTENT_PARSER_VERSION}:${sha}` : `content:${CONTENT_PARSER_VERSION}`,
     ttl: TTL,
   })
 }
 
-/** Per-SHA driver for non-content data. */
-function shaCacheDriver(sha: string): Driver {
-  if (!cacheAvailable()) return memoryDriver()
-  return vercelRuntimeCache({
-    base: `content:${CONTENT_PARSER_VERSION}:${sha}`,
-    ttl: TTL,
-  })
-}
-
-/**
- * Ad-hoc per-SHA storage for non-content data (commit history, RSS dates). Its own namespace: comark's
- * entries live under `contentCacheDriver()` with a `ref:` prefix, so `gh:...` keys never meet them.
- */
+/** Ad-hoc per-SHA storage for non-content data (commit history, RSS dates). */
 export function shaCacheStorage(sha: string): Storage {
-  return createStorage({ driver: shaCacheDriver(sha) })
+  return createStorage({ driver: contentCacheDriver(sha) })
 }
 
 /**
