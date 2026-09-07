@@ -3,11 +3,11 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resolveSeedRefs } from '../utils'
+import { resolveSnapshotSha } from '../utils'
 
 const SHA = (char: string) => char.repeat(40)
 
-describe('resolveSeedRefs', () => {
+describe('resolveSnapshotSha', () => {
   let repo: string
   let contentCommit: string
   let head: string
@@ -31,7 +31,7 @@ describe('resolveSeedRefs', () => {
   }
 
   beforeEach(async () => {
-    repo = await mkdtemp(join(tmpdir(), 'comark-seedrefs-'))
+    repo = await mkdtemp(join(tmpdir(), 'comark-snapshot-sha-'))
     run('init', '-q', '-b', 'main')
     run('config', 'user.email', 'test@example.com')
     run('config', 'user.name', 'Test')
@@ -57,11 +57,11 @@ describe('resolveSeedRefs', () => {
 
   it('walks from the built commit, not the branch', async () => {
     // The distinction that keeps a mid-build push (or a redeploy of an older commit) from labelling
-    // the seed with content it does not hold.
+    // the snapshot with content it does not hold.
     const fetchMock = stubApi({ [head]: contentCommit, main: SHA('f') })
     vi.stubGlobal('fetch', fetchMock)
 
-    expect(await resolveSeedRefs(input())).toEqual([contentCommit])
+    expect(await resolveSnapshotSha(input())).toBe(contentCommit)
 
     const requested = new URL(String(fetchMock.mock.calls[0]![0])).searchParams
     expect(requested.get('sha')).toBe(head)
@@ -69,32 +69,25 @@ describe('resolveSeedRefs', () => {
     expect(requested.get('per_page')).toBe('1')
   })
 
-  it('adds the pin when it resolves to the same content commit', async () => {
-    const pinnedSha = SHA('a')
-    vi.stubGlobal('fetch', stubApi({ [head]: contentCommit, [pinnedSha]: contentCommit }))
-
-    expect(await resolveSeedRefs({ ...input(), pinnedSha })).toEqual([contentCommit, pinnedSha])
-  })
-
-  it('drops a pin that resolves elsewhere', async () => {
-    // A pin on older content: the seed holds this build's content, so it must not be labelled with it.
-    const pinnedSha = SHA('a')
-    vi.stubGlobal('fetch', stubApi({ [head]: contentCommit, [pinnedSha]: SHA('b') }))
-
-    expect(await resolveSeedRefs({ ...input(), pinnedSha })).toEqual([contentCommit])
-  })
-
   it('falls back to a tree-verified git answer when the API fails', async () => {
     vi.stubGlobal('fetch', stubApi({}))
 
     // Full history here, so git finds the true commit and its content tree matches HEAD's.
-    expect(await resolveSeedRefs(input())).toEqual([contentCommit])
+    expect(await resolveSnapshotSha(input())).toBe(contentCommit)
+  })
+
+  it('skips the API when no repository is known', async () => {
+    const fetchMock = stubApi({ [head]: SHA('c') })
+    vi.stubGlobal('fetch', fetchMock)
+
+    expect(await resolveSnapshotSha({ ...input(), repo: '' })).toBe(contentCommit)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('ships nothing when neither the API nor git can name the content', async () => {
     vi.stubGlobal('fetch', stubApi({}))
 
-    expect(await resolveSeedRefs({ ...input(), contentDir: 'nope' })).toEqual([])
+    expect(await resolveSnapshotSha({ ...input(), contentDir: 'nope' })).toBeUndefined()
   })
 
   it('warns on the git fallback when the answer is a shallow boundary', async () => {
@@ -113,8 +106,7 @@ describe('resolveSeedRefs', () => {
       at('add', '-A')
       at('commit', '-qm', 'init')
 
-      const refs = await resolveSeedRefs({ ...input(), repoRoot: shallow, warn })
-      expect(refs).toHaveLength(1)
+      expect(await resolveSnapshotSha({ ...input(), repoRoot: shallow, warn })).toMatch(/^[0-9a-f]{40}$/)
       expect(warn).toHaveBeenCalledOnce()
       expect(warn.mock.calls[0]![0]).toContain('shallow clone boundary')
     } finally {

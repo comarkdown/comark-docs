@@ -28,7 +28,7 @@ const comarkPlugins = [
 
 /**
  * The parser, in one place for:
- * - The build-time seed
+ * - The build-time snapshot
  * - The runtime instance
  */
 function create(options: Pick<ContentOptions, 'source' | 'cache' | 'basePath'>, tracer?: Tracer) {
@@ -53,7 +53,7 @@ export function createRuntimeContentInstance(options: Pick<ContentOptions, 'sour
 }
 
 /**
- * The throwaway instance the build-time seed is parsed with (`modules/snapshot/`).
+ * The throwaway instance the build-time snapshot is parsed with (`modules/snapshot/`).
  */
 export function createBuildContentInstance(options: Pick<ContentOptions, 'source'>) {
   return create(options)

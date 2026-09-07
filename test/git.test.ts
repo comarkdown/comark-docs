@@ -73,7 +73,7 @@ describe('commit and tree helpers', () => {
   })
 
   it('returns the same tree for a ref whose content matches HEAD', () => {
-    // The whole safety property of the build-time seed: the commit it is labelled with has to hold
+    // The whole safety property of the build-time snapshot: the commit it is labelled with has to hold
     // the content that was parsed. Here the code commit did not touch `content/`, so both agree.
     const last = getLastCommit(repo, 'content')!
     expect(getTreeSha(repo, last, 'content')).toBe(getTreeSha(repo, 'HEAD', 'content'))
@@ -87,7 +87,7 @@ describe('commit and tree helpers', () => {
     run('commit', '-qm', 'edit content')
 
     expect(getTreeSha(repo, 'HEAD', 'content')).not.toBe(before)
-    // A stale label is what the seed must never be written under.
+    // A stale label is what the snapshot must never be written under.
     expect(getTreeSha(repo, 'HEAD~1', 'content')).toBe(before)
   })
 

@@ -126,25 +126,33 @@ describe('comark-content contract', () => {
     expect(doc?.nodes?.length).toBeGreaterThan(0)
   })
 
-  describe('build-time seed', () => {
+  describe('build-time snapshot', () => {
     /**
-     * `modules/snapshot/` writes the seed with `writeSnapshots()`, and
-     * `server/utils/content.ts` reads it back through a Nitro server asset. Two things here are
-     * layout, not behaviour, and both are silent when wrong: the per-instance subdirectory, and
-     * the fact that a server asset hands back JSON *text*.
+     * `modules/snapshot/` writes it with `writeSnapshots()`, and
+     * `server/utils/content.ts` reads it back through a Nitro server asset. Three things here are
+     * layout, not behaviour, and all are silent when wrong: the per-instance subdirectory, the fact
+     * that a server asset hands back JSON *text*, and `manifest: false` suppressing the light tier
+     * the layer does not read.
      */
-    async function writeSeed() {
-      const dir = await mkdtemp(join(tmpdir(), 'comark-seed-'))
-      await writeSnapshots(createFixtureContent(), { dir })
+    async function writeSnapshotFile() {
+      const dir = await mkdtemp(join(tmpdir(), 'comark-snapshot-'))
+      await writeSnapshots(createFixtureContent(), { dir, manifest: false })
       // One directory per instance, named after it — ours is unnamed, so `default`.
       const read = (file: string) => readFile(join(dir, DEFAULT_CONTENT_NAME, file), 'utf8')
       return { snapshot: () => read('snapshot.json'), manifest: () => read('manifest.json') }
     }
 
-    it('hydrates a withSnapshot instance from the seed without reading the source', async () => {
-      const seed = await writeSeed()
+    it('writes the snapshot alone when the manifest tier is off', async () => {
+      const stored = await writeSnapshotFile()
 
-      // A source that throws on any read: hydrating from the seed must not touch it. This is the
+      await expect(stored.snapshot()).resolves.toContain('Contract fixture')
+      await expect(stored.manifest()).rejects.toThrow()
+    })
+
+    it('hydrates a withSnapshot instance from the snapshot without reading the source', async () => {
+      const stored = await writeSnapshotFile()
+
+      // A source that throws on any read: hydrating from the snapshot must not touch it. This is the
       // cold start being bought — in production the reads it stands in for are GitHub API calls.
       const unreachable = {
         ...fsSource(fixture),
@@ -154,7 +162,7 @@ describe('comark-content contract', () => {
       }
 
       const content = comarkContent({
-        source: withSnapshot(unreachable, seed.snapshot, seed.manifest),
+        source: withSnapshot(unreachable, stored.snapshot),
         cache: { driver: memoryDriver() },
       })
       await content.init(full)
@@ -165,15 +173,11 @@ describe('comark-content contract', () => {
       expect(doc?.nodes?.length).toBeGreaterThan(0)
     })
 
-    it('falls back to the source when no seed is stored', async () => {
+    it('falls back to the source when no snapshot is stored', async () => {
       // What every ref other than the build commit gets: loaders return `null`, so the origin is
-      // the only provider. A seed that cannot prove it belongs to this ref must never be used.
+      // the only provider. A snapshot that cannot prove it belongs to this ref must never be used.
       const content = comarkContent({
-        source: withSnapshot(
-          fsSource(fixture),
-          () => null,
-          () => null
-        ),
+        source: withSnapshot(fsSource(fixture), () => null),
         cache: { driver: memoryDriver() },
       })
       await content.init(full)

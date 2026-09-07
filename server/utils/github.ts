@@ -81,7 +81,7 @@ export async function resolveContentSha(
     if (cached) return cached
   }
 
-  // Shared with the build-time seed, which walks the built commit instead of a branch — see
+  // Shared with the build-time snapshot, which walks the built commit instead of a branch — see
   // `fetchLastContentCommit()`. One query, so the two cannot drift apart.
   let sha: string | undefined
   try {

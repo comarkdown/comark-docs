@@ -122,9 +122,9 @@ function contentSource(ref: string, opts: { remote?: boolean } = {}): ContentSou
     ttl: 60 * 60 * 24,
   })
 
-  // The snapshot shipped during build by `modules/snapshot/`.
+  // Untyped read: unstorage runs every value through `destr`, so this arrives already parsed.
   return withSnapshot(source, () =>
-    useStorage('assets:comark-content').get<string>(`${ref}/${DEFAULT_CONTENT_NAME}/snapshot.json`)
+    useStorage('assets:comark-content').get(`${ref}/${DEFAULT_CONTENT_NAME}/snapshot.json`)
   )
 }
 
