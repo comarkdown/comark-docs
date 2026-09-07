@@ -37,7 +37,7 @@ export function findNavigationLayout(
   navigation: NavigationItem[] | undefined | null,
   path: string | undefined
 ): NavigationLayout | undefined {
-  if (!navigation?.length || !path || path === '/') return undefined
+  if (!navigation?.length || !path) return undefined
 
   let layout: NavigationLayout | undefined
   const visit = (items: NavigationItem[]) => {
@@ -56,7 +56,7 @@ export function findNavigationLayout(
   }
 
   visit(navigation)
-  return layout || 'docs'
+  return layout
 }
 
 /** Trail of navigation items leading to `path`, including the page itself. */
