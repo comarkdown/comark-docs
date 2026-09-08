@@ -1,4 +1,4 @@
-import { addPrerenderRoutes, addServerHandler, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
+import { addServerHandler, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
 import { join } from 'pathe'
 import { scanSkills } from './utils'
@@ -29,16 +29,10 @@ export default defineNuxtModule({
       nitroConfig.serverAssets.push({ baseName: 'skills', dir: skillsDir })
     })
 
-    const prerenderRoutes = ['/.well-known/skills', '/.well-known/skills/', '/.well-known/skills/index.json']
-    for (const skill of catalog) {
-      for (const file of skill.files) {
-        prerenderRoutes.push(`/.well-known/skills/${skill.name}/${file}`)
-      }
-    }
-    addPrerenderRoutes(prerenderRoutes)
-
+    // Full ISR, avoid prerendering files to keep the build fast.
     if (!nuxt.options.dev && comarkDocs?.isr !== false) {
       nuxt.options.routeRules = defu(nuxt.options.routeRules, {
+        '/.well-known/skills': { isr: true },
         '/.well-known/skills/**': { isr: true },
       }) as typeof nuxt.options.routeRules
     }
