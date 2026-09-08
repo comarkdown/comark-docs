@@ -20,12 +20,18 @@ importers:
       '@comark/nuxt':
         specifier: ^0.6.2
         version: 0.6.2(a7af4bed794ccaa8b491cb4661979ebb)
+      '@iconify-json/logos':
+        specifier: ^1.2.14
+        version: 1.2.14
       '@iconify-json/lucide':
         specifier: ^1.2.125
         version: 1.2.125
       '@iconify-json/simple-icons':
         specifier: ^1.2.93
         version: 1.2.93
+      '@iconify-json/unjs':
+        specifier: ^1.2.4
+        version: 1.2.4
       '@iconify-json/vscode-icons':
         specifier: ^1.2.74
         version: 1.2.74
@@ -846,11 +852,17 @@ packages:
   '@iconify-json/carbon@1.2.25':
     resolution: {integrity: sha512-7GLgXnmi47Skh8DcPPiP8U3vgm3rOVziEe+flCdG/kwiVaeb649U3Eqt/ej4f3NvlZK8BrOxpR3xQlWFLZYblQ==}
 
+  '@iconify-json/logos@1.2.14':
+    resolution: {integrity: sha512-O36DicXkgAMT6NAsH7MTWlOql8NktHz9fBCItTjz6L/9gyRXw4vQj6qTeVgww5UZWiVugUV1MhVFA/g9HWIkBw==}
+
   '@iconify-json/lucide@1.2.125':
     resolution: {integrity: sha512-tOCk1QKMtKnCfPAgZRHgjRkQTP7wF5IO+iPKvvp8vxGZYPkSLhx4HTV3Ng0pIZ3wNWrS6kVpHkunJ1dc19L1og==}
 
   '@iconify-json/simple-icons@1.2.93':
     resolution: {integrity: sha512-/XhANjfGYOuqvSR3TmUnkQkINvQ4GVjVuukvymRbxtVFBvIq/yiXJqCDycKcQPT401OYT9H2vIY6ihAlz1QIAw==}
+
+  '@iconify-json/unjs@1.2.4':
+    resolution: {integrity: sha512-ueSrChjHps8u6jTSDYTAp+4OQ/k+E11PbKZQjKkDVnOxNpC+/fUXXkYgrnqEUgT0rSvUiS0B7X5A8GcsP/PjOA==}
 
   '@iconify-json/vscode-icons@1.2.74':
     resolution: {integrity: sha512-ZVf1IM5sOvvY+0Gc6jtuD5okkd51mJe/BoVMhWJCu1WqZLSF6XgbSguxUOyuBmMjJXNPSw1OBvPwEVq1bXfiTw==}
@@ -7355,11 +7367,19 @@ snapshots:
     dependencies:
       '@iconify/types': 2.0.0
 
+  '@iconify-json/logos@1.2.14':
+    dependencies:
+      '@iconify/types': 2.0.0
+
   '@iconify-json/lucide@1.2.125':
     dependencies:
       '@iconify/types': 2.0.0
 
   '@iconify-json/simple-icons@1.2.93':
+    dependencies:
+      '@iconify/types': 2.0.0
+
+  '@iconify-json/unjs@1.2.4':
     dependencies:
       '@iconify/types': 2.0.0
 

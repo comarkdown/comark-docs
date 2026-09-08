@@ -23,7 +23,9 @@ export default defineNuxtConfig({
   },
   ogImage: { zeroRuntime: false },
   icon: {
-    provider: 'iconify',
+    provider: 'server',
+    fallbackToApi: 'client-only',
+    serverBundle: { collections: [] },
     customCollections: layerIconCollections() as never,
     clientBundle: {
       scan: true,

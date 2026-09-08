@@ -2,7 +2,6 @@ import { existsSync, readdirSync } from 'node:fs'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
-import { LAYER_ICON_COLLECTIONS } from '../../utils/icons'
 import { getPackageJsonMetadata, inferSiteURL, resolveContentDir } from './utils'
 
 const logger = useLogger('comark-docs')
@@ -122,16 +121,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
         allowRepos: options.codeExplorer?.allowRepos || [],
       },
     })
-
-    // Drop layer Iconify prefixes from appConfig so @nuxt/icon keeps using the Iconify API (not `/api/_nuxt_icon`).
-    nuxt.hook('modules:done', () => {
-      const iconAppConfig = nuxtOptions.appConfig.icon as { customCollections?: string[] } | undefined
-      if (!iconAppConfig?.customCollections?.length) return
-      iconAppConfig.customCollections = iconAppConfig.customCollections.filter(
-        (prefix) => !LAYER_ICON_COLLECTIONS.includes(prefix)
-      )
-    })
-
 
     // Extend Nuxt UI components to make them global and usable in markdown by consumers.
     nuxt.hook('components:extend', (components) => {
