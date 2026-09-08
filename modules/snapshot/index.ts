@@ -12,8 +12,9 @@ const logger = useLogger('comark-docs')
 const ASSET_BASE = 'comark-content'
 
 /**
- * Writes a build-time content snapshot into the function bundle.
- * A cold start then hydrates from it instead of walking the content repository.
+ * Writes a build-time content snapshot into the function bundle, stamped with the commit it was
+ * parsed at. A cold start at that commit hydrates from it instead of walking the content
+ * repository; a cold start at a later commit reuses every unchanged body from it.
  */
 export default defineNuxtModule({
   meta: { name: 'comark-docs:snapshot' },
@@ -52,16 +53,19 @@ export default defineNuxtModule({
         return
       }
 
-      const content = createBuildContentInstance({ source: fs(contentPath) })
+      // Pinned to the content commit, so the artifact carries `ref`. At runtime an instance pinned
+      // to the same commit uses it as its index; one pinned to a later commit walks that commit
+      // for the index and still takes every body whose source text did not change.
+      const content = createBuildContentInstance({ source: fs(contentPath) }).withRef(sha)
 
       try {
         const writeStart = performance.now()
-        await writeSnapshots(content, { dir: join(dir, sha), manifest: false })
+        await writeSnapshots(content, { dir, manifest: false })
         const writeMs = Math.round(performance.now() - writeStart)
 
         // Size is the number to watch: the snapshot is inlined into the bundle as a string.
         // Every cold start that reads it pays for that.
-        const { size } = await stat(join(dir, sha, DEFAULT_CONTENT_NAME, 'snapshot.json'))
+        const { size } = await stat(join(dir, DEFAULT_CONTENT_NAME, 'snapshot.json'))
         logger.success(
           `Content snapshot ${sha.slice(0, 7)}: ${Math.round(size / 1024)} kB parsed and written in ${writeMs}ms ` +
             `(ref resolved in ${resolveMs}ms)`

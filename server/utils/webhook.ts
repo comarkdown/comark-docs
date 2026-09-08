@@ -15,7 +15,7 @@ export interface ContentChanges {
 /** Files the content source can actually serve — matches the parsers installed in `content.ts`. */
 const CONTENT_EXTENSIONS = ['.md', '.yml', '.yaml', '.json']
 
-/** The content instance's name (see `createSourceContent()` in `content.ts`) — unnamed, so `default`. */
+/** The content instance's name (see `createBaseContent()` in `content.ts`) — unnamed, so `default`. */
 const SOURCE_NAME = DEFAULT_CONTENT_NAME
 
 /**

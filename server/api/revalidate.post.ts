@@ -89,10 +89,12 @@ export default defineEventHandler(async (event) => {
 
     // Refresh the content SHA
     const headSha = await resolveContentSha(branch, contentDir, { refresh: true })
-    const freshContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
-    // Partial init: the diff needs the index (cache will be reused by the warm below)
-    await freshContent.init()
-    const newItems = (await freshContent.manifest()).items
+    // A throwaway instance pinned to the new commit: the diff needs its index only. Its index lands
+    // in the commit's cache namespace, which the prod swap and the warm below then reuse.
+    const fresh = contentAt(headSha)
+    await fresh.init()
+    const newItems = (await fresh.manifest()).items
+    await fresh.dispose()
 
     return { headSha, newItems, ...diffContent(changes, oldItems, newItems) }
   })

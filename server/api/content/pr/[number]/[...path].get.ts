@@ -17,7 +17,5 @@ export default defineEventHandler(async (event) => {
   }
 
   const sha = await resolvePullPreviewSha(number)
-  const content = await getPreviewContent(sha, `/api/content/pr/${number}`)
-
-  return await content.handler(toWebRequest(event))
+  return servePreview(event, sha, `/pr/${rawNumber}`)
 })
