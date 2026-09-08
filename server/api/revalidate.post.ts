@@ -89,8 +89,9 @@ export default defineEventHandler(async (event) => {
 
     // Refresh the content SHA
     const headSha = await resolveContentSha(branch, contentDir, { refresh: true })
-    // A throwaway instance pinned to the new commit: the diff needs its index only. Its index lands
-    // in the commit's cache namespace, which the prod swap and the warm below then reuse.
+
+    // Throwaway instance: the diff needs the index only.
+    // It lands in the commit's cache namespace to be reused by the prod warm below.
     const fresh = contentAt(headSha)
     await fresh.init()
     const newItems = (await fresh.manifest()).items

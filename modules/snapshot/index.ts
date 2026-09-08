@@ -12,9 +12,9 @@ const logger = useLogger('comark-docs')
 const ASSET_BASE = 'comark-content'
 
 /**
- * Writes a build-time content snapshot into the function bundle, stamped with the commit it was
- * parsed at. A cold start at that commit hydrates from it instead of walking the content
- * repository; a cold start at a later commit reuses every unchanged body from it.
+ * Writes a build-time snapshot into the function bundle stamped with the commit it was parsed at.
+ * A cold start at that commit hydrates from it instead of walking the content repository.
+ * At a later commit it still supplies every unchanged body.
  */
 export default defineNuxtModule({
   meta: { name: 'comark-docs:snapshot' },
@@ -53,9 +53,8 @@ export default defineNuxtModule({
         return
       }
 
-      // Pinned to the content commit, so the artifact carries `ref`. At runtime an instance pinned
-      // to the same commit uses it as its index; one pinned to a later commit walks that commit
-      // for the index and still takes every body whose source text did not change.
+      // `withRef` stamps the artifact with the commit.
+      // At runtime, even with a different commit, we can reuse unchanged bodies.
       const content = createBuildContentInstance({ source: fs(contentPath) }).withRef(sha)
 
       try {

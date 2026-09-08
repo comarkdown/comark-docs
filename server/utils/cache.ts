@@ -13,6 +13,12 @@ function cacheAvailable(): boolean {
   return !import.meta.dev && Boolean(process.env.VERCEL)
 }
 
+/** Every namespace below degrades to per-process memory off Vercel if not available. */
+function runtimeCacheDriver(base: string, ttl: number): Driver {
+  if (!cacheAvailable()) return memoryDriver()
+  return vercelRuntimeCache({ base, ttl })
+}
+
 /**
  * Bump when content parser/plugin configuration, relevant parser dependencies, or cached derived
  * data changes. Keeping this explicit lets unrelated deployments reuse immutable content artifacts.
@@ -20,27 +26,11 @@ function cacheAvailable(): boolean {
 export const CONTENT_PARSER_VERSION = 'v3'
 
 /**
- * The driver behind everything cached per parser version, under `content:<version>`:
- *
- * - without `sha`, comark's index, parsed bodies and artifacts for every commit. An instance pinned
- *   with `content.withRef(sha)` adds its own `ref:<sha>:` prefix, so instances pinned to different
- *   commits share this driver without reading each other's entries;
- * - with `sha`, ad-hoc per-commit data (commit history, RSS dates) under `content:<version>:<sha>`.
- *   Those keys start with `gh:` and never meet comark's.
- *
- * Bumping the parser version leaves every commit's entries behind at once.
+ * Comark cache: index, parsed bodies and artifacts of every commit.
+ * Sharing content across all perser versions BUT keys are per-sha.
  */
-export function contentCacheDriver(sha?: string): Driver {
-  if (!cacheAvailable()) return memoryDriver()
-  return vercelRuntimeCache({
-    base: sha ? `content:${CONTENT_PARSER_VERSION}:${sha}` : `content:${CONTENT_PARSER_VERSION}`,
-    ttl: TTL,
-  })
-}
-
-/** Ad-hoc per-SHA storage for non-content data (commit history, RSS dates). */
-export function shaCacheStorage(sha: string): Storage {
-  return createStorage({ driver: contentCacheDriver(sha) })
+export function contentCacheDriver(): Driver {
+  return runtimeCacheDriver(`content:${CONTENT_PARSER_VERSION}`, TTL)
 }
 
 /**
@@ -48,15 +38,19 @@ export function shaCacheStorage(sha: string): Storage {
  * (`resolveContentSha` in `github.ts`), in its own namespace so every instance reads one pointer
  * instead of keeping its own timer.
  *
- * Vercel Runtime Cache is **regional**, not global (https://vercel.com/docs/caching/runtime-cache):
- * this assumes Functions run in a single region (no `regions` in `vercel.json`/`nuxt.config.ts`).
- * Multi-region would confine the webhook's forced refresh to its region — others self-heal on TTL,
- * so reach for a globally replicated store (e.g. Edge Config) only if that day comes.
+ * TODO: Vercel Runtime Cache is **regional**, not global (https://vercel.com/docs/caching/runtime-cache):
+ * It assumes Functions run in a single region.
+ * Multi-region would confine the webhook's forced refresh to its region (others self-heal on TTL)
+ * We should reach for a globally replicated store (e.g. Edge Config).
  */
 export function refCacheDriver(): Driver {
-  if (!cacheAvailable()) return memoryDriver()
-  return vercelRuntimeCache({
-    base: 'content:refs',
-    ttl: REF_TTL,
-  })
+  return runtimeCacheDriver('content:refs', REF_TTL)
+}
+
+/**
+ * Per-commit data Comark knows nothing about (commit history, RSS dates).
+ * Namespace is per-sha and keys start with `gh:`.
+ */
+export function shaCacheStorage(sha: string): Storage {
+  return createStorage({ driver: runtimeCacheDriver(`content:${CONTENT_PARSER_VERSION}:${sha}`, TTL) })
 }
