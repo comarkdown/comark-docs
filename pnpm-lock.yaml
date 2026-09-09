@@ -99,8 +99,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.2(@vueuse/core@14.4.0(vue@3.5.41(typescript@6.0.3)))(vue@3.5.41(typescript@6.0.3))
       nuxt-agent-discovery:
-        specifier: ^0.5.0
-        version: 0.5.0(3adf33016b78b1d9f3d0bf8940d45a28)
+        specifier: ^0.5.1
+        version: 0.5.1(3adf33016b78b1d9f3d0bf8940d45a28)
       nuxt-llms:
         specifier: https://pkg.pr.new/nuxt-content/nuxt-llms/nuxt-llms@f6a9730
         version: https://pkg.pr.new/nuxt-content/nuxt-llms/nuxt-llms@f6a9730(magic-string@1.2.3)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.5)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)))
@@ -4912,8 +4912,8 @@ packages:
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
-  nuxt-agent-discovery@0.5.0:
-    resolution: {integrity: sha512-FTEnPiMdVliNk3rc8fAKgg/x6mPokmaePug367tEhnDQUAJ0TM4ShMicTxNQWVTdUXRCKPlGU8DX2wj+5MaHHQ==}
+  nuxt-agent-discovery@0.5.1:
+    resolution: {integrity: sha512-5cG8q4hFh7U0ib1Ot8RqClbXMcX5claDZ80eMbjI+kNVub1tkd9CKe7JaQW5VzW8vD+27szJFsnVaXQLTmGQ4g==}
     peerDependencies:
       '@nuxt/content': ^3.0.0
       '@nuxtjs/mcp-toolkit': '>=0.19.0'
@@ -11726,7 +11726,7 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuxt-agent-discovery@0.5.0(3adf33016b78b1d9f3d0bf8940d45a28):
+  nuxt-agent-discovery@0.5.1(3adf33016b78b1d9f3d0bf8940d45a28):
     dependencies:
       '@nuxt/kit': 4.5.2(magic-string@1.2.3)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.5)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)))
       defu: 6.1.7
