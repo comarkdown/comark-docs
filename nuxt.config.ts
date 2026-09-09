@@ -1,6 +1,6 @@
 import { resolveModulePath } from 'exsolve'
 import { defineNuxtConfig } from 'nuxt/config'
-import { layerIconCollections } from './utils/icons'
+import { LAYER_ICON_COLLECTIONS } from './utils/icons'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-06-09',
@@ -25,12 +25,8 @@ export default defineNuxtConfig({
   icon: {
     provider: 'server',
     fallbackToApi: 'client-only',
-    serverBundle: { collections: [] },
-    customCollections: layerIconCollections() as never,
-    clientBundle: {
-      scan: true,
-      includeCustomCollections: false
-    },
+    serverBundle: { collections: LAYER_ICON_COLLECTIONS },
+    clientBundle: { scan: true },
   },
   vite: {
     resolve: {
