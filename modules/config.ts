@@ -149,7 +149,11 @@ export default defineNuxtModule<ComarkDocsOptions>({
       name: `${siteName} Docs`,
       version: '1.0.0',
     })
-    ;(nuxt.options as { mcp?: typeof mcp }).mcp = mcp
+    // `mcp: false` disables the toolkit, so the defaults must not be written back over it. The server
+    // card below reads `rawMcpOptions` for the same reason.
+    if (rawMcpOptions !== false) {
+      ;(nuxt.options as { mcp?: typeof mcp }).mcp = mcp
+    }
 
     // What nuxt-agent-discovery cannot know: the MCP server card describing the toolkit's endpoint under the
     // same name, and the deprecated `comarkDocs.skills` alias.
