@@ -9,7 +9,7 @@ sequenceDiagram
   participant SSR as Lambda SSR
   participant ContentRoute as /api/content/**
   participant Config as Vercel Global Config
-  participant Refs as Shared ref cache (content:refs)
+  participant Refs as Shared ref cache (content:refs:v2)
   participant GH as GitHub
   participant Content as shared content
 

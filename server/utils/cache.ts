@@ -40,7 +40,8 @@ export function contentCacheDriver(): Driver {
  * We should reach for a globally replicated store (e.g. Edge Config).
  */
 export function refCacheDriver(ttl: number): Driver {
-  return runtimeCacheDriver('content:refs', ttl)
+  // v2 prevents entries written before production refs gained a fallback TTL from surviving the migration.
+  return runtimeCacheDriver('content:refs:v2', ttl)
 }
 
 /**
