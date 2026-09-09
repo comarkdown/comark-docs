@@ -10,6 +10,7 @@
     "url": "git+https://github.com/comarkdown/comark-docs.git"
   },
   "license": "MIT",
+  "packageManager": "pnpm@11.25.0",
   "files": [
     "app",
     "server",
