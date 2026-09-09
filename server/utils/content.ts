@@ -37,14 +37,24 @@ export function contentAt(sha: string): DocsContent {
   return getBaseContent().withRef(sha)
 }
 
-// The content commit currently served.
+// The content commit currently served, once `getProdContent()` has resolved one.
 // Pin GitHub reads to an immutable SHA:
 // bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
-let headRef: string | undefined
+let headSha: string | undefined
 
+/**
+ * The pinned head commit, or nothing while none is resolved (dev, off-Vercel, pre-first-resolve).
+ */
+export function getHeadSha(): string | undefined {
+  return headSha
+}
+
+/**
+ * The pinned head SHA, falling back to the branch while none is resolved.
+ * The fallback only ever applies off-Vercel (self-hosted, `nuxt preview`, `vercel dev`).
+ */
 export function getHeadRef(): string {
-  headRef ??= targetBranch()
-  return headRef
+  return headSha ?? targetBranch()
 }
 
 /**
@@ -66,18 +76,20 @@ export async function resolveProdSha(): Promise<string> {
 let prod: Promise<DocsContent> | undefined
 
 /**
- * Shared instance for the lifetime of the process, pinned to `headRef`.
+ * Shared instance for the lifetime of the process, pinned to `headSha`.
  * Always resolves the head via `resolveProdSha()`.
  * Swaps to a new pinned instance when the head advances.
  */
 export async function getProdContent(): Promise<DocsContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveProdSha()
-    if (sha !== getHeadRef()) {
-      console.log(`[comark-docs] New head: ${getHeadRef()} -> ${sha}`)
-      headRef = sha
-      void prod?.then((instance) => instance.dispose()).catch(() => {})
-      prod = undefined
+    if (sha !== headSha) {
+      if (headSha) {
+        console.log(`[comark-docs] New head: ${headSha} -> ${sha}`)
+        void prod?.then((instance) => instance.dispose()).catch(() => {})
+        prod = undefined
+      }
+      headSha = sha
     }
   }
 

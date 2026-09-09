@@ -36,10 +36,10 @@ export async function servePreview(event: Parameters<typeof toWebRequest>[0], sh
   url.pathname = url.pathname.replace(segment, '')
   const rewritten = new Request(url, request)
 
-  if (sha === getHeadRef()) {
+  if (sha === getHeadSha()) {
     const instance = await getProdContent()
     // Recheck after promise resolves.
-    if (sha === getHeadRef()) return instance.handler(rewritten)
+    if (sha === getHeadSha()) return instance.handler(rewritten)
   }
   return getPreviewContent(sha).handler(rewritten)
 }
