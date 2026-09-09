@@ -112,7 +112,7 @@ const components = {
   Browser,
 }
 
-const { toc, seo } = useAppConfig()
+const { toc } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
 const content = useDocsContent()
 const layout = inject<Ref<NavigationLayout>>('layout')
@@ -187,39 +187,26 @@ if (content.value.mode === 'prod') {
 
   const breadcrumb = computed(() => findBreadcrumb(navigation?.value, selfPath.value))
 
-  useHead({
-    script: [
-      {
-        type: 'application/ld+json',
-        innerHTML: computed(() =>
-          jsonLd([
-            {
-              '@context': 'https://schema.org',
-              '@type': 'TechArticle',
-              headline: fm.value.title,
-              description: fm.value.description,
-              url: canonicalUrl.value,
-              inLanguage: 'en',
-              isPartOf: {
-                '@type': 'WebSite',
-                name: seo?.siteName,
-                url: site.url,
-              },
-              author: { '@type': 'Organization', name: seo?.siteName, url: site.url },
-            },
-            // Google requires `item` on every ListItem. Non-page section nodes
-            // (page: false) only have a title — omit them from structured data.
-            breadcrumbListLd([
-              { name: 'Docs', item: site.url },
-              ...breadcrumb.value
-                .filter((item): item is { title: string, path: string } => Boolean(item.path))
-                .map((item) => ({ name: item.title, item: joinURL(site.url, item.path) })),
-            ]),
-          ])
-        ),
-      },
-    ],
-  })
+  // `WebSite`, `WebPage` and the publisher come from nuxt-schema-org, which also owns the `@id` links
+  // between them. Only what is specific to this page is declared here.
+  useSchemaOrg([
+    defineArticle({
+      '@type': 'TechArticle',
+      headline: () => fm.value.title,
+      description: () => fm.value.description,
+      inLanguage: 'en',
+    }),
+    defineBreadcrumb({
+      // Google requires `item` on every ListItem. Non-page section nodes
+      // (page: false) only have a title — omit them from structured data.
+      itemListElement: [
+        { name: 'Docs', item: site.url },
+        ...breadcrumb.value
+          .filter((item): item is { title: string, path: string } => Boolean(item.path))
+          .map((item) => ({ name: item.title, item: joinURL(site.url, item.path) })),
+      ],
+    }),
+  ])
 }
 </script>
 

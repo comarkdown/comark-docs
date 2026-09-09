@@ -107,6 +107,9 @@ importers:
       nuxt-og-image:
         specifier: ^6.7.8
         version: 6.7.8(d69daeae2668f4062a5626b724092832)
+      nuxt-schema-org:
+        specifier: ^6.3.1
+        version: 6.3.1(922ee4371f2ec5825b5f186a85055e54)
       nuxt-seo-utils:
         specifier: ^8.4.2
         version: 8.4.2(6c2732a7424285fd39f1e74aab3b66f7)
@@ -5043,6 +5046,20 @@ packages:
       tailwindcss:
         optional: true
       unifont:
+        optional: true
+      zod:
+        optional: true
+
+  nuxt-schema-org@6.3.1:
+    resolution: {integrity: sha512-pZQyLERx8iho4QDCDNK0WxfdHwmZWXk8Nrp9DUfR79aKkwivm83SEvwWp0D9/YuBfaXhm+9YxVBpCDA2kr8B+g==}
+    peerDependencies:
+      '@unhead/vue': ^2.0.7 || ^3.0.0
+      unhead: ^2.0.7 || ^3.0.0
+      zod: '>=3'
+    peerDependenciesMeta:
+      '@unhead/vue':
+        optional: true
+      unhead:
         optional: true
       zod:
         optional: true
@@ -11983,6 +12000,29 @@ snapshots:
       - vite
       - vue
       - webpack
+
+  nuxt-schema-org@6.3.1(922ee4371f2ec5825b5f186a85055e54):
+    dependencies:
+      '@nuxt/kit': 4.5.2(magic-string@1.2.3)(magicast@0.5.4)(oxc-parser@0.143.0)(rolldown@1.2.5)(unplugin@3.3.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0)))
+      defu: 6.1.7
+      nuxt-site-config: 4.2.3(3bc4744619a624c5169bc56293f3c985)
+      nuxtseo-shared: 5.3.14(fc4f002cf8929f5932e9df9bf8f19792)
+      pkg-types: 2.3.1
+      ufo: 1.6.4
+    optionalDependencies:
+      '@unhead/vue': 3.4.0(@oxc-project/types@0.146.0)(esbuild@0.28.2)(lightningcss@1.33.0)(oxc-parser@0.143.0)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0))(vue@3.5.41(typescript@6.0.3))
+      unhead: 3.4.0(esbuild@0.28.2)(rolldown@1.2.5)(rollup@4.62.5)(vite@8.2.2(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0))
+      zod: 4.4.3
+    transitivePeerDependencies:
+      - '@nuxt/schema'
+      - magic-string
+      - magicast
+      - nuxt
+      - oxc-parser
+      - rolldown
+      - unplugin
+      - vite
+      - vue
 
   nuxt-seo-utils@8.4.2(6c2732a7424285fd39f1e74aab3b66f7):
     dependencies:

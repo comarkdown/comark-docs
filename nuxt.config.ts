@@ -20,6 +20,7 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap',
     'nuxt-seo-utils',
     'nuxt-og-image',
+    'nuxt-schema-org',
     '@nuxtjs/mcp-toolkit',
     'nuxt-llms',
     'nuxt-agent-discovery',

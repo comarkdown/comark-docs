@@ -66,6 +66,7 @@
     "nuxt-agent-discovery": "^0.5.0",
     "nuxt-llms": "https://pkg.pr.new/nuxt-content/nuxt-llms/nuxt-llms@f6a9730",
     "nuxt-og-image": "^6.7.8",
+    "nuxt-schema-org": "^6.3.1",
     "nuxt-seo-utils": "^8.4.2",
     "pathe": "^2.0.3",
     "rangi": "^2.2.0",

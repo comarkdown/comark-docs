@@ -62,21 +62,18 @@ if (content.value.mode === 'prod') {
   const { organization, ...softwareApp } = (docs?.schemaOrg ?? {}) as Record<string, unknown> & {
     organization?: Record<string, unknown>
   }
-  const identity = { name: seo?.siteName, url: site.url }
-  const nodes: Record<string, unknown>[] = []
-  if (Object.keys(softwareApp).length) {
-    nodes.push({ '@type': 'SoftwareApplication', ...identity, ...softwareApp })
-  }
-  if (organization && Object.keys(organization).length) {
-    nodes.push({ '@type': 'Organization', ...identity, ...organization })
-  }
+  // `WebSite` and `WebPage` come from nuxt-schema-org, which also owns the `@id` links to these.
+  // Both inputs are cast: the app config carries them untyped, as whatever schema.org accepts.
+  const nodes = [
+    ...(Object.keys(softwareApp).length
+      ? [defineSoftwareApp({ name: seo?.siteName, ...softwareApp } as Parameters<typeof defineSoftwareApp>[0])]
+      : []),
+    ...(organization && Object.keys(organization).length
+      ? [defineOrganization({ name: seo?.siteName, ...organization } as Parameters<typeof defineOrganization>[0])]
+      : []),
+  ]
   if (nodes.length) {
-    useHead({
-      script: nodes.map((node) => ({
-        type: 'application/ld+json',
-        innerHTML: jsonLd({ '@context': 'https://schema.org', ...node }),
-      })),
-    })
+    useSchemaOrg(nodes)
   }
 }
 </script>
