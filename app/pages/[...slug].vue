@@ -148,6 +148,9 @@ const description = computed(() => fm.value.seo?.description || fm.value.descrip
 const site = useSiteConfig()
 // Previews (/tree, /blob) canonicalize to the production URL.
 const canonicalUrl = computed(() => joinURL(site.url, content.value.path))
+// The page's markdown twin, so an agent reading the HTML finds it without negotiating again.
+// Previews have no twin of their own, so this follows the canonical to production.
+const markdownUrl = computed(() => `${canonicalUrl.value}.md`)
 
 useRobotsRule(computed(() => (content.value.mode === 'prod' ? 'index, follow' : 'noindex, nofollow')))
 
@@ -159,9 +162,19 @@ useSeoMeta({
   ogUrl: canonicalUrl,
 })
 
-useHead({
-  link: [{ rel: 'canonical', href: canonicalUrl }],
-})
+// Previews are noindex and canonicalize to production, which `useCanonical` cannot express since it
+// builds the canonical from the current route. Same split as nuxt.com, which skips the composable on
+// the unversioned `/docs/*` stubs.
+if (content.value.mode === 'prod') {
+  useCanonical(() => `${content.value.path}.md`)
+} else {
+  useHead({
+    link: [
+      { rel: 'canonical', href: canonicalUrl },
+      { rel: 'alternate', type: 'text/markdown', href: markdownUrl },
+    ],
+  })
+}
 
 const headline = computed(() => findPageHeadline(navigation?.value, selfPath.value))
 

@@ -45,9 +45,9 @@ useSeoMeta({
   ogUrl: site.url,
 })
 
-useHead({
-  link: [{ rel: 'canonical', href: site.url }],
-})
+// `/raw/index.md`, not `/index.md`: the homepage document has no `.md` twin of its own, so this is
+// the URL the module routes at the edge. Same as nuxt.com and ui.nuxt.com.
+useCanonical('/raw/index.md')
 
 if (content.value.mode === 'prod') {
   defineOgImage('DocsSatori', {
