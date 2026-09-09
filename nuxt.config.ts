@@ -69,10 +69,11 @@ export default defineNuxtConfig({
       ],
     },
   },
+  llms: {
+    prerender: false,
+  },
   nitro: {
     routeRules: {
-      '/llms.txt': { prerender: false },
-      '/llms-full.txt': { prerender: false },
       '/openapi.json': { prerender: true },
     },
     // MCP tool handlers reach the request through `useEvent()`.
