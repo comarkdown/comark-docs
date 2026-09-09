@@ -9,15 +9,10 @@ allowBuilds:
 blockExoticSubdeps: false
 
 minimumReleaseAgeExclude:
-  - "@nuxt/kit@4.5.1"
-  - "@nuxt/schema@4.5.1"
-  - "@nuxt/nitro-server@4.5.1"
-  - "@nuxt/vite-builder@4.5.1"
-  - nuxt@4.5.1
-  - '@comark/nuxt@0.6.0 || 0.6.1 || 0.6.2'
-  - '@comark/vue@0.6.0 || 0.6.1 || 0.6.2'
-  - comark@0.6.0 || 0.6.1 || 0.6.2
-  - comark-content@0.3.0
+  # First-party packages, published and consumed here in the same session.
+  - '@comark/*'
+  - comark
+  - comark-content
 
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
