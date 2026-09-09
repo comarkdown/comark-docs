@@ -143,7 +143,7 @@ function contentSource(): ContentSource {
   // Snaphot build during build time by `modules/snapshot/` is used.
   // Snpahost is pinned to the latest commit at the time of the build.
   // First head moves, only the bodies whose source hash matches are reused.
-  return withSnapshot(source, () => readSnapshot())
+  return withSnapshot(source, () => readSnapshot(), () => readManifest())
 }
 
 /**
@@ -158,6 +158,24 @@ async function readSnapshot(): Promise<unknown> {
     const hit = data != null
     span?.setAttribute('comark.snapshot.hit', hit)
     recordDuration('content.snapshot.read.ms', startedAt, { hit: String(hit) })
+    return data
+  } finally {
+    span?.end()
+  }
+}
+
+/**
+ * Read the build-time snapshot, or nothing when this deployment did not ship one.
+ */
+async function readManifest(): Promise<unknown> {
+  const span = contentTracer()?.startSpan('manifest:read')
+  const startedAt = performance.now()
+  try {
+    // Untyped read: unstorage runs every value through `destr`, so this arrives already parsed.
+    const data = await useStorage('assets:comark-content').get(`${DEFAULT_CONTENT_NAME}/manifest.json`)
+    const hit = data != null
+    span?.setAttribute('comark.manifest.hit', hit)
+    recordDuration('content.manifest.read.ms', startedAt, { hit: String(hit) })
     return data
   } finally {
     span?.end()

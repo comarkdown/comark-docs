@@ -1,6 +1,7 @@
 import { mkdir, stat } from 'node:fs/promises'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
-import { DEFAULT_CONTENT_NAME, writeSnapshots } from 'comark-content'
+import { DEFAULT_CONTENT_NAME } from 'comark-content'
+import { writeSnapshots } from 'comark-content/build'
 import fs from 'comark-content/sources/fs'
 import { join } from 'pathe'
 import { createBuildContentInstance } from '../../utils/content'
@@ -59,7 +60,7 @@ export default defineNuxtModule({
 
       try {
         const writeStart = performance.now()
-        await writeSnapshots(content, { dir, manifest: false })
+        await writeSnapshots(content, { dir })
         const writeMs = Math.round(performance.now() - writeStart)
 
         // Size is the number to watch: the snapshot is inlined into the bundle as a string.
