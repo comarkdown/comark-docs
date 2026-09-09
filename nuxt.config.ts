@@ -75,9 +75,6 @@ export default defineNuxtConfig({
     prerender: false,
   },
   nitro: {
-    routeRules: {
-      '/openapi.json': { prerender: true },
-    },
     // MCP tool handlers reach the request through `useEvent()`.
     experimental: { asyncContext: true },
     vercel: {

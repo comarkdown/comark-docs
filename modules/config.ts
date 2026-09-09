@@ -229,6 +229,8 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/llms-full.txt': { isr },
         '/sitemap.md': { isr },
         '/rss.xml': { isr },
+        // Prerendering would bake the build-time site URL and `docs.version` into it.
+        '/openapi.json': { isr },
         // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
         '/api/content/blob/*/search-sections': { isr: true },
         '/api/content/tree/*/search-sections': { isr },
