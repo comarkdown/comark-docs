@@ -172,6 +172,35 @@ export default defineNuxtModule<ComarkDocsOptions>({
       ...(options.skills ? { skills: options.skills } : {}),
     }) as AgentDiscoveryOptions
 
+    // A `.vue` page has no document behind it, so negotiation would answer a markdown 404 on a route
+    // browsers serve as HTML. Every page route outside the content catch-all is excluded, which is what a
+    // consumer app's own pages need: without this each one has to be listed in `excludePrefixes` by hand.
+    // `pages:extend` runs after nuxt-agent-discovery resolved its options, so this appends to the list it
+    // holds rather than to the module options, which are read by then.
+    nuxt.hook('pages:extend', (pages) => {
+      const excludePrefixes = (nuxt.options.runtimeConfig.agentDiscovery as { excludePrefixes?: string[] } | undefined)?.excludePrefixes
+      if (!excludePrefixes) {
+        return
+      }
+
+      const excluded: string[] = []
+      for (const page of pages) {
+        // Up to the first dynamic segment, so `/blog/[slug]` excludes `/blog/`. The content catch-all
+        // (`/:slug(.*)*`) and the homepage both reduce to `/`, which stays negotiable.
+        const dynamic = page.path.search(/[:*(]/)
+        const prefix = dynamic === -1 ? page.path : page.path.slice(0, dynamic)
+        if (prefix === '/' || excludePrefixes.includes(prefix)) {
+          continue
+        }
+        excludePrefixes.push(prefix)
+        excluded.push(prefix)
+      }
+
+      if (excluded.length) {
+        logger.info(`Vue pages excluded from markdown negotiation: ${excluded.join(', ')}`)
+      }
+    })
+
     // `llms.txt` sections come from the content navigation at request time. Registered here rather than
     // scanned from `server/plugins/` so the hook runs ahead of the nuxt-agent-discovery bridge (see the plugin).
     const { resolve } = createResolver(import.meta.url)

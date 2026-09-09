@@ -38,8 +38,9 @@ export default defineNuxtConfig({
   agentDiscovery: {
     // comark sites build their own content instance, so the adapter is a file rather than auto-detected.
     source: resolve('./server/utils/agent-source.ts'),
-    // Versioned previews serve HTML only, and `/logos` is a layer page with no document behind it.
-    excludePrefixes: { extend: ['/tree/', '/blob/', '/pr/', '/logos'] },
+    // Versioned previews serve HTML only. Layer and app `.vue` pages (`/logos` here) are excluded
+    // automatically from the page routes, see modules/config.ts.
+    excludePrefixes: { extend: ['/tree/', '/blob/', '/pr/'] },
     discovery: {
       // `server/routes/openapi.json.get.ts`, the one document the module cannot know about.
       links: [
