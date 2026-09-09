@@ -45,9 +45,10 @@ useSeoMeta({
   ogUrl: site.url,
 })
 
-// `/raw/index.md`, not `/index.md`: the homepage document has no `.md` twin of its own, so this is
-// the URL the module routes at the edge. Same as nuxt.com and ui.nuxt.com.
-useCanonical('/raw/index.md')
+// The raw prefix, not `/index.md`: the homepage document has no `.md` twin of its own, so this is the
+// URL the module routes at the edge. Same as nuxt.com and ui.nuxt.com.
+const rawPrefix = useRuntimeConfig().public.agentDiscovery?.rawPrefix || '/raw'
+useCanonical(`${rawPrefix}/index.md`)
 
 if (content.value.mode === 'prod') {
   defineOgImage('DocsSatori', {
