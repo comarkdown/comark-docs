@@ -24,7 +24,7 @@ sequenceDiagram
   else no pin or read failed
     Config-->>Content: undefined
     Content->>Refs: resolveContentSha(targetBranch, contentDir)
-    alt cache hit (no production TTL)
+    alt cache hit (within 1h fallback TTL)
       Refs-->>Content: cached content sha
     else cache miss
       Refs->>GH: commits?sha=<branch>&path=<contentDir>
@@ -51,10 +51,14 @@ its index from GitHub once per content revision, then parses one page. All reads
 immutable `<content-sha>`. Without a Global Config pin, code-only commits do not rebuild the content
 instance.
 
-The production branch pointer is shared across *instances* and has no TTL. The push webhook
-refreshes it before purging ISR, so cold starts don't need to resolve the branch through GitHub.
+The production branch pointer is shared across *instances* with a one-hour fallback TTL. The push
+webhook refreshes it before purging ISR, so normal cold starts don't need to resolve the branch
+through GitHub. If a webhook delivery or refresh fails, a request resolves the branch again after
+the fallback TTL instead of serving the old SHA indefinitely.
+
 Vercel's Runtime Cache is regional (see the note on `refCacheDriver()` in
-`server/utils/cache.ts`), so this requires the project to run in one region.
+`server/utils/cache.ts`). This project runs in one region, so the webhook refresh reaches every
+instance's shared cache. Additional regions would self-heal when their fallback TTL expires.
 
 Preview deployments, `/tree/:branch`, `/pr/:number`, and preview authorization decisions use a
 600-second TTL because production webhooks don't update them. Negative ref lookups use the same TTL,
@@ -72,8 +76,8 @@ failed request.
 which writes the latest branch content SHA into the same shared ref cache before fanning out ISR
 purges for the affected pages. Without a Global Config pin, a freshly-purged page's next render sees
 the new SHA. With a pin, the next render stays on the pinned SHA, while the refreshed branch pointer
-is ready if the pin is removed. The webhook is required for production freshness because that
-pointer does not expire.
+is ready if the pin is removed. If the webhook fails, the production pointer refreshes within one
+hour.
 
 Parsed manifests and bodies live under a parser-version + content-SHA namespace. Vercel
 Runtime Cache persists across deployments within an environment, so unrelated deployments can reuse

@@ -31,17 +31,16 @@ export function contentCacheDriver(): Driver {
 }
 
 /**
- * Shared driver backing branch pointers and preview authorization decisions (`github.ts`). TTLs are
- * set per item: the production branch pointer is webhook-owned and does not expire, while previews
- * and negative decisions remain bounded.
+ * Shared driver backing branch pointers and preview authorization decisions (`github.ts`). The
+ * caller supplies a bounded default TTL, and individual preview entries can use a shorter TTL.
  *
  * TODO: Vercel Runtime Cache is **regional**, not global (https://vercel.com/docs/caching/runtime-cache):
  * It assumes Functions run in a single region.
  * Multi-region would confine the webhook's forced refresh to its region (others self-heal on TTL)
  * We should reach for a globally replicated store (e.g. Edge Config).
  */
-export function refCacheDriver(): Driver {
-  return runtimeCacheDriver('content:refs')
+export function refCacheDriver(ttl: number): Driver {
+  return runtimeCacheDriver('content:refs', ttl)
 }
 
 /**

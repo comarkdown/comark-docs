@@ -46,19 +46,22 @@ export function targetBranch(): string {
   return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
 }
 
-/** Moving previews and negative decisions eventually refresh or recover. */
+/** The webhook refreshes production immediately; this bounds recovery when delivery fails. */
+const PRODUCTION_REF_TTL = 60 * 60
+
+/** Moving previews and negative decisions refresh or recover more frequently. */
 const PREVIEW_REF_TTL = 600
 
 // Branch + content directory → content commit SHA pointer, shared across every instance. The
-// production branch is refreshed by its push webhook; other branches refresh on this TTL.
-const refStorage = createStorage({ driver: refCacheDriver() })
+// production branch is refreshed by its push webhook; TTL remains a bounded fallback.
+const refStorage = createStorage({ driver: refCacheDriver(PRODUCTION_REF_TTL) })
 const normalizeContentDir = (contentDir: string) => contentDir.replace(/^\/+|\/+$/g, '')
 const refKey = (branch: string, contentDir: string) =>
   `branch:${encodeURIComponent(branch)}:path:${encodeURIComponent(normalizeContentDir(contentDir))}`
 
-/** The production webhook owns its target branch pointer; all other refs remain time-bounded. */
-function refTtl(branch: string): number | undefined {
-  if (process.env.VERCEL_ENV === 'production' && branch === targetBranch()) return undefined
+/** Production has a longer fallback because its webhook owns the normal refresh path. */
+function refTtl(branch: string): number {
+  if (process.env.VERCEL_ENV === 'production' && branch === targetBranch()) return PRODUCTION_REF_TTL
   return PREVIEW_REF_TTL
 }
 
@@ -116,8 +119,7 @@ export async function resolveContentSha(
     throw createError({ statusCode: 404, statusMessage: `Content not found at ref: ${branch}` })
   }
 
-  const ttl = refTtl(branch)
-  await refStorage.setItem(key, sha, ttl ? { ttl } : undefined)
+  await refStorage.setItem(key, sha, { ttl: refTtl(branch) })
   return sha
 }
 
