@@ -5,16 +5,13 @@ import vercelRuntimeCache from 'unstorage/drivers/vercel-runtime-cache'
 /** SHA-pinned content is immutable, so it can be cached for a long time. */
 const TTL = 60 * 60 * 24
 
-/** Content refs move with their branches, so the pointer cache uses a short TTL. */
-const REF_TTL = 60
-
 /** Whether the Vercel Runtime Cache is available (i.e. running on Vercel). */
 function cacheAvailable(): boolean {
   return !import.meta.dev && Boolean(process.env.VERCEL)
 }
 
 /** Every namespace below degrades to per-process memory off Vercel if not available. */
-function runtimeCacheDriver(base: string, ttl: number): Driver {
+function runtimeCacheDriver(base: string, ttl?: number): Driver {
   if (!cacheAvailable()) return memoryDriver()
   return vercelRuntimeCache({ base, ttl })
 }
@@ -34,9 +31,9 @@ export function contentCacheDriver(): Driver {
 }
 
 /**
- * Shared driver backing the branch + content directory → content commit pointer
- * (`resolveContentSha` in `github.ts`), in its own namespace so every instance reads one pointer
- * instead of keeping its own timer.
+ * Shared driver backing branch pointers and preview authorization decisions (`github.ts`). TTLs are
+ * set per item: the production branch pointer is webhook-owned and does not expire, while previews
+ * and negative decisions remain bounded.
  *
  * TODO: Vercel Runtime Cache is **regional**, not global (https://vercel.com/docs/caching/runtime-cache):
  * It assumes Functions run in a single region.
@@ -44,7 +41,7 @@ export function contentCacheDriver(): Driver {
  * We should reach for a globally replicated store (e.g. Edge Config).
  */
 export function refCacheDriver(): Driver {
-  return runtimeCacheDriver('content:refs', REF_TTL)
+  return runtimeCacheDriver('content:refs')
 }
 
 /**

@@ -46,12 +46,21 @@ export function targetBranch(): string {
   return process.env.VERCEL_GIT_COMMIT_REF || useRuntimeConfig().docs.github.branch || 'main'
 }
 
-// Branch + content directory → content commit SHA pointer, shared across every instance so only one
-// pays for the GitHub API call per TTL window. See `refCacheDriver()` for the single-region assumption.
+/** Moving previews and negative decisions eventually refresh or recover. */
+const PREVIEW_REF_TTL = 600
+
+// Branch + content directory → content commit SHA pointer, shared across every instance. The
+// production branch is refreshed by its push webhook; other branches refresh on this TTL.
 const refStorage = createStorage({ driver: refCacheDriver() })
 const normalizeContentDir = (contentDir: string) => contentDir.replace(/^\/+|\/+$/g, '')
 const refKey = (branch: string, contentDir: string) =>
   `branch:${encodeURIComponent(branch)}:path:${encodeURIComponent(normalizeContentDir(contentDir))}`
+
+/** The production webhook owns its target branch pointer; all other refs remain time-bounded. */
+function refTtl(branch: string): number | undefined {
+  if (process.env.VERCEL_ENV === 'production' && branch === targetBranch()) return undefined
+  return PREVIEW_REF_TTL
+}
 
 /** Sentinel for "this ref doesn't resolve" — see the negative caching in `resolveContentSha`. */
 const UNRESOLVED = '\0unresolved'
@@ -96,18 +105,19 @@ export async function resolveContentSha(
     const failure = error as { statusCode?: number; response?: { status?: number } }
     const status = failure.statusCode ?? failure.response?.status
     if (status === 404) {
-      if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED)
+      if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED, { ttl: PREVIEW_REF_TTL })
       throw createError({ statusCode: 404, statusMessage: `Ref not found: ${branch}` })
     }
     throw error
   }
 
   if (!sha) {
-    if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED)
+    if (opts.cacheMisses) await refStorage.setItem(key, UNRESOLVED, { ttl: PREVIEW_REF_TTL })
     throw createError({ statusCode: 404, statusMessage: `Content not found at ref: ${branch}` })
   }
 
-  await refStorage.setItem(key, sha)
+  const ttl = refTtl(branch)
+  await refStorage.setItem(key, sha, ttl ? { ttl } : undefined)
   return sha
 }
 
@@ -155,8 +165,8 @@ function pullAllowsPreview(pull: GitHubPullSummary): boolean {
  * 1. an associated PR allows it (same-repo PR, or a fork PR carrying `preview:enabled`), or
  * 2. the commit is in the production branch's history (version-history links).
  *
- * Decisions live in the short-TTL ref cache — positive ones too, so removing the label revokes
- * access within a TTL. Skipped in dev, where refs resolve against the local checkout instead.
+ * Decisions live in the preview ref cache — positive ones too, so removing the label revokes
+ * access within 10 minutes. Skipped in dev, where refs resolve against the local checkout instead.
  */
 export async function authorizePreviewSha(sha: string): Promise<string> {
   if (import.meta.dev) return sha
@@ -169,7 +179,7 @@ export async function authorizePreviewSha(sha: string): Promise<string> {
   if (cached) return cached
 
   const deny = async (): Promise<never> => {
-    await refStorage.setItem(key, UNRESOLVED)
+    await refStorage.setItem(key, UNRESOLVED, { ttl: PREVIEW_REF_TTL })
     throw createError({ statusCode: 404, statusMessage: `No preview available for commit: ${sha}` })
   }
 
@@ -208,7 +218,7 @@ export async function authorizePreviewSha(sha: string): Promise<string> {
 
   if (!allowed) return deny()
 
-  await refStorage.setItem(key, fullSha)
+  await refStorage.setItem(key, fullSha, { ttl: PREVIEW_REF_TTL })
   return fullSha
 }
 
@@ -216,8 +226,8 @@ export async function authorizePreviewSha(sha: string): Promise<string> {
  * Authorize a `/pr/:number` preview and resolve it to the PR's head commit SHA.
  *
  * Same rule as `authorizePreviewSha`: same-repo PRs are always previewable, fork PRs only with the
- * `preview:enabled` label. Cached in the short-TTL ref cache so the preview follows new pushes and
- * label removal revokes it within a TTL.
+ * `preview:enabled` label. Cached for 10 minutes so the preview follows new pushes and label removal
+ * revokes it within the same bound.
  */
 export async function resolvePullPreviewSha(number: number): Promise<string> {
   const key = `preview:pr:${number}`
@@ -228,7 +238,7 @@ export async function resolvePullPreviewSha(number: number): Promise<string> {
   if (cached) return cached
 
   const deny = async (): Promise<never> => {
-    await refStorage.setItem(key, UNRESOLVED)
+    await refStorage.setItem(key, UNRESOLVED, { ttl: PREVIEW_REF_TTL })
     throw createError({ statusCode: 404, statusMessage: `No preview available for PR #${number}` })
   }
 
@@ -245,7 +255,7 @@ export async function resolvePullPreviewSha(number: number): Promise<string> {
   const sha = pull.head?.sha
   if (!sha || !pullAllowsPreview(pull)) return deny()
 
-  await refStorage.setItem(key, sha)
+  await refStorage.setItem(key, sha, { ttl: PREVIEW_REF_TTL })
   return sha
 }
 
