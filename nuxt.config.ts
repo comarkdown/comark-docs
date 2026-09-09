@@ -1,6 +1,6 @@
 import { resolveModulePath } from 'exsolve'
 import { defineNuxtConfig } from 'nuxt/config'
-import { LAYER_ICON_COLLECTIONS } from './utils/icons'
+import { LAYER_ICON_COLLECTIONS, layerIconAliases } from './utils/icons'
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-06-09',
@@ -47,6 +47,7 @@ export default defineNuxtConfig({
     prerender: false,
   },
   nitro: {
+    alias: layerIconAliases(),
     vercel: {
       config: {
         bypassToken: process.env.VERCEL_BYPASS_TOKEN,
