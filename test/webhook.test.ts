@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ContentListFile } from 'comark-content'
 import type { GitHubCommit } from '../server/utils/github'
-import { changesForPush, diffContent, indexByFileKey, payloadUrlForPage } from '../server/utils/webhook'
-import { rawUrlForPage } from '../server/utils/markdown'
+import { changesForPush, diffContent, indexByFileKey, payloadUrlForPage, rawUrlForPage } from '../server/utils/webhook'
 
 const commit = (partial: GitHubCommit): GitHubCommit => partial
 

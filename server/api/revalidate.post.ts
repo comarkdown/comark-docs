@@ -69,6 +69,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const buildId = useRuntimeConfig(event).app.buildId
+  const rawPrefix = useRuntimeConfig(event).public.agentDiscovery?.rawPrefix
   const pathsToPurge = new Set<string>()
   const byReason = new Map<PurgeReason, Set<string>>()
 
@@ -103,7 +104,7 @@ export default defineEventHandler(async (event) => {
   for (const path of pagePaths) {
     addPath('page', path)
     addPath('payload', payloadUrlForPage(path, buildId))
-    addPath('raw', rawUrlForPage(path))
+    addPath('raw', rawUrlForPage(path, rawPrefix))
   }
 
   // Navigation renders on every page, so a change to it re-renders all of them.
@@ -112,7 +113,7 @@ export default defineEventHandler(async (event) => {
       if (item.meta.kind !== 'document') continue
       addPath('nav', item.path)
       addPath('nav', payloadUrlForPage(item.path, buildId))
-      addPath('nav', rawUrlForPage(item.path))
+      addPath('nav', rawUrlForPage(item.path, rawPrefix))
     }
   }
 
@@ -121,7 +122,7 @@ export default defineEventHandler(async (event) => {
   const pathsToWarm = [`${artifactBase}/manifest.json`, `${artifactBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`]
 
   // Any content change invalidates the global indexes: each is rebuilt from the whole tree.
-  for (const path of ['/llms.txt', '/llms-full.txt', '/rss.xml', '/sitemap.xml']) {
+  for (const path of ['/llms.txt', '/llms-full.txt', '/rss.xml', '/sitemap.xml', '/sitemap.md']) {
     addPath('global', path)
   }
 

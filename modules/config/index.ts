@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from 'node:fs'
-import { defineNuxtModule, useLogger } from '@nuxt/kit'
+import { addServerPlugin, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
+import type { ModuleOptions as AgentDiscoveryOptions } from 'nuxt-agent-discovery'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
 import { getPackageJsonMetadata, inferSiteURL, resolveContentDir } from './utils'
 
@@ -24,12 +25,8 @@ export interface ComarkDocsOptions {
     /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
   }
+  /** @deprecated Use `agentDiscovery.skills` instead. */
   skills?: {
-    /**
-     * Directory, relative to the app root, scanned at build time for Agent Skills.
-     * Each subdirectory with a `SKILL.md` is published at `/.well-known/skills/`.
-     * @default 'skills'
-     */
     dir?: string
   }
 }
@@ -47,12 +44,13 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
-      site?: { url?: string; name?: string }
+      site?: { url?: string; name?: string; description?: string }
       appConfig: Record<string, unknown>
     }
 
-    // Static module defaults live in the layer's nuxt.config: seeding them here makes module order
-    // load-bearing. Only build-time discoveries (git, env, the consumer's content dir) belong below.
+    // This module is listed first in the layer's nuxt.config, so what is seeded below (`site`, `mcp`,
+    // `agentDiscovery`) is in place before the modules that read it at setup. Static defaults still belong in
+    // nuxt.config; only build-time discoveries (git, env, the consumer's content dir) are resolved here.
 
     const url = inferSiteURL()
     const meta = await getPackageJsonMetadata(rootDir)
@@ -87,6 +85,14 @@ export default defineNuxtModule<ComarkDocsOptions>({
       name: siteName,
     }) as typeof nuxtOptions.site
 
+    // nuxt-schema-org attaches this to every page as the publisher, and to the `Article` on a docs page
+    // as its author. Without it the graph has no identity at all and both fields are simply absent.
+    // A site declaring its own `schemaOrg` in nuxt.config wins, the same as `site` above.
+    ;(nuxt.options as { schemaOrg?: { identity?: Record<string, unknown> } }).schemaOrg = defu(
+      (nuxt.options as { schemaOrg?: { identity?: Record<string, unknown> } }).schemaOrg,
+      { identity: { type: 'Organization', name: siteName, url } },
+    )
+
     nuxtOptions.appConfig.seo = defu(nuxtOptions.appConfig.seo, {
       siteName,
     })
@@ -109,6 +115,8 @@ export default defineNuxtModule<ComarkDocsOptions>({
       githubToken: '',
       webhookSecret: '',
       bypassToken: '',
+      // Feeds the OpenAPI document.
+      version: meta.version || '0.0.0',
       github: {
         owner: gitInfo?.owner || '',
         repo: gitInfo?.name || '',
@@ -132,11 +140,87 @@ export default defineNuxtModule<ComarkDocsOptions>({
       }
     })
 
-    const mcpOptions = (nuxt.options as { mcp?: { name?: string; version?: string } }).mcp
-    ;(nuxt.options as { mcp?: { name?: string; version?: string } }).mcp = defu(mcpOptions, {
+    const rawMcpOptions = (nuxt.options as { mcp?: false | { name?: string; version?: string; route?: string } }).mcp
+    const mcp = defu(rawMcpOptions || undefined, {
       name: `${siteName} Docs`,
       version: '1.0.0',
     })
+    // `mcp: false` disables the toolkit, so the defaults must not be written back over it. The server
+    // card below reads `rawMcpOptions` for the same reason.
+    if (rawMcpOptions !== false) {
+      ;(nuxt.options as { mcp?: typeof mcp }).mcp = mcp
+    }
+
+    // What nuxt-agent-discovery cannot know: the MCP server card describing the toolkit's endpoint under the
+    // same name, and the deprecated `comarkDocs.skills` alias.
+    if (options.skills) {
+      logger.warn('`comarkDocs.skills` is deprecated. Move it to `agentDiscovery.skills` in nuxt.config.ts.')
+    }
+    const agentDiscovery = (nuxt.options as { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery
+    ;(nuxt.options as { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery = defu(agentDiscovery, {
+      discovery: {
+        mcpServerCard:
+          rawMcpOptions === false
+            ? false
+            : {
+                endpoint: mcp.route || '/mcp',
+                name: mcp.name,
+                version: mcp.version,
+                ...(nuxtOptions.site?.description ? { description: nuxtOptions.site.description } : {}),
+              },
+      },
+      ...(options.skills ? { skills: options.skills } : {}),
+    }) as AgentDiscoveryOptions
+
+    // A `.vue` page has no document behind it, so negotiation would answer a markdown 404 on a route
+    // browsers serve as HTML. Every page route outside the content catch-all is excluded, which is what a
+    // consumer app's own pages need: without this each one has to be listed in `excludePrefixes` by hand.
+    //
+    // Routes are only known at `pages:extend`, by which point nuxt-agent-discovery has resolved its
+    // options and Nitro has deep-copied `runtimeConfig`, so the list exists twice: the one the Vercel
+    // preset reads when it writes the route table, and Nitro's own, which the server bundle serializes.
+    // Both get the exclusions or the CDN stops routing these paths while the origin still negotiates
+    // them, and an agent gets a markdown 404 on a page browsers render. `nitro:init` runs first, so the
+    // copy is in hand by the time the pages are.
+    let nitroExcludePrefixes: string[] | undefined
+    nuxt.hook('nitro:init', (nitro) => {
+      nitroExcludePrefixes = (nitro.options.runtimeConfig.agentDiscovery as { excludePrefixes?: string[] } | undefined)?.excludePrefixes
+    })
+
+    nuxt.hook('pages:extend', (pages) => {
+      const excludePrefixes = (nuxt.options.runtimeConfig.agentDiscovery as { excludePrefixes?: string[] } | undefined)?.excludePrefixes
+      if (!excludePrefixes) {
+        return
+      }
+
+      const excluded: string[] = []
+      for (const page of pages) {
+        // Up to the first dynamic segment, so `/blog/[slug]` excludes `/blog/`. The content catch-all
+        // (`/:slug(.*)*`) and the homepage both reduce to `/`, which stays negotiable.
+        const dynamic = page.path.search(/[:*(]/)
+        const prefix = dynamic === -1 ? page.path : page.path.slice(0, dynamic)
+        if (prefix === '/' || excluded.includes(prefix)) {
+          continue
+        }
+        excluded.push(prefix)
+      }
+
+      // `pages:extend` runs again on every page change in dev, so both lists are additive and deduped.
+      for (const list of [excludePrefixes, nitroExcludePrefixes]) {
+        if (list) {
+          list.push(...excluded.filter(prefix => !list.includes(prefix)))
+        }
+      }
+
+      if (excluded.length) {
+        logger.info(`Vue pages excluded from markdown negotiation: ${excluded.join(', ')}`)
+      }
+    })
+
+    // `llms.txt` sections come from the content navigation at request time. Registered here rather than
+    // scanned from `server/plugins/` so the hook runs ahead of the nuxt-agent-discovery bridge (see the plugin).
+    const { resolve } = createResolver(import.meta.url)
+    addServerPlugin(resolve('./runtime/server/plugins/llms'))
 
     // ISR rules here (not `$production`) so they merge cleanly across npm layers; content sections need a redeploy.
     if (!nuxt.options.dev && options.isr !== false) {
@@ -155,7 +239,10 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Global content indexes, purged by the push webhook on content changes.
         '/llms.txt': { isr },
         '/llms-full.txt': { isr },
+        '/sitemap.md': { isr },
         '/rss.xml': { isr },
+        // Prerendering would bake the build-time site URL and `docs.version` into it.
+        '/openapi.json': { isr },
         // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
         '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
         '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned

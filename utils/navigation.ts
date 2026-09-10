@@ -3,7 +3,7 @@ import type { NavigationItem } from 'comark-content'
 /**
  * First leaf page under the navigation node at `path`, if `path` is a section (directory) node.
  * Returns `undefined` when the path isn't in the tree or already is a leaf — used to redirect
- * directory URLs like `/getting-started` (and their `/raw/**.md` mirrors) to their first page.
+ * directory URLs like `/getting-started` to their first page.
  */
 export function findFirstLeaf(
   navigation: NavigationItem[] | undefined | null,
