@@ -93,8 +93,8 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.4.3)
       comark-content:
-        specifier: https://pkg.pr.new/comark-content@a64a262
-        version: https://pkg.pr.new/comark-content@a64a262(@vercel/functions@3.9.5(ws@8.21.3))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.4.3)
+        specifier: https://pkg.pr.new/comark-content@14e67ad
+        version: https://pkg.pr.new/comark-content@14e67ad(@vercel/functions@3.9.5(ws@8.21.3))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.4.3)
       defu:
         specifier: ^6.1.7
         version: 6.1.7
@@ -3366,8 +3366,8 @@ packages:
   colortranslator@5.0.0:
     resolution: {integrity: sha512-Z3UPUKasUVDFCDYAjP2fmlVRf1jFHJv1izAmPjiOa0OCIw1W7iC8PZ2GsoDa8uZv+mKyWopxxStT9q05+27h7w==}
 
-  comark-content@https://pkg.pr.new/comark-content@a64a262:
-    resolution: {integrity: sha512-PzuI3E1wqWT1etatfVKfEmQx0qNCYa3spezEf+9eXeuKawbi66zVieM5XCLSFyUuSivQMC/S7zO1uipKC9bxjw==, tarball: https://pkg.pr.new/comark-content@a64a262}
+  comark-content@https://pkg.pr.new/comark-content@14e67ad:
+    resolution: {integrity: sha512-6MXNFiCA9PGh9OpC7wQjLoZ7jpT6u3GXBdFqKAj88kLfDxVCzdt+H91Urfn3u0nXjiAunotKzdJ2vk4cRkKoGg==, tarball: https://pkg.pr.new/comark-content@14e67ad}
     version: 0.3.0
     hasBin: true
 
@@ -10207,7 +10207,7 @@ snapshots:
 
   colortranslator@5.0.0: {}
 
-  comark-content@https://pkg.pr.new/comark-content@a64a262(@vercel/functions@3.9.5(ws@8.21.3))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.4.3):
+  comark-content@https://pkg.pr.new/comark-content@14e67ad(@vercel/functions@3.9.5(ws@8.21.3))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.4.3):
     dependencies:
       citty: 0.2.2
       comark: 0.6.2(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.4.3)

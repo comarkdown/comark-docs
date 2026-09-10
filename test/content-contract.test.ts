@@ -16,6 +16,7 @@ import fsSource from 'comark-content/sources/fs'
 import githubSource from 'comark-content/sources/github'
 import snapshot, { withSnapshot } from 'comark-content/sources/snapshot'
 import { createContentClient } from 'comark-content/client'
+import { comarkContent as runtimeComarkContent, DEFAULT_CONTENT_NAME as RUNTIME_CONTENT_NAME, readArtifact as runtimeReadArtifact } from 'comark-content/runtime'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import memoryDriver from 'unstorage/drivers/memory'
@@ -49,6 +50,8 @@ describe('comark-content contract', () => {
       fsSource,
       githubSource,
       createContentClient,
+      runtimeComarkContent,
+      runtimeReadArtifact,
       // Browser-only at runtime, but the subpaths resolve under node — enough to catch a rename.
       sqliteWasm,
       sqliteFullTextSearch,
@@ -122,6 +125,32 @@ describe('comark-content contract', () => {
     expect(Object.keys((await client.manifest()).items)).toEqual(['/'])
 
     // Bodies have to arrive parsed: the client has no source to read a document from.
+    const doc = await client.get('/')
+    expect(doc?.data?.title).toBe('Contract fixture')
+    expect(doc?.nodes?.length).toBeGreaterThan(0)
+  })
+
+  it('hydrates a runtime-entry instance from those artifacts', async () => {
+    // `app/workers/search.ts` imports from `comark-content/runtime`, the parser-free entry.
+    // A snapshot-only instance must still hydrate there, and the name has to stay in step with
+    // the artifact paths the worker fetches.
+    expect(RUNTIME_CONTENT_NAME).toBe(DEFAULT_CONTENT_NAME)
+
+    const server = createFixtureContent()
+    await server.init(full)
+
+    const fetchArtifact = async (path: string) =>
+      await (await server.handler(new Request(`http://localhost/api/content/${path}`))).json()
+
+    const client = runtimeComarkContent({
+      source: snapshot(
+        () => fetchArtifact(`snapshot/${RUNTIME_CONTENT_NAME}.json`),
+        () => fetchArtifact('manifest.json')
+      ),
+    })
+    await client.init()
+
+    expect(Object.keys((await client.manifest()).items)).toEqual(['/'])
     const doc = await client.get('/')
     expect(doc?.data?.title).toBe('Contract fixture')
     expect(doc?.nodes?.length).toBeGreaterThan(0)

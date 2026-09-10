@@ -3,7 +3,7 @@
  *
  * Triggered by `?debug=search` param.
  */
-import type { ContentFile, Logger, RelationalDatabase } from 'comark-content'
+import type { ContentFile, Logger, RelationalDatabase } from 'comark-content/runtime'
 
 const PREFIX = '[search:worker]'
 

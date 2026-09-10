@@ -3,20 +3,16 @@
  *
  * Hydrated from the per-commit snapshot artifacts.
  */
-import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content'
+import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content/runtime'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
 import snapshot from 'comark-content/sources/snapshot'
 import sqliteFullTextSearch from 'comark-content/plugins/sqlite-full-text-search'
 import { ofetch } from 'ofetch'
 import { describeArtifact, indexedRows, isDebug, log, logger, setDebug, since } from './internal/search-logger'
-import type { CacheArtifact, SearchOptions, SearchResult } from 'comark-content'
+import type { CacheArtifact, SearchOptions, SearchResult } from 'comark-content/runtime'
 
 /**
- * Factored out so `SearchInstance` can be derived from its return type instead of annotated —
- * `ComarkContent`'s instance-name parameter reaches `get()`'s argument type, so a bare
- * `ComarkContent & SqliteFullTextSearchMethods` annotation isn't a supertype of a concrete
- * instance (fails under `strictFunctionTypes`, same reason as `DocsContent` in
- * `server/utils/content.ts`).
+ * Creates a search instance.
  */
 function createSearchInstance(fetchArtifact: (path: string) => Promise<CacheArtifact>, apiBase: string) {
   const database = sqliteWasm()
