@@ -111,7 +111,7 @@ export default defineAppConfig({
     },
     prose: {
       a: {
-        base: 'rounded-none border-current hover:text-muted hover:border-current [&>code]:border-current hover:[&>code]:text-muted hover:[&>code]:border-current',
+        base: 'rounded-none border-current hover:text-muted hover:border-current has-[>code]:border-transparent',
       },
       codePreview: {
         slots: {
