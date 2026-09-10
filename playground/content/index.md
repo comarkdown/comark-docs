@@ -4,7 +4,7 @@ description: "comark-docs is a Nuxt layer for documentation sites powered by com
 navigation: false
 ---
 
-::u-page-hero
+::landing-hero
 ---
 orientation: horizontal
 ---
@@ -15,7 +15,7 @@ Docs that ship without a redeploy.
 The first Markdown-driven docs site where content goes live on `git push`. No rebuild, no redeploy. Served at request time through [Comark Content](https://content.comark.dev), cached at the edge, revalidated by a webhook. And every branch or commit is already a live preview.
 
 #links
-  :::u-button
+  :::button
   ---
   to: /getting-started/introduction
   size: lg
@@ -24,7 +24,7 @@ The first Markdown-driven docs site where content goes live on `git push`. No re
   Get started
   :::
 
-  :::u-button
+  :::button
   ---
   to: /concepts/architecture
   size: lg
@@ -130,7 +130,7 @@ Ready to ship docs faster?
 Install the layer, write Markdown in `content/`, and push. This site is the playground — everything you see here is built with it.
 
 #links
-  :::u-button
+  :::button
   ---
   to: /getting-started/installation
   size: lg
@@ -139,7 +139,7 @@ Install the layer, write Markdown in `content/`, and push. This site is the play
   Install comark-docs
   :::
 
-  :::u-button
+  :::button
   ---
   to: https://github.com/comarkdown/comark-docs
   size: lg
