@@ -13,6 +13,7 @@ minimumReleaseAgeExclude:
   - '@comark/*'
   - comark
   - comark-content
+  - nuxt-agent-discovery
 
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.

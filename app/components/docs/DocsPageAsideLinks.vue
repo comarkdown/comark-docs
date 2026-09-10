@@ -13,7 +13,8 @@ const { copy: copyLink } = useClipboard()
 const copying = ref(false)
 const site = useSiteConfig()
 
-const mdPath = computed(() => `/raw${route.path}.md`)
+const { rawPrefix } = useRuntimeConfig().public.agentDiscovery
+const mdPath = computed(() => `${rawPrefix}${route.path}.md`)
 const mdUrl = computed(() => `${site.url}${mdPath.value}`)
 
 const { github, docs } = useAppConfig()
