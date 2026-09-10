@@ -243,6 +243,9 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/rss.xml': { isr },
         // Prerendering would bake the build-time site URL and `docs.version` into it.
         '/openapi.json': { isr },
+        // Scanned from the app at build time, so they only change on deploy.
+        '/.well-known/skills': { isr: true },
+        '/.well-known/skills/**': { isr: true },
         // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
         '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
         '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
@@ -272,6 +275,15 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
       // Consumer-declared rules win per route.
       nuxt.options.routeRules = defu(nuxt.options.routeRules, rules) as typeof nuxt.options.routeRules
+
+      // Remove once https://github.com/benjamincanac/nuxt-agent-discovery/pull/35 is released.
+      nuxt.hook('modules:done', () => {
+        nuxt.hook('prerender:routes', (ctx) => {
+          for (const route of ctx.routes) {
+            if (route.startsWith('/.well-known/skills')) ctx.routes.delete(route)
+          }
+        })
+      })
     }
   },
 })
