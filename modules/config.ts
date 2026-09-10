@@ -89,11 +89,15 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
     // nuxt-schema-org attaches this to every page as the publisher, and to the `Article` on a docs page
     // as its author. Without it the graph has no identity at all and both fields are simply absent.
-    // A site declaring its own `schemaOrg` in nuxt.config wins, the same as `site` above.
-    ;(nuxt.options as { schemaOrg?: { identity?: Record<string, unknown> } }).schemaOrg = defu(
-      (nuxt.options as { schemaOrg?: { identity?: Record<string, unknown> } }).schemaOrg,
-      { identity: { type: 'Organization', name: siteName, url } },
-    )
+    // A site declaring its own `schemaOrg` in nuxt.config wins, the same as `site` above, and `false`
+    // disables the module outright. Seeded through a view of the shape a config carries: the module's
+    // own type is the resolved one, with every key required, which no partial can satisfy.
+    const schemaOrgOptions = nuxt.options as { schemaOrg?: false | { identity?: Record<string, unknown> } }
+    if (schemaOrgOptions.schemaOrg !== false) {
+      const schemaOrg: { identity?: Record<string, unknown> } = schemaOrgOptions.schemaOrg || {}
+      schemaOrg.identity = schemaOrg.identity || { type: 'Organization', name: siteName, url }
+      schemaOrgOptions.schemaOrg = schemaOrg
+    }
 
     nuxtOptions.appConfig.seo = defu(nuxtOptions.appConfig.seo, {
       siteName,
