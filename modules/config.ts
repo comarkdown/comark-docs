@@ -87,6 +87,14 @@ export default defineNuxtModule<ComarkDocsOptions>({
       name: siteName,
     }) as typeof nuxtOptions.site
 
+    // nuxt-schema-org attaches this to every page as the publisher, and to the `Article` on a docs page
+    // as its author. Without it the graph has no identity at all and both fields are simply absent.
+    // A site declaring its own `schemaOrg` in nuxt.config wins, the same as `site` above.
+    ;(nuxt.options as { schemaOrg?: { identity?: Record<string, unknown> } }).schemaOrg = defu(
+      (nuxt.options as { schemaOrg?: { identity?: Record<string, unknown> } }).schemaOrg,
+      { identity: { type: 'Organization', name: siteName, url } },
+    )
+
     nuxtOptions.appConfig.seo = defu(nuxtOptions.appConfig.seo, {
       siteName,
     })
