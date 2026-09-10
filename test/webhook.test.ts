@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ContentListFile } from 'comark-content'
 import type { GitHubCommit } from '../server/utils/github'
-import { changesForPush, diffContent, indexByFileKey, payloadUrlForPage, rawUrlForPage } from '../server/utils/webhook'
+import { changesForPush, diffContent, indexByFileKey, payloadUrlForPage } from '../server/utils/webhook'
 
 const commit = (partial: GitHubCommit): GitHubCommit => partial
 
@@ -67,13 +67,6 @@ describe('payloadUrlForPage', () => {
     expect(payloadUrlForPage('/guide/intro')).toBe('/guide/intro/_payload.json')
     expect(payloadUrlForPage('/guide', 'abc123')).toBe('/guide/_payload.json?_b=abc123')
     expect(payloadUrlForPage('/', 'abc123')).toBe('/_payload.json?_b=abc123')
-  })
-})
-
-describe('rawUrlForPage', () => {
-  it('is the exact inverse of pagePathFromRawSlug', () => {
-    expect(rawUrlForPage('/')).toBe('/raw/index.md')
-    expect(rawUrlForPage('/guide/intro')).toBe('/raw/guide/intro.md')
   })
 })
 

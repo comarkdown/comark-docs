@@ -65,15 +65,6 @@ function isNavConfigFile(file: string): boolean {
 }
 
 /**
- * Page path -> raw markdown twin (`/` -> `/raw/index.md`), the URL nuxt-agent-discovery serves.
- * `rawPrefix` comes from the module's public runtime config so a consumer that moved it still gets purged.
- */
-export function rawUrlForPage(path: string, rawPrefix = '/raw'): string {
-  const prefix = rawPrefix.replace(/\/$/, '')
-  return path === '/' ? `${prefix}/index.md` : `${prefix}/${path.replace(/^\//, '')}.md`
-}
-
-/**
  * The payload URL a client-side navigation fetches for `path`
  */
 export function payloadUrlForPage(path: string, buildId?: string): string {

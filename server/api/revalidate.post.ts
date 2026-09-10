@@ -1,4 +1,5 @@
 import { verify } from '@octokit/webhooks-methods'
+import { rawUrl } from '#agent-discovery'
 import { DEFAULT_CONTENT_NAME } from 'comark-content'
 import { waitUntil } from '@vercel/functions'
 
@@ -69,9 +70,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const buildId = useRuntimeConfig(event).app.buildId
-  const rawPrefix = useRuntimeConfig(event).public.agentDiscovery?.rawPrefix
   const pathsToPurge = new Set<string>()
   const byReason = new Map<PurgeReason, Set<string>>()
+  const rawPathFor = (path: string): string => new URL(rawUrl(event, path)).pathname
 
   /** Add a path to the purge set, and track it by reason for the breakdown log. */
   const addPath = (reason: PurgeReason, path: string): void => {
@@ -104,7 +105,7 @@ export default defineEventHandler(async (event) => {
   for (const path of pagePaths) {
     addPath('page', path)
     addPath('payload', payloadUrlForPage(path, buildId))
-    addPath('raw', rawUrlForPage(path, rawPrefix))
+    addPath('raw', rawPathFor(path))
   }
 
   // Navigation renders on every page, so a change to it re-renders all of them.
@@ -113,7 +114,7 @@ export default defineEventHandler(async (event) => {
       if (item.meta.kind !== 'document') continue
       addPath('nav', item.path)
       addPath('nav', payloadUrlForPage(item.path, buildId))
-      addPath('nav', rawUrlForPage(item.path, rawPrefix))
+      addPath('nav', rawPathFor(item.path))
     }
   }
 
