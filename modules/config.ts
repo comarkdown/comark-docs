@@ -48,6 +48,8 @@ export default defineNuxtModule<ComarkDocsOptions>({
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
       site?: { url?: string; name?: string; description?: string }
       appConfig: Record<string, unknown>
+      mcp?: false | { name?: string; version?: string; route?: string }
+      agentDiscovery?: AgentDiscoveryOptions
     }
 
     // This module is listed first in the layer's nuxt.config, so what is seeded below (`site`, `mcp`,
@@ -156,7 +158,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
       }
     })
 
-    const rawMcpOptions = (nuxt.options as { mcp?: false | { name?: string; version?: string; route?: string } }).mcp
+    const rawMcpOptions = nuxtOptions.mcp
     const mcp = defu(rawMcpOptions || undefined, {
       name: `${siteName} Docs`,
       version: '1.0.0',
@@ -164,7 +166,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
     // `mcp: false` disables the toolkit, so the defaults must not be written back over it. The server
     // card below reads `rawMcpOptions` for the same reason.
     if (rawMcpOptions !== false) {
-      ;(nuxt.options as { mcp?: typeof mcp }).mcp = mcp
+      nuxtOptions.mcp = mcp
     }
 
     // What nuxt-agent-discovery cannot know: the MCP server card describing the toolkit's endpoint under the
@@ -172,8 +174,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
     if (options.skills) {
       logger.warn('`comarkDocs.skills` is deprecated. Move it to `agentDiscovery.skills` in nuxt.config.ts.')
     }
-    const agentDiscovery = (nuxt.options as { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery
-    ;(nuxt.options as { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery = defu(agentDiscovery, {
+    nuxtOptions.agentDiscovery = defu(nuxtOptions.agentDiscovery, {
       discovery: {
         mcpServerCard:
           rawMcpOptions === false
