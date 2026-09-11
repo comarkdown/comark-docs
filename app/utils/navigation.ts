@@ -1,4 +1,5 @@
 import type { NavigationItem } from 'comark-content'
+import type { RouteLocationNormalized } from 'vue-router'
 
 export function findPageHeadline(
   navigation: NavigationItem[] | undefined | null,
@@ -30,6 +31,19 @@ export interface BreadcrumbItem {
 }
 
 export type NavigationLayout = 'docs' | 'page'
+
+export function resolveRouteLayout(
+  navigation: NavigationItem[] | undefined | null,
+  route: Pick<RouteLocationNormalized, 'meta' | 'matched'>,
+  path: string
+): NavigationLayout | undefined {
+  if (route.meta.layout === false) return undefined
+  if (route.meta.layout === 'docs' || route.meta.layout === 'page') return route.meta.layout
+  const layout = findNavigationLayout(navigation, path)
+  const name = route.matched[0]?.name
+  if (!layout && (name === 'slug' || name === 'docs-pr' || name === 'docs-blob' || name === 'docs-tree')) return 'docs'
+  return layout
+}
 
 /** Layout declared by the nearest matching page or directory navigation node. */
 export function findNavigationLayout(

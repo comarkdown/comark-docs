@@ -14,11 +14,7 @@ const { data: navigation } = await useAsyncData('navigation', () => content.valu
 const nuxtApp = useNuxtApp()
 const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
 const resolveNavigationLayout = () => {
-  if (route.meta.layout === false) return undefined
-  if (route.meta.layout === 'docs' || route.meta.layout === 'page') return route.meta.layout
-  const layout = findNavigationLayout(navTree.value, route.path)
-  if (!layout && route.matched?.[0]?.name === 'slug') return 'docs'
-  return layout
+  return resolveRouteLayout(navigation.value, route, content.value.base ? content.value.path : route.path)
 }
 const navigationLayout = ref(resolveNavigationLayout())
 onNuxtReady(() => {
