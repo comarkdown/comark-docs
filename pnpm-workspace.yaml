@@ -10,7 +10,8 @@ blockExoticSubdeps: false
 
 minimumReleaseAgeExclude:
   # First-party packages, published and consumed here in the same session.
-  - '@comark/*'
+  - '@comark/nuxt'
+  - '@comark/vue'
   - comark
   - comark-content
   - nuxt-agent-discovery

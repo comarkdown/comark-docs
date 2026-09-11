@@ -3,7 +3,7 @@ import { parseMarkdown, type MarkdownDocument } from 'comark'
 import rangi from 'comark/plugins/rangi'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import { geistTheme } from '../../../utils/geist-theme.ts'
+import { geistTheme } from '../../../utils/geist.ts'
 
 // A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
 // private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.

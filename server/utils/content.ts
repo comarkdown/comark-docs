@@ -1,103 +1,64 @@
-import { defineContentPlugin, type CacheOptions, comarkContent  } from 'comark-content';
+import { type ContentSource, DEFAULT_CONTENT_NAME } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
-import rangi from 'comark/plugins/rangi'
-import security from 'comark/plugins/security'
-import emoji from 'comark/plugins/emoji'
-import toc from 'comark/plugins/toc'
-import mermaid from 'comark/plugins/mermaid'
-import yaml from 'comark-content/plugins/yaml'
-import tracingOtel from 'comark-content/plugins/tracing/otel'
-import { contentTracer } from './tracer.ts'
-import { geistTheme } from '../../utils/geist-theme.ts'
+import { withSnapshot } from 'comark-content/sources/snapshot'
+import { createRuntimeContentInstance } from '../../utils/content.ts'
 
 /**
- * The instance this layer builds, derived from the factory rather than written
- * out.
- *
- * `ComarkContent` is the *unnarrowed* shape: its instance-name parameter drives
- * the conditional types behind `get()` and `list()`, so a concrete instance is
- * not assignable to it. Deriving instead of annotating keeps the narrowing that
- * `comark-content prepare` generates — `get('/known/path')` stays typed all the
- * way through the layer.
+ * The instance serving requests in this layer.
  */
-export type DocsContent = Awaited<ReturnType<typeof createSourceContent>>
-
-// Rebuilt only when the head advances (see `getProdContent`). Holds the *promise*, not the instance: the
-// assignment lands after the await, so two requests on a cold instance would each build a CMS.
-let content: Promise<DocsContent> | undefined
-
-// Bump CONTENT_PARSER_VERSION in `cache.ts` when these plugins or their options change cached output.
-const comarkPlugins = [
-  mermaid({ theme: 'zinc-light', themeDark: 'zinc-dark' }),
-  rangi({ theme: geistTheme }),
-  toc({ depth: 3 }),
-  emoji(),
-  security({
-    blockedTags: ['script', 'iframe', 'embed', 'form', 'base', 'meta', 'link', 'style'],
-    allowDataImages: false,
-  }),
-]
-
-// Bound to THIS instance so a preview content instance serves its own version's sections, not production's.
-const searchSectionsPlugin = defineContentPlugin(() => ({
-  name: 'search-sections',
-  setup(ctx) {
-    ctx.addServeHandler('search-sections', async () => Response.json(await buildSearchSections(ctx as unknown as DocsContent)))
-  },
-}))()
+export type DocsContent = ReturnType<typeof createBaseContent>
 
 /**
- * Create a new content instance reading content at `ref` (a commit SHA or branch). `remote` forces the
- * GitHub source, `cache` overrides comark's (in-memory by default), `watch` is dev file watching.
+ * Holds the source, the plugins and the cache driver.
+ * Once per function invocation.
+ * Base for all instances "cloned" with `withRef(sha)` in `contentAt()`.
  */
-export async function createSourceContent(
-  ref: string,
-  opts: { remote?: boolean; cache?: CacheOptions; basePath?: string; watch?: boolean } = {}
-) {
-  // A no-op unless the consumer shadows it from their own `server/utils/`. Re-typed as the layer's own
-  // options: a consumer's hook is declared against the wide `ContentOptions`, and letting that widen the
-  // argument would erase the source and plugin types `comarkContent` infers from the literal.
-  const tracer = contentTracer()
-  const instance = comarkContent({
-    markdown: {
-      plugins: comarkPlugins,
-    },
-    source: contentSource(ref, { remote: opts.remote }),
-    plugins: [
-      yaml(), // enable .navigation.yml to be detected
-      searchSectionsPlugin,
-      tracer && tracingOtel({ tracer }),
-    ],
-    cache: opts.cache,
-    basePath: opts.basePath,
+let base: DocsContent | undefined
+
+function getBaseContent(): DocsContent {
+  base ??= createBaseContent()
+  return base
+}
+
+function createBaseContent() {
+  return createRuntimeContentInstance({
+    source: contentSource(),
+    cache: { driver: contentCacheDriver() },
   })
-
-  // Only the default instance watches: others read a fixed ref that can't change, and retaining
-  // `watch()`'s stop function to release the watcher would leak once the preview entry is evicted.
-  if (import.meta.dev && opts.watch) {
-    await instance.watch()
-    instance.hooks.hook('watch:file:update', (_source:string, key: string) => {
-      invalidateSearchSections(instance)
-      console.log(`${key} updated`)
-    })
-    instance.hooks.hook('watch:file:remove', () => invalidateSearchSections(instance))
-  }
-
-  return instance
-}
-
-// The content commit this instance is pinned to. Pinning GitHub reads to an immutable SHA rather
-// than the branch name bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
-let headRef: string | undefined
-
-export function getHeadRef(): string {
-  headRef ??= targetBranch()
-  return headRef
 }
 
 /**
- * The SHA production should currently serve:
+ * Base instance cloned and pinned to a SHA.
+ * Nothing is read until the first call.
+ * `dispose()` it when you replace it.
+*/
+export function contentAt(sha: string): DocsContent {
+  return getBaseContent().withRef(sha)
+}
+
+// The content commit currently served, once `getProdContent()` has resolved one.
+// Pin GitHub reads to an immutable SHA:
+// bypasses the stale `raw.githubusercontent.com/<branch>` CDN.
+let headSha: string | undefined
+
+/**
+ * The pinned head commit, or nothing while none is resolved (dev, off-Vercel, pre-first-resolve).
+ */
+export function getHeadSha(): string | undefined {
+  return headSha
+}
+
+/**
+ * The pinned head SHA, falling back to the branch while none is resolved.
+ * The fallback only ever applies off-Vercel (self-hosted, `nuxt preview`, `vercel dev`).
+ */
+export function getHeadRef(): string {
+  return headSha ?? targetBranch()
+}
+
+/**
+ * The SHA prod instance currently serves:
  * - global config pin if one is set (production only)
  * - latest commit touching the content directory via `resolveContentSha()`
  */
@@ -110,88 +71,125 @@ export async function resolveProdSha(): Promise<string> {
   return resolveContentSha(targetBranch(), contentDir)
 }
 
+// Rebuild the promise when the head advances.
+// Holds the promise to ensure two requests on a cold process don't each build one.
+let prod: Promise<DocsContent> | undefined
+
 /**
- * Shared content instance for the lifetime of this server instance, pinned to `headRef`. In production every
- * call resolves the current head via `resolveProdSha()` — a shared, short-TTL cache, not a per-instance
- * timer — and rebuilds when that advances. Previews stay pinned.
+ * Shared instance for the lifetime of the process, pinned to `headSha`.
+ * Always resolves the head via `resolveProdSha()`.
+ * Swaps to a new pinned instance when the head advances.
  */
 export async function getProdContent(): Promise<DocsContent> {
   if (['production', 'preview'].includes(process.env.VERCEL_ENV || '')) {
     const sha = await resolveProdSha()
-    if (sha !== getHeadRef()) {
-      console.log(`[content] head ${getHeadRef()} -> ${sha}`)
-      headRef = sha
-      content = undefined // the old instance baked its source at the old commit
+    if (sha !== headSha) {
+      if (headSha) {
+        console.log(`[comark-docs] New head: ${headSha} -> ${sha}`)
+        void prod?.then((instance) => instance.dispose()).catch(() => {})
+        prod = undefined
+      }
+      headSha = sha
     }
   }
 
-  if (!content) {
-    content = createSourceContent(getHeadRef(), {
-      watch: true,
-      cache: {
-        driver: cacheDriver(getHeadRef()),
-      },
-    }).catch((error) => {
-      // Don't memoize a failed build — the next request should retry.
-      content = undefined
+  if (!prod) {
+    prod = (async () => {
+      const instance = import.meta.dev ? await watchedDevContent() : contentAt(getHeadRef())
+      const startedAt = performance.now()
+      await instance.init()
+      recordDuration('content.init.ms', startedAt)
+      return instance
+    })().catch((error) => {
+      prod = undefined
       throw error
     })
   }
-  return content
+  return prod
 }
 
-function contentSource(ref: string, opts: { remote?: boolean } = {}) {
+/** The unpinned base in development — it reads the working tree and follows file changes. */
+async function watchedDevContent(): Promise<DocsContent> {
+  const instance = getBaseContent()
+  await instance.watch()
+  instance.hooks.hook('watch:file:update', (_source: string, key: string) => {
+    invalidateSearchSections(instance)
+    console.log(`[comark-docs] ${key} updated`)
+  })
+  instance.hooks.hook('watch:file:remove', () => invalidateSearchSections(instance))
+  return instance
+}
+
+/**
+ * The source every instance derives from.
+ * `withRef(sha)` pins it to a commit.
+ *
+ * Production:
+ * - GitHub reads the tree and files at `sha`
+ * - the build snapshot supplies every body whose source hash is unchanged
+ *
+ * Development:
+ * - unpinned reads the working tree, which `watch()` follows
+ * - pinned reads the repo at that commit
+ * - no snapshot
+ */
+function contentSource(): ContentSource {
   const { docs } = useRuntimeConfig()
 
   if (import.meta.dev) {
-    if (opts.remote) return gitLocalSource(ref, docs.contentDir)
-
-    return fs(docs.contentPath)
+    return {
+      ...fs(docs.contentPath),
+      withRef: (ref) => gitLocalSource(ref, docs.contentDir),
+    }
   }
 
-  return github({
+  const source = github({
     repo: githubRepo(),
-    branch: ref,
+    branch: targetBranch(),
     path: docs.contentDir,
     token: githubToken(),
-    // `ref` is an immutable commit SHA => we can cache hard.
+    // Reads happen through `withRef(<sha>)`, an immutable commit => cache hard.
     ttl: 60 * 60 * 24,
   })
+
+  // Snaphot build during build time by `modules/snapshot/` is used.
+  // Snpahost is pinned to the latest commit at the time of the build.
+  // First head moves, only the bodies whose source hash matches are reused.
+  return withSnapshot(source, () => readSnapshot(), () => readManifest())
 }
 
-/** Per-instance registry of preview CMS instances, keyed by `<basePath>::<sha>`. */
-const contentPreviewInstances = new Map<string, Promise<DocsContent>>()
-
-// Bound required: each entry is a content instance with its own manifest and parsed bodies, and public
-// `/tree/:branch` / `/blob/:sha` let a crawler mint one per SHA. Evicted refs just rebuild, their
-// bodies surviving in the per-SHA Runtime Cache.
-const MAX_PREVIEW_INSTANCES = 8
-
-export function getPreviewContent(sha: string, basePath: string): Promise<DocsContent> {
-  const key = `${basePath}::${sha}`
-  const existing = contentPreviewInstances.get(key)
-  if (existing) {
-    // `Map` preserves insertion order, which is the whole LRU: re-insert so the MRU key is last.
-    contentPreviewInstances.delete(key)
-    contentPreviewInstances.set(key, existing)
-    return existing
+/**
+ * Read the build-time snapshot, or nothing when this deployment did not ship one.
+ */
+async function readSnapshot(): Promise<unknown> {
+  const span = contentTracer()?.startSpan('snapshot:read')
+  const startedAt = performance.now()
+  try {
+    // Untyped read: unstorage runs every value through `destr`, so this arrives already parsed.
+    const data = await useStorage('assets:comark-content').get(`${DEFAULT_CONTENT_NAME}/snapshot.json`)
+    const hit = data != null
+    span?.setAttribute('comark.snapshot.hit', hit)
+    recordDuration('content.snapshot.read.ms', startedAt, { hit: String(hit) })
+    return data
+  } finally {
+    span?.end()
   }
+}
 
-  const instance = createSourceContent(sha, {
-    remote: true,
-    basePath,
-    cache: { driver: cacheDriver(sha) },
-  }).catch((error) => {
-    contentPreviewInstances.delete(key)
-    throw error
-  })
-  contentPreviewInstances.set(key, instance)
-
-  while (contentPreviewInstances.size > MAX_PREVIEW_INSTANCES) {
-    const oldest = contentPreviewInstances.keys().next()
-    if (oldest.done) break
-    contentPreviewInstances.delete(oldest.value)
+/**
+ * Read the build-time snapshot, or nothing when this deployment did not ship one.
+ */
+async function readManifest(): Promise<unknown> {
+  const span = contentTracer()?.startSpan('manifest:read')
+  const startedAt = performance.now()
+  try {
+    // Untyped read: unstorage runs every value through `destr`, so this arrives already parsed.
+    const data = await useStorage('assets:comark-content').get(`${DEFAULT_CONTENT_NAME}/manifest.json`)
+    const hit = data != null
+    span?.setAttribute('comark.manifest.hit', hit)
+    recordDuration('content.manifest.read.ms', startedAt, { hit: String(hit) })
+    return data
+  } finally {
+    span?.end()
   }
-
-  return instance
 }

@@ -17,9 +17,6 @@ useSeoMeta({
 })
 
 const { data: navigation } = await useAsyncData('navigation', () => prodContent.navigation())
-const { data: files } = useLazyAsyncData('search-sections', () => prodContent.searchSections(), {
-  server: false,
-})
 
 provide('navigation', navigation)
 </script>
@@ -32,11 +29,6 @@ provide('navigation', navigation)
 
     <AppFooter />
 
-    <ClientOnly>
-      <LazyUContentSearch
-        :files="files ?? []"
-        :navigation="navigation ?? []"
-      />
-    </ClientOnly>
+    <AppSearch :navigation="navigation ?? []" />
   </UApp>
 </template>

@@ -4,7 +4,7 @@ import type { Source } from 'comark-content'
 import type { PageCommit } from './github'
 
 const exec = promisify(execFile)
-/** Root of the git repository holding the content (resolved at build time by modules/config.ts). */
+/** Root of the git repository holding the content (resolved at build time by modules/config/). */
 function repoRoot(): string {
   return useRuntimeConfig().docs.repoRoot
 }

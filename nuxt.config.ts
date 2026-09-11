@@ -1,7 +1,7 @@
 import { resolveModulePath } from 'exsolve'
 import { defineNuxtConfig } from 'nuxt/config'
 import { createResolver } from 'nuxt/kit'
-import { layerIconCollections } from './utils/icons'
+import { LAYER_ICON_COLLECTIONS, layerIconAliases } from './utils/icons'
 
 const { resolve } = createResolver(import.meta.url)
 
@@ -12,7 +12,7 @@ export default defineNuxtConfig({
     // The layer's own modules go first: what config.ts seeds (`site`, `mcp`, `agentDiscovery`) has to be in
     // place before the modules that read it at setup. Nuxt queues a layer's `modules` before its scanned
     // `modules/` dir and dedupes by file path, so the extension is what keeps these from installing twice.
-    resolve('./modules/config.ts'),
+    resolve('./modules/config/index.ts'),
     resolve('./modules/css.ts'),
     '@nuxt/ui',
     '@comark/nuxt',
@@ -23,6 +23,7 @@ export default defineNuxtConfig({
     'nuxt-schema-org',
     '@nuxtjs/mcp-toolkit',
     'nuxt-llms',
+    'nuxt-workers',
     'nuxt-agent-discovery',
   ],
   ignore: ['content/**'],
@@ -52,29 +53,31 @@ export default defineNuxtConfig({
   },
   ogImage: { zeroRuntime: false },
   icon: {
-    provider: 'iconify',
-    customCollections: layerIconCollections() as never,
-    clientBundle: {
-      scan: true,
-      includeCustomCollections: false
-    },
+    provider: 'server',
+    fallbackToApi: 'client-only',
+    serverBundle: { collections: LAYER_ICON_COLLECTIONS },
+    clientBundle: { scan: true },
   },
   vite: {
     resolve: {
       alias: { 'beautiful-mermaid': resolveModulePath('beautiful-mermaid', { from: import.meta.url }) },
     },
+    worker: { format: 'es' },
     optimizeDeps: {
       include: [
         'beautiful-mermaid',
         'comark-docs > ai > @ai-sdk/gateway > @vercel/oidc',
         'js-yaml'
       ],
+      // Pre-bundling would break the wasm/worker assets sqlite loads relative to its module URL.
+      exclude: ['@sqlite.org/sqlite-wasm'],
     },
   },
   llms: {
     prerender: false,
   },
   nitro: {
+    alias: layerIconAliases(),
     // MCP tool handlers reach the request through `useEvent()`.
     experimental: { asyncContext: true },
     vercel: {

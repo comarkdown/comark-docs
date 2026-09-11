@@ -2,10 +2,8 @@ import { existsSync, readdirSync } from 'node:fs'
 import { addServerPlugin, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { ModuleOptions as AgentDiscoveryOptions } from 'nuxt-agent-discovery'
-import { resolveContentDir } from '../utils/content-dir'
-import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../utils/git'
-import { LAYER_ICON_COLLECTIONS } from '../utils/icons'
-import { getPackageJsonMetadata, inferSiteURL } from '../utils/meta'
+import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
+import { getPackageJsonMetadata, inferSiteURL, resolveContentDir } from './utils'
 
 const logger = useLogger('comark-docs')
 
@@ -138,16 +136,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
       },
     })
 
-    // Drop layer Iconify prefixes from appConfig so @nuxt/icon keeps using the Iconify API (not `/api/_nuxt_icon`).
-    nuxt.hook('modules:done', () => {
-      const iconAppConfig = nuxtOptions.appConfig.icon as { customCollections?: string[] } | undefined
-      if (!iconAppConfig?.customCollections?.length) return
-      iconAppConfig.customCollections = iconAppConfig.customCollections.filter(
-        (prefix) => !LAYER_ICON_COLLECTIONS.includes(prefix)
-      )
-    })
-
-
     // Extend Nuxt UI components to make them global and usable in markdown by consumers.
     nuxt.hook('components:extend', (components) => {
       const globalComponents = ['UButton', 'UPageHero']
@@ -249,7 +237,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Previews are served live (SSR) off Runtime Cache; `/blob/**` is immutable commit HTML.
         // `/pr/**` follows the PR's head like `/tree/**` follows a branch, so it shares the short TTL.
         '/tree/**': { isr, robots: 'noindex, nofollow' },
-        '/blob/**': { isr: true, robots: 'noindex, nofollow' },
+        '/blob/**': { isr: true, robots: 'noindex, nofollow' }, // Immutable since SHA-pinned
         '/pr/**': { isr, robots: 'noindex, nofollow' },
         // Raw markdown mirrors of every page, for agents.
         '/raw/**': { isr, robots: 'noindex' },
@@ -260,11 +248,17 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/rss.xml': { isr },
         // Prerendering would bake the build-time site URL and `docs.version` into it.
         '/openapi.json': { isr },
-        // Fetched on every page hydration (see app.vue) and parses every doc body, so cache it.
-        '/api/content/blob/*/search-sections': { isr: true },
-        '/api/content/tree/*/search-sections': { isr },
-        '/api/content/pr/*/search-sections': { isr },
-        '/api/content/search-sections': { isr },
+        // Scanned from the app at build time, so they only change on deploy.
+        '/.well-known/skills': { isr: true },
+        '/.well-known/skills/**': { isr: true },
+        // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
+        '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
+        '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
+        '/api/content/tree/*/manifest.json': { isr },
+        '/api/content/tree/*/snapshot/*': { isr },
+        // `/pr/*` follows the PR head, so it gets the short TTL like `/tree/*`.
+        '/api/content/pr/*/manifest.json': { isr },
+        '/api/content/pr/*/snapshot/*': { isr },
         '/api/code-explorer/**': { isr },
         '/_payload.json': {
           headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },
@@ -286,6 +280,15 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
       // Consumer-declared rules win per route.
       nuxt.options.routeRules = defu(nuxt.options.routeRules, rules) as typeof nuxt.options.routeRules
+
+      // Remove once https://github.com/benjamincanac/nuxt-agent-discovery/pull/35 is released.
+      nuxt.hook('modules:done', () => {
+        nuxt.hook('prerender:routes', (ctx) => {
+          for (const route of ctx.routes) {
+            if (route.startsWith('/.well-known/skills')) ctx.routes.delete(route)
+          }
+        })
+      })
     }
   },
 })
