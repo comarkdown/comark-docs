@@ -20,7 +20,7 @@ function runtimeCacheDriver(base: string, ttl?: number): Driver {
  * Bump when content parser/plugin configuration, relevant parser dependencies, or cached derived
  * data changes. Keeping this explicit lets unrelated deployments reuse immutable content artifacts.
  */
-export const CONTENT_PARSER_VERSION = 'v3'
+export const CONTENT_PARSER_VERSION = 'v4'
 
 /**
  * Comark cache: index, parsed bodies and artifacts of every commit.
