@@ -57,18 +57,26 @@ export function getHeadRef(): string {
   return headSha ?? targetBranch()
 }
 
+// Share pending promises to avoid multiple concurrent requests.
+let pendingSha: Promise<string> | undefined
+
 /**
  * The SHA prod instance currently serves:
  * - global config pin if one is set (production only)
  * - latest commit touching the content directory via `resolveContentSha()`
  */
-export async function resolveProdSha(): Promise<string> {
-  const { contentDir } = useRuntimeConfig().docs
-  if (process.env.VERCEL_ENV === 'production') {
-    const pinned = await getPinnedSha()
-    if (pinned) return pinned
-  }
-  return resolveContentSha(targetBranch(), contentDir)
+export function resolveProdSha(): Promise<string> {
+  pendingSha ??= (async () => {
+    const { contentDir } = useRuntimeConfig().docs
+    if (process.env.VERCEL_ENV === 'production') {
+      const pinned = await getPinnedSha()
+      if (pinned) return pinned
+    }
+    return resolveContentSha(targetBranch(), contentDir)
+  })().finally(() => {
+    pendingSha = undefined
+  })
+  return pendingSha
 }
 
 // Rebuild the promise when the head advances.

@@ -17,11 +17,7 @@ function searchDebug(): boolean {
  * per-commit snapshot artifacts.
  */
 export function useSearch() {
-  const { data: headSha } = useAsyncData(
-    'content-head-sha',
-    () => $fetch<{ sha: string | null }>('/api/content/head').then(({ sha }) => sha),
-    { default: () => null }
-  )
+  const headSha = inject<Ref<string | null>>('sha', ref(null))
 
   /**
    * Load the database.

@@ -7,9 +7,16 @@ const { seo, docs } = useAppConfig()
 const content = useDocsContent()
 const route = useRoute()
 
-const { data: navigation } = await useAsyncData('navigation', () => content.value.client.navigation(), {
-  watch: [() => content.value.base],
-})
+const [{ data: navigation }, { data: sha }] = await Promise.all([
+  useAsyncData('navigation', () => content.value.client.navigation(), {
+    watch: [() => content.value.base],
+  }),
+  useAsyncData(
+    'content-head-sha',
+    () => $fetch<{ sha: string | null }>('/api/content/head').then(({ sha }) => sha),
+    { default: () => null }
+  ),
+])
 
 const nuxtApp = useNuxtApp()
 const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
@@ -47,6 +54,7 @@ useSeoMeta({
 
 provide('navigation', navTree)
 provide('layout', navigationLayout)
+provide('sha', sha)
 
 // const colorMode = useColorMode()
 const historyOpen = useVersionHistory()
