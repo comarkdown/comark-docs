@@ -13,31 +13,60 @@ function searchDebug(): boolean {
 }
 
 /**
- * Client-side full-text search over production content (sqlite-wasm FTS5) hydrated from the
- * per-commit snapshot artifacts.
+ * Client-side full-text search over the active route's content (sqlite-wasm FTS5)
+ * Hydrated from the per-commit snapshot artifacts.
  */
 export function useSearch() {
-  const headSha = inject<Ref<string | null>>('sha', ref(null))
+  const content = useDocsContent()
+  const sha = inject<Ref<string | null>>('sha', ref(null))
+
+  /** What to hydrate from, or `null` when this route has nothing searchable. */
+  const target = computed(() => {
+    const preview = content.value.mode !== 'prod'
+    if (sha.value) return {
+      sha: sha.value,
+      preview,
+      apiBase: `/api/content/blob/${sha.value}`
+    }
+
+    // Prod in dev mode
+    if (!preview && import.meta.dev) return {
+      sha: null,
+      preview,
+      apiBase: '/api/content'
+    }
+
+    return null
+  })
+
+  const available = computed(() => target.value !== null)
 
   /**
-   * Load the database.
-   * No-op once loading or ready; retries after a failure.
+   * Load the database for the current target.
+   * No-ops if the target is unchanged.
    */
   async function warmup(): Promise<void> {
-    if (status.value === 'loading' || status.value === 'ready') return
+    const current = target.value
+
+    if (!current) {
+      if (content.value.mode === 'prod' && !import.meta.dev) {
+        console.error('[search] /api/content/head returned no commit pin — search hidden')
+      }
+      return
+    }
+
     status.value = 'loading'
     try {
-      if (!headSha.value && !import.meta.dev) {
-        throw new Error('[search] /api/content/head returned no commit pin')
-      }
-
-      // Immutable per-commit artifacts, CDN-cached forever. Only unpinned in dev, per the guard above.
-      const apiBase = headSha.value ? `/api/content/blob/${headSha.value}` : '/api/content'
-
       const debug = searchDebug()
-      if (debug) console.info(`[search] warmup from ${apiBase} (head ${headSha.value ?? 'unpinned'})`)
+      if (debug) console.info(`[search] warmup from ${current.apiBase} (sha ${current.sha ?? 'unpinned'})`)
 
-      await warmupSearch(apiBase, location.origin, debug)
+      await warmupSearch({
+        apiBase: current.apiBase,
+        sha: current.sha,
+        preview: current.preview,
+        origin: location.origin,
+        debug,
+      })
       status.value = 'ready'
     } catch (error) {
       status.value = 'error'
@@ -47,11 +76,17 @@ export function useSearch() {
 
   if (import.meta.client) {
     onNuxtReady(warmup)
+    watch(() => target.value && `${target.value.preview}:${target.value.sha}`, warmup)
   }
 
   async function search(query: string, opts?: SearchOptions): Promise<SearchResult[]> {
     return searchContent(query, opts)
   }
 
-  return { search, status: readonly(status), warmup }
+  return {
+    search,
+    status: readonly(status),
+    warmup,
+    available,
+  }
 }

@@ -117,12 +117,12 @@ const navigation = inject<Ref<NavigationItem[]>>('navigation')
 const content = useDocsContent()
 const layout = inject<Ref<NavigationLayout>>('layout')
 
-const { data: page } = await useAsyncData(`${content.value.base}:${content.value.path}`, () =>
+const { data: page } = await useAsyncData(`${content.value.routeBase}:${content.value.path}`, () =>
   content.value.client.get(content.value.path)
 )
 if (!page.value) {
   // A directory without an index page (e.g. /getting-started) redirects to its first page.
-  const firstLeaf = findFirstLeaf(navigation?.value, prefixLink(content.value.path, content.value.base))
+  const firstLeaf = findFirstLeaf(navigation?.value, prefixLink(content.value.path, content.value.routeBase))
   if (firstLeaf) {
     await navigateTo(firstLeaf, { redirectCode: 302 })
   } else {
@@ -130,11 +130,11 @@ if (!page.value) {
   }
 }
 
-const selfPath = computed(() => prefixLink(content.value.path, content.value.base))
+const selfPath = computed(() => prefixLink(content.value.path, content.value.routeBase))
 
 const tree = computed(() => {
   const p = page.value
-  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.base) } : p
+  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.routeBase) } : p
 })
 
 const surroundLinks = computed(() => findSurroundLinks(navigation?.value, selfPath.value))

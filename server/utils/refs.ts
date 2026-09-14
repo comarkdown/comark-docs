@@ -31,6 +31,15 @@ export function parseBranchName(value: string): string | null {
   return branch
 }
 
+/**
+ * A branch name that is unambiguously not a commit SHA.
+ */
+export function parsePreviewBranch(value: string): string | null {
+  const branch = parseBranchName(value)
+  if (!branch || parseCommitSha(branch)) return null
+  return branch
+}
+
 /** A pull request number: all digits, no leading zero, small enough to stay a safe integer. */
 export function parsePullNumber(value: string): number | null {
   const trimmed = value.trim()

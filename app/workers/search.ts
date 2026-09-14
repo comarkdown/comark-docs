@@ -1,7 +1,12 @@
 /**
  * Search worker: owns the browser-standalone `comark-content` instance (sqlite-wasm FTS5).
  *
- * Hydrated from the per-commit snapshot artifacts.
+ * Hydrated from the per-commit snapshot artifacts, every mode's (prod, blob, tree, pr) served from
+ * its own SHA-pinned `/api/content/blob/<sha>` URL.
+ *
+ * Instances are cached by SHA:
+ * - Prod is always kept
+ * - One preview only is kept, evicted on the next switch
  */
 import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content/runtime'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
@@ -11,57 +16,91 @@ import { ofetch } from 'ofetch'
 import { describeArtifact, indexedRows, isDebug, log, logger, setDebug, since } from './internal/search-logger'
 import type { CacheArtifact, SearchOptions, SearchResult } from 'comark-content/runtime'
 
-/**
- * Creates a search instance.
- */
-function createSearchInstance(fetchArtifact: (path: string) => Promise<CacheArtifact>, apiBase: string) {
-  const database = sqliteWasm()
-  return {
-    database,
-    content: comarkContent({
-      // The first (full-body) tier is what the index is built from; the second (manifest) tier
-      // is the light one `init()` prefers, so a bare `init()` below doesn't download bodies that
-      // `search()` is about to fetch anyway via the snapshot tier.
-      source: snapshot(
-        () => fetchArtifact(`${apiBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`),
-        () => fetchArtifact(`${apiBase}/manifest.json`)
-      ),
-      plugins: [sqliteFullTextSearch({ database })],
-      logger,
-    }),
-  }
+export interface SearchTarget {
+  apiBase: string
+  sha: string | null
+  preview: boolean
+  origin: string
+  debug: boolean
 }
 
-type SearchInstance = ReturnType<typeof createSearchInstance>['content']
+// Shared database for the worker's lifetime
+const database = sqliteWasm()
 
-let instance: SearchInstance | undefined
-
-/**
- * The in-flight hydration.
- *
- * Ensures only one hydration runs at a time.
- */
-let hydration: Promise<void> | undefined
-
-/** Loads the database. No-op once ready; retries after a failure. */
-export function warmupSearch(apiBase: string, origin: string, debug: boolean): Promise<void> {
-  setDebug(debug)
-  if (instance) {
-    log('warmup ignored — already ready')
-    return Promise.resolve()
-  }
-  hydration ||= loadDatabase(apiBase, origin).catch((error) => {
-    hydration = undefined // clears the guard so the next warmup can retry
-    throw error
+function createInstance(fetchArtifact: (path: string) => Promise<CacheArtifact>, apiBase: string, sha: string | null) {
+  const content = comarkContent({
+    source: snapshot(
+      () => fetchArtifact(`${apiBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`),
+      () => fetchArtifact(`${apiBase}/manifest.json`)
+    ),
+    plugins: [sqliteFullTextSearch({ database })],
+    logger,
   })
-  return hydration
+
+  return sha ? content.withRef(sha) : content
 }
 
-async function loadDatabase(apiBase: string, origin: string): Promise<void> {
+type SearchInstance = ReturnType<typeof createInstance>
+
+/** Whichever instance `searchContent()` should query */
+let active: SearchInstance | undefined
+
+/** Hydrated instances by key */
+const loaded = new Map<string, SearchInstance>()
+/** In-flight hydrations, so concurrent warmups for one commit share a single load. */
+const pending = new Map<string, Promise<SearchInstance>>()
+
+/** Needed to avoid evicting prod */
+let prodKey: string | undefined
+/** Most recently requested key (for eviction) */
+let currentKey = ''
+
+function hydrate(target: SearchTarget): Promise<SearchInstance> {
+  const key = target.sha ?? 'unpinned' // dev mode only
+  const existing = loaded.get(key)
+  if (existing) return Promise.resolve(existing)
+
+  let promise = pending.get(key)
+  if (!promise) {
+    promise = loadInstance(target)
+      .then((instance) => {
+        loaded.set(key, instance)
+        return instance
+      })
+      // Cleared on failure too, so the next warmup retries instead of re-awaiting this rejection.
+      .finally(() => pending.delete(key))
+    pending.set(key, promise)
+  }
+  return promise
+}
+
+/**
+ * Loads (or reuses) the database for `target`, makes it active, and evicts whatever else is
+ * cached — keeping prod warm and dropping any preview once navigated away from it.
+ */
+export async function warmupSearch(target: SearchTarget): Promise<void> {
+  setDebug(target.debug)
+  const key = target.sha ?? 'unpinned'
+  currentKey = key
+  // Claim prod's key before awaiting, so the eviction below can never clean it.
+  if (!target.preview) prodKey = key
+
+  const instance = await hydrate(target)
+  if (currentKey !== key) return // a switch occurred, so skip the eviction
+
+  active = instance
+  for (const [staleKey, stale] of loaded) {
+    if (staleKey === key || staleKey === prodKey) continue
+    loaded.delete(staleKey)
+    void stale.clean().catch((error) => log(`cleanup failed for ${staleKey}`, error))
+  }
+}
+
+async function loadInstance(target: SearchTarget): Promise<SearchInstance> {
   const started = performance.now()
   try {
     const fetchArtifact = async (path: string): Promise<CacheArtifact> => {
-      const url = new URL(path, origin).href
+      const url = new URL(path, target.origin).href
       const fetchStarted = performance.now()
       try {
         const artifact = await ofetch<CacheArtifact>(url)
@@ -81,30 +120,30 @@ async function loadDatabase(apiBase: string, origin: string): Promise<void> {
       }
     }
 
-    const { database, content } = createSearchInstance(fetchArtifact, apiBase)
-
+    const content = createInstance(fetchArtifact, target.apiBase, target.sha)
     await content.init()
 
     const indexStarted = performance.now()
     await content.search('') // pulls the snapshot in and builds the FTS index
-    log(`index built in ${since(indexStarted)} — ${await indexedRows(database, DEFAULT_CONTENT_NAME)} row(s)`)
+    const rows = await indexedRows(database, target.sha)
+    log(`index built in ${since(indexStarted)} for ${target.apiBase} — ${rows} row(s)`)
 
-    instance = content
-    log(`ready in ${since(started)}`)
+    log(`ready in ${since(started)} (${target.preview ? 'preview' : 'prod'} ${target.sha ?? 'unpinned'})`)
+    return content
   } catch (error) {
-    log(`hydration failed after ${since(started)}`, error)
+    log(`hydration failed after ${since(started)} for ${target.apiBase}`, error)
     throw error
   }
 }
 
 /** Empty until hydration lands. */
 export async function searchContent(query: string, opts?: SearchOptions): Promise<SearchResult[]> {
-  if (!instance) {
+  if (!active) {
     log(`dropped query "${query}" — no instance yet`)
     return []
   }
   const queryStarted = performance.now()
-  const results = await instance.search(query, {
+  const results = await active.search(query, {
     limit: 25,
     snippet: { columns: ['content'] },
     ...opts,

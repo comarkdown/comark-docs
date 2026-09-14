@@ -3,6 +3,7 @@
  *
  * Triggered by `?debug=search` param.
  */
+import { DEFAULT_CONTENT_NAME } from 'comark-content/runtime'
 import type { ContentFile, Logger, RelationalDatabase } from 'comark-content/runtime'
 
 const PREFIX = '[search:worker]'
@@ -54,14 +55,19 @@ export function describeArtifact(decoded: unknown): string {
   return `${items ? Object.keys(items).length : 0} manifest item(s)`
 }
 
+/** Mirrors the FTS plugin's `ownId` convention */
+function sourceIdFor(sha: string | null): string {
+  return sha ? `${DEFAULT_CONTENT_NAME}@${sha}` : DEFAULT_CONTENT_NAME
+}
+
 /**
  * Rows in the FTS plugin's index — the one number that separates "nothing was indexed" from "the
  * query found nothing", since `search()` catches SQL errors and returns `[]` either way. Reads the
  * plugin's private table, so it is a diagnostic, not something to build on.
  */
-export async function indexedRows(database: RelationalDatabase, source: string): Promise<number | string> {
+export async function indexedRows(database: RelationalDatabase, sha: string | null): Promise<number | string> {
   try {
-    const rows = await database.all<{ n: number }>('SELECT count(*) as n FROM __fts_search WHERE source = ?', [source])
+    const rows = await database.all<{ n: number }>('SELECT count(*) as n FROM __fts_search WHERE source = ?', [sourceIdFor(sha)])
     return rows?.[0]?.n ?? 'unknown'
   } catch (error) {
     return `unknown (${error instanceof Error ? error.message : String(error)})`

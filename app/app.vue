@@ -9,19 +9,19 @@ const route = useRoute()
 
 const [{ data: navigation }, { data: sha }] = await Promise.all([
   useAsyncData('navigation', () => content.value.client.navigation(), {
-    watch: [() => content.value.base],
+    watch: [() => content.value.routeBase],
   }),
   useAsyncData(
-    'content-head-sha',
-    () => $fetch<{ sha: string | null }>('/api/content/head').then(({ sha }) => sha),
-    { default: () => null }
+    () => `content-head:${content.value.apiBase}`,
+    () => $fetch<{ sha: string | null }>(`${content.value.apiBase}/head`).then(({ sha }) => sha),
+    { default: () => null, watch: [() => content.value.apiBase] }
   ),
 ])
 
 const nuxtApp = useNuxtApp()
-const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
+const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.routeBase))
 const resolveNavigationLayout = () => {
-  return resolveRouteLayout(navigation.value, route, content.value.base ? content.value.path : route.path)
+  return resolveRouteLayout(navigation.value, route, content.value.routeBase ? content.value.path : route.path)
 }
 const navigationLayout = ref(resolveNavigationLayout())
 onNuxtReady(() => {
@@ -56,7 +56,7 @@ provide('navigation', navTree)
 provide('layout', navigationLayout)
 provide('sha', sha)
 
-// const colorMode = useColorMode()
+const { available: searchAvailable } = useSearch()
 const historyOpen = useVersionHistory()
 
 const { assistant } = useAppConfig()
@@ -98,7 +98,10 @@ defineShortcuts({
 
     <AppFooter />
 
-    <AppSearch :navigation="navTree" />
+    <AppSearch
+      v-if="searchAvailable"
+      :navigation="navTree"
+    />
 
     <ClientOnly>
       <LazyVersionHistory />

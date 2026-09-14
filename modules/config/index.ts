@@ -251,14 +251,9 @@ export default defineNuxtModule<ComarkDocsOptions>({
         // Scanned from the app at build time, so they only change on deploy.
         '/.well-known/skills': { isr: true },
         '/.well-known/skills/**': { isr: true },
-        // Per-commit artifacts hydrating the client-side search database (see `useSearch`)
+        // Per-commit artifacts hydrating the client-side search database.
         '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
         '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
-        '/api/content/tree/*/manifest.json': { isr },
-        '/api/content/tree/*/snapshot/*': { isr },
-        // `/pr/*` follows the PR head, so it gets the short TTL like `/tree/*`.
-        '/api/content/pr/*/manifest.json': { isr },
-        '/api/content/pr/*/snapshot/*': { isr },
         '/api/code-explorer/**': { isr },
         '/_payload.json': {
           headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },

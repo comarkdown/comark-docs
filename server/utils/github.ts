@@ -164,8 +164,8 @@ function pullAllowsPreview(pull: GitHubPullSummary): boolean {
  * fetchable through the *upstream* repo API — so a bare format check would render any fork's
  * markdown on this domain. A SHA is previewable when:
  *
- * 1. an associated PR allows it (same-repo PR, or a fork PR carrying `preview:enabled`), or
- * 2. the commit is in the production branch's history (version-history links).
+ * 1. an associated PR allows it (same-repo PR, or a fork PR carrying `preview:enabled`)
+ * 2. the commit is in the production branch's history (version-history links)
  *
  * Decisions live in the preview ref cache — positive ones too, so removing the label revokes
  * access within 10 minutes. Skipped in dev, where refs resolve against the local checkout instead.

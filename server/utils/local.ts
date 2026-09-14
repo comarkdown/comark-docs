@@ -19,7 +19,7 @@ const MAX_BUFFER = 64 * 1024 * 1024
  * and `git show` accepts diff options including `--output=<file>`. Don't swap it for `--`:
  * `<rev>:<path>` is an object spec, so `git show -- HEAD:file` reads it as a pathspec, emitting nothing.
  */
-async function resolveGitRef(ref: string): Promise<string> {
+export async function resolveGitRef(ref: string): Promise<string> {
   const candidates = [`refs/heads/${ref}`, `refs/remotes/origin/${ref}`, ref]
 
   for (const candidate of candidates) {

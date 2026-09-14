@@ -6,8 +6,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing branch or path' })
   }
 
-  // Public endpoint: every distinct ref costs a GitHub API call and a preview-content instance — validate first.
-  const branch = parseBranchName(decodeURIComponent(rawBranch))
+  const branch = parsePreviewBranch(decodeURIComponent(rawBranch))
   if (!branch) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid branch name' })
   }
