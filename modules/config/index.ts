@@ -275,15 +275,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
 
       // Consumer-declared rules win per route.
       nuxt.options.routeRules = defu(nuxt.options.routeRules, rules) as typeof nuxt.options.routeRules
-
-      // Remove once https://github.com/benjamincanac/nuxt-agent-discovery/pull/35 is released.
-      nuxt.hook('modules:done', () => {
-        nuxt.hook('prerender:routes', (ctx) => {
-          for (const route of ctx.routes) {
-            if (route.startsWith('/.well-known/skills')) ctx.routes.delete(route)
-          }
-        })
-      })
     }
   },
 })

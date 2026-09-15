@@ -29,7 +29,7 @@ export default defineNuxtConfig({
   ignore: ['content/**'],
   ui: { content: true, prose: true },
   sitemap: {
-    // Content is the source of truth: the app sources would only add the prerendered skill files.
+    // Content is the source of truth: the app sources would only add the static Vue pages.
     excludeAppSources: true,
     sources: ['/api/__sitemap__/urls'],
     exclude: ['/tree/**', '/blob/**', '/pr/**'],
