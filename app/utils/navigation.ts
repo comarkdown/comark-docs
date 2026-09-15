@@ -1,5 +1,27 @@
 import type { NavigationItem } from 'comark-content'
 import type { RouteLocationNormalized } from 'vue-router'
+import type { NavGroup } from '../composables/useNavigation'
+
+/** Logical top-level segment of a path, ignoring the active version `base`. */
+export function segmentOf(path: string, base: string): string {
+  const rel = base && path.startsWith(base) ? path.slice(base.length) : path
+  return rel.split('/').filter(Boolean)[0] ?? ''
+}
+
+/**
+ * Whether a header tab is active on `path`. A tab with `sections` is active on any of them, whatever it
+ * links to; a manual tab is active under `activePath`, or under its own `to`.
+ */
+export function isNavGroupActive(
+  group: Pick<NavGroup, 'to' | 'activePath' | 'sections'>,
+  path: string,
+  base: string
+): boolean {
+  const seg = segmentOf(path, base)
+  if (group.sections?.length) return group.sections.includes(seg)
+  if (group.to) return seg === segmentOf(group.activePath ?? group.to, base)
+  return false
+}
 
 export function findPageHeadline(
   navigation: NavigationItem[] | undefined | null,
