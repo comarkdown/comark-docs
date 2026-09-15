@@ -5,7 +5,7 @@ const props = defineProps<{
   navigation: NavigationItem[]
 }>()
 
-const { search, status } = useSearch()
+const { search, status, available } = useSearch()
 
 const appConfig = useAppConfig()
 
@@ -54,7 +54,7 @@ const groups = computed(() => {
 </script>
 
 <template>
-  <ClientOnly>
+  <ClientOnly v-if="available">
     <LazyUContentSearch
       :search="search"
       :search-status="status"

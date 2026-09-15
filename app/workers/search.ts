@@ -19,7 +19,7 @@ import type { CacheArtifact, SearchOptions, SearchResult } from 'comark-content/
 export interface SearchTarget {
   apiBase: string
   sha: string | null
-  preview: boolean
+  isPreview: boolean
   origin: string
   debug: boolean
 }
@@ -83,7 +83,7 @@ export async function warmupSearch(target: SearchTarget): Promise<void> {
   const key = target.sha ?? 'unpinned'
   currentKey = key
   // Claim prod's key before awaiting, so the eviction below can never clean it.
-  if (!target.preview) prodKey = key
+  if (!target.isPreview) prodKey = key
 
   const instance = await hydrate(target)
   if (currentKey !== key) return // a switch occurred, so skip the eviction
@@ -128,7 +128,7 @@ async function loadInstance(target: SearchTarget): Promise<SearchInstance> {
     const rows = await indexedRows(database, target.sha)
     log(`index built in ${since(indexStarted)} for ${target.apiBase} — ${rows} row(s)`)
 
-    log(`ready in ${since(started)} (${target.preview ? 'preview' : 'prod'} ${target.sha ?? 'unpinned'})`)
+    log(`ready in ${since(started)} (${target.isPreview ? 'preview' : 'prod'} ${target.sha ?? 'unpinned'})`)
     return content
   } catch (error) {
     log(`hydration failed after ${since(started)} for ${target.apiBase}`, error)

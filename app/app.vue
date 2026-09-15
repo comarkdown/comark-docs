@@ -56,7 +56,6 @@ provide('navigation', navTree)
 provide('layout', navigationLayout)
 provide('sha', sha)
 
-const { available: searchAvailable } = useSearch()
 const historyOpen = useVersionHistory()
 
 const { assistant } = useAppConfig()
@@ -98,10 +97,7 @@ defineShortcuts({
 
     <AppFooter />
 
-    <AppSearch
-      v-if="searchAvailable"
-      :navigation="navTree"
-    />
+    <AppSearch :navigation="navTree" />
 
     <ClientOnly>
       <LazyVersionHistory />

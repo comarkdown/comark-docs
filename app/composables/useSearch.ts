@@ -22,17 +22,17 @@ export function useSearch() {
 
   /** What to hydrate from, or `null` when this route has nothing searchable. */
   const target = computed(() => {
-    const preview = content.value.mode !== 'prod'
+    const isPreview = content.value.mode !== 'prod'
     if (sha.value) return {
       sha: sha.value,
-      preview,
+      isPreview,
       apiBase: `/api/content/blob/${sha.value}`
     }
 
     // Prod in dev mode
-    if (!preview && import.meta.dev) return {
+    if (!isPreview && import.meta.dev) return {
       sha: null,
-      preview,
+      isPreview,
       apiBase: '/api/content'
     }
 
@@ -50,7 +50,7 @@ export function useSearch() {
 
     if (!current) {
       if (content.value.mode === 'prod' && !import.meta.dev) {
-        console.error('[search] /api/content/head returned no commit pin — search hidden')
+        console.error('[search] prod route resolved no commit pin — search hidden')
       }
       return
     }
@@ -63,7 +63,7 @@ export function useSearch() {
       await warmupSearch({
         apiBase: current.apiBase,
         sha: current.sha,
-        preview: current.preview,
+        isPreview: current.isPreview,
         origin: location.origin,
         debug,
       })
@@ -76,7 +76,7 @@ export function useSearch() {
 
   if (import.meta.client) {
     onNuxtReady(warmup)
-    watch(() => target.value && `${target.value.preview}:${target.value.sha}`, warmup)
+    watch(() => target.value && `${target.value.isPreview}:${target.value.sha}`, warmup)
   }
 
   async function search(query: string, opts?: SearchOptions): Promise<SearchResult[]> {
