@@ -1,16 +1,21 @@
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import type { NavigationItem } from 'comark-content'
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.vue'
+import { isNavGroupActive, segmentOf } from '../utils/navigation'
+import type { NavGroupTarget } from '../utils/navigation'
 
-export interface NavGroup {
+export interface NavGroup extends NavGroupTarget {
   label: string
   /** Top-level content sections grouped under this tab. */
   sections?: string[]
   /** Where the tab links: the first leaf page of the first section (default) or the section index page. */
   link?: 'first-leaf' | 'section'
-  /** Explicit target for a tab backed by an app route rather than content sections. */
+  /**
+   * Explicit link target. Alone it makes a manual tab backed by an app route; together with `sections`
+   * the tab still owns those sections for the sidebar and its active state, and is also active under `to`.
+   */
   to?: string
-  /** Path prefix that marks a manual tab active; defaults to `to`. */
+  /** Path prefix that marks the tab active; defaults to `to`. */
   activePath?: string
   /** Dropdown items for a manual tab. */
   children?: NavGroupChild[]
@@ -27,12 +32,6 @@ function firstLeaf(item: NavigationItem): string {
   let current = item
   while (current.children?.length) current = current.children[0]!
   return current.path
-}
-
-/** Logical top-level segment of a path, ignoring the active version `base`. */
-function segmentOf(path: string, base: string): string {
-  const rel = base && path.startsWith(base) ? path.slice(base.length) : path
-  return rel.split('/').filter(Boolean)[0] ?? ''
 }
 
 function childIsActive(target: string, route: RouteLocationNormalizedLoaded): boolean {
@@ -68,7 +67,6 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
 
   return computed<NavigationMenuItem[]>(() => {
     const base = content.value.base
-    const seg = segmentOf(route.path, base)
 
     const bySegment = new Map<string, NavigationItem>()
     for (const item of navigation.value ?? []) bySegment.set(segmentOf(item.path, base), item)
@@ -76,12 +74,12 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
     const items: NavigationMenuItem[] = []
 
     for (const group of navGroups(navigation.value ?? [], base)) {
-      // Manual tab: an explicit app-route link, optionally with a dropdown.
+      // Explicit link, optionally with a dropdown.
       if (group.to) {
         items.push({
           label: group.label,
           to: group.to,
-          active: seg === segmentOf(group.activePath ?? group.to, base),
+          active: isNavGroupActive(group, route.path, base),
           ...(group.children?.length && {
             children: group.children.map((child) => ({
               label: child.label,
@@ -98,7 +96,7 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
       items.push({
         label: group.label,
         to: group.link === 'section' ? node.path : firstLeaf(node),
-        active: (group.sections ?? []).includes(seg),
+        active: isNavGroupActive(group, route.path, base),
       })
     }
 
