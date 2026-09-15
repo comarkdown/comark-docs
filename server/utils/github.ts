@@ -260,19 +260,3 @@ export async function resolvePullPreviewSha(number: number): Promise<string> {
   await refStorage.setItem(key, sha, { ttl: PREVIEW_REF_TTL })
   return sha
 }
-
-export interface PageCommit {
-  sha: string
-  shortSha: string
-  message: string
-  author?: string
-  avatarUrl?: string
-  date?: string
-  current?: boolean
-}
-
-/** Flag the newest commit — the version this page currently renders. */
-export function withCurrentVersion(commits: PageCommit[]): PageCommit[] {
-  if (!commits.length) return commits
-  return [{ ...commits[0]!, current: true }, ...commits.slice(1)]
-}

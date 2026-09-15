@@ -1,21 +1,20 @@
 <script setup lang="ts">
-interface PageCommit {
-  sha: string
-  shortSha: string
-  message: string
-  author?: string
-  avatarUrl?: string
-  date?: string
-  current?: boolean
-}
-
 const open = useVersionHistory()
 const isProductionDeployment = useRuntimeConfig().public.vercelEnv === 'production'
 
 const content = useDocsContent()
 const route = useRoute()
-const commits = ref<PageCommit[]>([])
+const history = ref<PageHistory>()
 const pending = ref(false)
+
+const commits = computed(() => history.value?.commits ?? [])
+const showBranchBadge = computed(
+  () => history.value?.defaultBranch && history.value.defaultBranch !== history.value.branch
+)
+const branchLabel = computed(() => {
+  if (!history.value) return ''
+  return `${isProductionDeployment ? 'Production' : 'Preview'} · ${history.value.branch}`
+})
 
 /** Path the current `commits` belong to, so a reopen on the same page is free. */
 const loadedPath = ref<string>()
@@ -24,9 +23,9 @@ async function loadHistory() {
   const path = content.value.path
   pending.value = true
   try {
-    commits.value = await $fetch<PageCommit[]>('/api/history', { query: { path } })
+    history.value = await $fetch<PageHistory>('/api/history', { query: { path } })
   } catch {
-    commits.value = []
+    history.value = undefined
   } finally {
     loadedPath.value = path
     pending.value = false
@@ -75,6 +74,19 @@ function formatDate(date?: string) {
     :overlay="false"
     :modal="false"
   >
+    <template #description>
+      <span class="flex flex-col gap-3">
+        <span class="text-2xs">{{ branchLabel }}</span>
+        <span class="inline-flex items-center gap-1 text-xs text-muted">
+          <UIcon
+            name="i-lucide-triangle-alert"
+            class="size-3 shrink-0"
+          />
+          Only the commits that changed this page are listed.
+        </span>
+      </span>
+    </template>
+
     <template #body>
       <p
         v-if="pending"
@@ -83,53 +95,71 @@ function formatDate(date?: string) {
         Loading…
       </p>
 
-      <p
-        v-else-if="!commits.length"
-        class="text-sm text-muted"
-      >
-        No version history for this page.
-      </p>
-
-      <ul
-        v-else
-        class="space-y-1 -mx-2.5"
-      >
-        <li
-          v-for="commit in commits"
-          :key="commit.sha"
+      <template v-else>
+        <p
+          v-if="!commits.length"
+          class="text-sm text-muted"
         >
-          <button
-            type="button"
-            class="w-full rounded-md px-3 py-2 text-left text-sm"
-            :class="isActive(commit) ? 'bg-elevated' : 'hover:bg-elevated/50'"
-            @click="select(commit)"
+          No version history for this page.
+        </p>
+
+        <ul
+          v-else
+          class="space-y-1 -mx-2.5"
+        >
+          <li
+            v-for="commit in commits"
+            :key="commit.sha"
           >
-            <span class="w-full flex flex-col gap-1">
-              <span class="inline-flex items-center gap-2">
-                <span class="font-medium text-default">{{ formatDate(commit.date) }}</span>
-                <UBadge
-                  v-if="commit.current"
-                  color="primary"
-                  size="sm"
-                  :label="isProductionDeployment ? 'Production' : 'Current'"
-                  class="rounded-full"
+            <button
+              type="button"
+              class="w-full rounded-md px-3 py-2 text-left text-sm"
+              :class="isActive(commit) ? 'bg-elevated' : 'hover:bg-elevated/50'"
+              @click="select(commit)"
+            >
+              <span class="w-full flex flex-col gap-1">
+                <span class="inline-flex items-center gap-2">
+                  <span class="font-medium text-default">{{ formatDate(commit.date) }}</span>
+                  <UBadge
+                    v-if="commit.current"
+                    color="primary"
+                    size="sm"
+                    label="Live"
+                    class="rounded-full"
+                  />
+                  <UBadge
+                    v-if="showBranchBadge && commit.branchOnly"
+                    color="neutral"
+                    variant="outline"
+                    size="sm"
+                    :label="history?.branch"
+                    class="rounded-full"
+                  />
+                  <UBadge
+                    v-if="commit.mainLatest && !commit.current"
+                    color="neutral"
+                    variant="outline"
+                    size="sm"
+                    :label="`${history?.defaultBranch} latest`"
+                    class="rounded-full"
+                  />
+                </span>
+                <span class="block truncate text-sm text-toned">{{ commit.message }}</span>
+                <UUser
+                  :avatar="{
+                    src: commit.avatarUrl,
+                    alt: commit.author,
+                    class: 'text-[10px] ' + (isActive(commit) ? 'bg-muted dark:bg-muted' : 'dark:bg-dimmed'),
+                  }"
+                  :name="commit.author"
+                  size="2xs"
+                  :ui="{ wrapper: 'gap-0' }"
                 />
               </span>
-              <span class="block truncate text-sm text-toned">{{ commit.message }}</span>
-              <UUser
-                :avatar="{
-                  src: commit.avatarUrl,
-                  alt: commit.author,
-                  class: 'text-[10px] ' + (isActive(commit) ? 'bg-muted dark:bg-muted' : 'dark:bg-dimmed'),
-                }"
-                :name="commit.author"
-                size="2xs"
-                :ui="{ wrapper: 'gap-0' }"
-              />
-            </span>
-          </button>
-        </li>
-      </ul>
+            </button>
+          </li>
+        </ul>
+      </template>
     </template>
   </USlideover>
 </template>

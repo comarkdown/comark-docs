@@ -4,16 +4,6 @@ import { withLeadingSlash } from 'ufo'
  * Commit history for a single content page.
  */
 
-interface PageCommit {
-  sha: string
-  shortSha: string
-  message: string
-  author?: string
-  avatarUrl?: string
-  date?: string
-  current?: boolean
-}
-
 interface GraphQLCommitNode {
   oid: string
   messageHeadline: string
@@ -27,6 +17,10 @@ interface GraphQLCommitNode {
 interface GraphQLHistoryResponse {
   data?: {
     repository?: {
+      defaultBranchRef?: {
+        name: string
+        target?: { history?: { nodes: Array<{ oid: string }> } }
+      }
       object?: {
         history?: { nodes: GraphQLCommitNode[] }
       }
@@ -40,6 +34,12 @@ const HISTORY_LIMIT = 10
 const HISTORY_QUERY = `
 query($owner:String!,$repo:String!,$rev:String!,$path:String!,$limit:Int!){
   repository(owner:$owner,name:$repo){
+    defaultBranchRef{
+      name
+      target{
+        ... on Commit { history(first:$limit, path:$path){ nodes{ oid } } }
+      }
+    }
     object(expression:$rev){
       ... on Commit {
         history(first:$limit, path:$path){
@@ -59,30 +59,43 @@ const toCommit = (c: GraphQLCommitNode): PageCommit => ({
   date: c.committedDate,
 })
 
-export default defineEventHandler(async (event): Promise<PageCommit[]> => {
+export default defineEventHandler(async (event): Promise<PageHistory> => {
   const raw = getQuery(event).path
   const path = typeof raw === 'string' && raw ? withLeadingSlash(raw) : '/'
 
   const content = await getProdContent()
+  const branch = targetBranch()
 
   const item = await content.get(path)
-  if (!item || item.meta.kind !== 'document') return []
+  if (!item || item.meta.kind !== 'document') return { branch, commits: [] }
 
   const repoPath = `${contentPrefix()}${item.meta.stem}${item.meta.extension}`
 
-  // Development: read history from the local git repo (no GitHub envs needed).
+  /*
+  * DEVELOPMENT: read history from the local git repo (no GitHub envs needed).
+  */
   if (import.meta.dev) {
-    const file = await gitLocalFileHistory(repoPath, HISTORY_LIMIT)
-    return withCurrentVersion(file)
+    const defaultBranch = await gitLocalDefaultBranch()
+    const [file, defaultFile] = await Promise.all([
+      gitLocalFileHistory(repoPath, HISTORY_LIMIT),
+      gitLocalFileHistory(repoPath, HISTORY_LIMIT, `refs/remotes/origin/${defaultBranch}`),
+    ])
+    const defaultShas = new Set(defaultFile.map((c) => c.sha))
+    const commits = withMainLatest(withBranchOnly(withCurrentVersion(file), defaultShas), defaultFile[0]?.sha)
+    return { branch, defaultBranch, commits }
   }
 
-  const rev = targetBranch()
+  /*
+  * PRODUCTION: read history from the GitHub API.
+  */
   const [owner, repo] = githubRepo().split('/')
+  const cache = branchCacheStorage(branch)
+  const cacheKey = `gh:history:v7:${repoPath}`
 
-  const cache = branchCacheStorage(rev)
-  const cacheKey = `gh:history:v4:${repoPath}`
-  const cached = await cache.getItem<PageCommit[]>(cacheKey)
-  if (cached) return cached
+  const cached = await cache.getItem<{ defaultBranch?: string; commits: PageCommit[] }>(cacheKey)
+  if (cached) {
+    return { branch, defaultBranch: cached.defaultBranch, commits: cached.commits }
+  }
 
   try {
     const res = await $fetch<GraphQLHistoryResponse>('https://api.github.com/graphql', {
@@ -93,7 +106,7 @@ export default defineEventHandler(async (event): Promise<PageCommit[]> => {
       },
       body: {
         query: HISTORY_QUERY,
-        variables: { owner, repo, rev, path: repoPath, limit: HISTORY_LIMIT },
+        variables: { owner, repo, rev: branch, path: repoPath, limit: HISTORY_LIMIT },
       },
     })
 
@@ -101,14 +114,22 @@ export default defineEventHandler(async (event): Promise<PageCommit[]> => {
       throw new Error(res.errors.map((e) => e.message).join('; '))
     }
 
-    const nodes = res.data?.repository?.object?.history?.nodes ?? []
-    const history = withCurrentVersion(nodes.map(toCommit))
+    const repository = res.data?.repository
+    const defaultBranch = repository?.defaultBranchRef?.name
+    const nodes = repository?.object?.history?.nodes ?? []
+    let commits = withCurrentVersion(nodes.map(toCommit))
 
-    await cache.setItem(cacheKey, history)
+    if (defaultBranch && defaultBranch !== branch) {
+      const defaultNodes = repository?.defaultBranchRef?.target?.history?.nodes ?? []
+      const defaultShas = new Set(defaultNodes.map((n) => n.oid))
+      commits = withMainLatest(withBranchOnly(commits, defaultShas), defaultNodes[0]?.oid)
+    }
 
-    return history
+    await cache.setItem(cacheKey, { defaultBranch, commits })
+
+    return { branch, defaultBranch, commits }
   } catch (error) {
     console.error(`[history] failed for ${repoPath}`, error)
-    return []
+    return { branch, commits: [] }
   }
 })
