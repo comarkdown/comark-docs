@@ -19,7 +19,8 @@ export function isNavGroupActive(
 ): boolean {
   const seg = segmentOf(path, base)
   if (group.sections?.length) return group.sections.includes(seg)
-  if (group.to) return seg === segmentOf(group.activePath ?? group.to, base)
+  // A manual target may carry a query or hash (`/play?example=basic`); only its path names a segment.
+  if (group.to) return seg === segmentOf((group.activePath ?? group.to).split(/[?#]/)[0]!, base)
   return false
 }
 

@@ -210,6 +210,8 @@ describe('isNavGroupActive', () => {
     expect(isNavGroupActive({ to: '/play' }, '/play', '')).toBe(true)
     expect(isNavGroupActive({ to: '/play' }, '/play/booking', '')).toBe(true)
     expect(isNavGroupActive({ to: '/play?example=basic', activePath: '/play' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play?example=basic' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play#demo' }, '/play/booking', '')).toBe(true)
     expect(isNavGroupActive({ to: '/play' }, '/syntax', '')).toBe(false)
   })
 
