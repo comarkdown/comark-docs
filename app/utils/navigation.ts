@@ -1,6 +1,5 @@
 import type { NavigationItem } from 'comark-content'
 import type { RouteLocationNormalized } from 'vue-router'
-import type { NavGroup } from '../composables/useNavigation'
 
 /** Logical top-level segment of a path, ignoring the active version `base`. */
 export function segmentOf(path: string, base: string): string {
@@ -8,18 +7,24 @@ export function segmentOf(path: string, base: string): string {
   return rel.split('/').filter(Boolean)[0] ?? ''
 }
 
+/** What decides whether a header tab is active. */
+export interface NavGroupTarget {
+  /** Top-level content sections the tab owns. */
+  sections?: string[]
+  /** Explicit link target. */
+  to?: string
+  /** Path prefix that marks the tab active; defaults to `to`. */
+  activePath?: string
+}
+
 /**
- * Whether a header tab is active on `path`. A tab with `sections` is active on any of them, whatever it
- * links to; a manual tab is active under `activePath`, or under its own `to`.
+ * Whether a header tab is active on `path`: on any of its `sections`, and under `activePath` or its
+ * own `to` (a target that renders a page rather than redirecting).
  */
-export function isNavGroupActive(
-  group: Pick<NavGroup, 'to' | 'activePath' | 'sections'>,
-  path: string,
-  base: string
-): boolean {
+export function isNavGroupActive(group: NavGroupTarget, path: string, base: string): boolean {
   const seg = segmentOf(path, base)
-  if (group.sections?.length) return group.sections.includes(seg)
-  // A manual target may carry a query or hash (`/play?example=basic`); only its path names a segment.
+  if (group.sections?.includes(seg)) return true
+  // A target may carry a query or hash (`/play?example=basic`); only its path names a segment.
   if (group.to) return seg === segmentOf((group.activePath ?? group.to).split(/[?#]/)[0]!, base)
   return false
 }

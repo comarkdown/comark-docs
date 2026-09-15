@@ -2,8 +2,9 @@ import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import type { NavigationItem } from 'comark-content'
 import type { NavigationMenuItem } from '@nuxt/ui/components/NavigationMenu.vue'
 import { isNavGroupActive, segmentOf } from '../utils/navigation'
+import type { NavGroupTarget } from '../utils/navigation'
 
-export interface NavGroup {
+export interface NavGroup extends NavGroupTarget {
   label: string
   /** Top-level content sections grouped under this tab. */
   sections?: string[]
@@ -11,10 +12,10 @@ export interface NavGroup {
   link?: 'first-leaf' | 'section'
   /**
    * Explicit link target. Alone it makes a manual tab backed by an app route; together with `sections`
-   * the tab still owns those sections for its active state and the sidebar, only the link changes.
+   * the tab still owns those sections for the sidebar and its active state, and is also active under `to`.
    */
   to?: string
-  /** Path prefix that marks a manual tab active; defaults to `to`. Ignored when `sections` is set. */
+  /** Path prefix that marks the tab active; defaults to `to`. */
   activePath?: string
   /** Dropdown items for a manual tab. */
   children?: NavGroupChild[]

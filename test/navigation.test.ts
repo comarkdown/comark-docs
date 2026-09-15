@@ -200,10 +200,18 @@ describe('isNavGroupActive', () => {
     expect(isNavGroupActive(group, '/plugins', '')).toBe(false)
   })
 
-  it('keeps the sections for a tab that links elsewhere', () => {
-    const group = { to: '/docs', sections: ['getting-started', 'syntax'] }
+  it('keeps the sections for a tab that links elsewhere and is active under its target too', () => {
+    const group = { to: '/guide', sections: ['getting-started', 'syntax'] }
     expect(isNavGroupActive(group, '/getting-started/introduction', '')).toBe(true)
-    expect(isNavGroupActive(group, '/docs', '')).toBe(false)
+    expect(isNavGroupActive(group, '/guide', '')).toBe(true)
+    expect(isNavGroupActive(group, '/plugins', '')).toBe(false)
+  })
+
+  it('lets activePath decide for a sections tab outside its sections', () => {
+    const group = { to: '/guide', sections: ['syntax'], activePath: '/handbook' }
+    expect(isNavGroupActive(group, '/syntax/markdown', '')).toBe(true)
+    expect(isNavGroupActive(group, '/handbook/intro', '')).toBe(true)
+    expect(isNavGroupActive(group, '/guide', '')).toBe(false)
   })
 
   it('marks a manual tab active under its link or activePath', () => {
