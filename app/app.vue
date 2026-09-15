@@ -97,9 +97,8 @@ defineShortcuts({
 
     <AppFooter />
 
-    <AppSearch :navigation="navTree" />
-
     <ClientOnly>
+      <AppSearch :navigation="navTree" />
       <LazyVersionHistory />
       <LazyAssistantChat v-if="assistant?.enabled && assistantMounted" />
     </ClientOnly>

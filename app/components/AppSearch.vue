@@ -54,14 +54,13 @@ const groups = computed(() => {
 </script>
 
 <template>
-  <ClientOnly v-if="available">
-    <LazyUContentSearch
-      :search="search"
-      :search-status="status"
-      :navigation="navigation"
-      :groups="groups"
-      :transition="false"
-      :loading="status === 'loading'"
-    />
-  </ClientOnly>
+  <LazyUContentSearch
+    v-if="available"
+    :search="search"
+    :search-status="status"
+    :navigation="navigation"
+    :groups="groups"
+    :transition="false"
+    :loading="status === 'loading'"
+  />
 </template>
