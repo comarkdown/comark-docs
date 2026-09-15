@@ -1,6 +1,6 @@
 /**
  * Per-pull-request data endpoint: `/pr/:number` previews the PR's head commit. Follows new pushes
- * (the number → head SHA pointer lives in the short-TTL ref cache) and enforces the preview
+ * (the number → head SHA pointer lives in the 10-minute ref cache) and enforces the preview
  * authorization: same-repo PRs always, fork PRs only with the `preview:enabled` label.
  */
 export default defineEventHandler(async (event) => {
@@ -17,7 +17,5 @@ export default defineEventHandler(async (event) => {
   }
 
   const sha = await resolvePullPreviewSha(number)
-  const content = await getPreviewContent(sha, `/api/content/pr/${number}`)
-
-  return await content.handler(toWebRequest(event))
+  return servePreview(event, sha, `/pr/${rawNumber}`)
 })

@@ -1,31 +1,27 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
-import type { SearchSection } from './utils/search-sections'
+import { useRoute } from 'vue-router'
 
 const { seo, docs } = useAppConfig()
 
 const content = useDocsContent()
 const route = useRoute()
 
-const { data: navigation } = await useAsyncData('navigation', () => content.value.client.navigation(), {
-  watch: [() => content.value.base],
-})
-const {
-  data: files,
-  status,
-  execute: loadSearchSections,
-} = useLazyAsyncData('search-sections', () => content.value.client.searchSections(), {
-  server: false,
-  watch: [() => content.value.base],
-  immediate: false,
-})
-
-onNuxtReady(() => loadSearchSections())
+const [{ data: navigation }, { data: sha }] = await Promise.all([
+  useAsyncData('navigation', () => content.value.client.navigation(), {
+    watch: [() => content.value.routeBase],
+  }),
+  useAsyncData(
+    () => `content-head:${content.value.apiBase}`,
+    () => $fetch<{ sha: string | null }>(`${content.value.apiBase}/head`).then(({ sha }) => sha),
+    { default: () => null, watch: [() => content.value.apiBase] }
+  ),
+])
 
 const nuxtApp = useNuxtApp()
-const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.base))
+const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.routeBase))
 const resolveNavigationLayout = () => {
-  return resolveRouteLayout(navigation.value, route, content.value.base ? content.value.path : route.path)
+  return resolveRouteLayout(navigation.value, route, content.value.routeBase ? content.value.path : route.path)
 }
 const navigationLayout = ref(resolveNavigationLayout())
 onNuxtReady(() => {
@@ -33,12 +29,6 @@ onNuxtReady(() => {
     navigationLayout.value = resolveNavigationLayout()
   })
 })
-const searchFiles = computed<SearchSection[]>(() =>
-  (files.value ?? []).map((section) => {
-    const [path, hash] = section.id.split('#')
-    return { ...section, id: prefixLink(path!, content.value.base) + (hash ? `#${hash}` : '') }
-  })
-)
 
 useHead({
   meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
@@ -64,8 +54,8 @@ useSeoMeta({
 
 provide('navigation', navTree)
 provide('layout', navigationLayout)
+provide('sha', sha)
 
-// const colorMode = useColorMode()
 const historyOpen = useVersionHistory()
 
 const { assistant } = useAppConfig()
@@ -108,13 +98,7 @@ defineShortcuts({
     <AppFooter />
 
     <ClientOnly>
-      <LazyUContentSearch
-        :files="searchFiles"
-        :navigation="navTree"
-        :transition="false"
-        :loading="status !== 'success'"
-        :placeholder="status !== 'success' ? 'Loading...' : undefined"
-      />
+      <AppSearch :navigation="navTree" />
       <LazyVersionHistory />
       <LazyAssistantChat v-if="assistant?.enabled && assistantMounted" />
     </ClientOnly>

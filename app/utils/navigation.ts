@@ -23,7 +23,7 @@ function walk(items: NavigationItem[], path: string): boolean {
   return false
 }
 
-export { findFirstLeaf } from '../../utils/first-leaf'
+export { findFirstLeaf } from '../../utils/navigation'
 
 export interface BreadcrumbItem {
   title: string

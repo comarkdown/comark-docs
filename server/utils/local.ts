@@ -1,10 +1,9 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import type { Source } from 'comark-content'
-import type { PageCommit } from './github'
 
 const exec = promisify(execFile)
-/** Root of the git repository holding the content (resolved at build time by modules/config.ts). */
+/** Root of the git repository holding the content (resolved at build time by modules/config/). */
 function repoRoot(): string {
   return useRuntimeConfig().docs.repoRoot
 }
@@ -19,7 +18,7 @@ const MAX_BUFFER = 64 * 1024 * 1024
  * and `git show` accepts diff options including `--output=<file>`. Don't swap it for `--`:
  * `<rev>:<path>` is an object spec, so `git show -- HEAD:file` reads it as a pathspec, emitting nothing.
  */
-async function resolveGitRef(ref: string): Promise<string> {
+export async function resolveGitRef(ref: string): Promise<string> {
   const candidates = [`refs/heads/${ref}`, `refs/remotes/origin/${ref}`, ref]
 
   for (const candidate of candidates) {
@@ -79,12 +78,13 @@ export function gitLocalSource(ref: string, dir: string): Source {
 }
 
 /** The commits that touched a repo file, newest first (local equivalent of the GitHub commits API). */
-export async function gitLocalFileHistory(repoPath: string, limit = 5): Promise<PageCommit[]> {
+export async function gitLocalFileHistory(repoPath: string, limit = 5, rev = 'HEAD'): Promise<PageCommit[]> {
   try {
-    const { stdout } = await exec('git', ['log', `-n${limit}`, '--format=%H%x1f%an%x1f%aI%x1f%s', '--', repoPath], {
-      cwd: repoRoot(),
-      maxBuffer: MAX_BUFFER,
-    })
+    const { stdout } = await exec(
+      'git',
+      ['log', `-n${limit}`, '--format=%H%x1f%an%x1f%aI%x1f%s', rev, '--', repoPath],
+      { cwd: repoRoot(), maxBuffer: MAX_BUFFER }
+    )
     return stdout
       .split('\n')
       .filter(Boolean)
@@ -93,22 +93,20 @@ export async function gitLocalFileHistory(repoPath: string, limit = 5): Promise<
         return { sha, shortSha: sha.slice(0, 7), message, author, date }
       })
   } catch (error) {
-    console.error(`[history] git log failed for ${repoPath}`, error)
+    console.error(`[history] git log failed for ${rev}:${repoPath}`, error)
     return []
   }
 }
 
-/** The current HEAD commit (the local stand-in for the production deploy commit). */
-export async function gitLocalHeadCommit(): Promise<PageCommit | null> {
+/** The repo's default branch name, dev-only (mirrors `defaultBranchRef` from the GitHub API). */
+export async function gitLocalDefaultBranch(): Promise<string> {
   try {
-    const { stdout } = await exec('git', ['log', '-1', '--format=%H%x1f%an%x1f%aI%x1f%s', 'HEAD'], {
+    const { stdout } = await exec('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], {
       cwd: repoRoot(),
       maxBuffer: MAX_BUFFER,
     })
-    const [sha = '', author, date, message = ''] = stdout.trim().split('\x1F')
-    return sha ? { sha, shortSha: sha.slice(0, 7), message, author, date } : null
-  } catch (error) {
-    console.error('[history] git HEAD lookup failed', error)
-    return null
+    return stdout.trim().replace(/^origin\//, '') || 'main'
+  } catch {
+    return 'main'
   }
 }

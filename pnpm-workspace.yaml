@@ -10,7 +10,8 @@ blockExoticSubdeps: false
 
 minimumReleaseAgeExclude:
   # First-party packages, published and consumed here in the same session.
-  - '@comark/*'
+  - '@comark/nuxt'
+  - '@comark/vue'
   - comark
   - comark-content
   - nuxt-agent-discovery
@@ -18,3 +19,4 @@ minimumReleaseAgeExclude:
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
+  comark: ^0.7.0

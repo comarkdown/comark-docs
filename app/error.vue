@@ -16,12 +16,17 @@ useSeoMeta({
   description: 'We are sorry but this page could not be found.',
 })
 
-const { data: navigation } = await useAsyncData('navigation', () => prodContent.navigation())
-const { data: files } = useLazyAsyncData('search-sections', () => prodContent.searchSections(), {
-  server: false,
-})
+const [{ data: navigation }, { data: sha }] = await Promise.all([
+  useAsyncData('navigation', () => prodContent.navigation()),
+  useAsyncData(
+    'content-head-sha',
+    () => $fetch<{ sha: string | null }>('/api/content/head').then(({ sha }) => sha),
+    { default: () => null }
+  ),
+])
 
 provide('navigation', navigation)
+provide('sha', sha)
 </script>
 
 <template>
@@ -32,11 +37,6 @@ provide('navigation', navigation)
 
     <AppFooter />
 
-    <ClientOnly>
-      <LazyUContentSearch
-        :files="files ?? []"
-        :navigation="navigation ?? []"
-      />
-    </ClientOnly>
+    <AppSearch :navigation="navigation ?? []" />
   </UApp>
 </template>

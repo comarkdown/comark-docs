@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseMarkdown } from 'comark'
 import rangi from 'comark/plugins/rangi'
-import { geistDark, geistLight, geistTheme } from '../utils/geist-theme'
+import { geistDark, geistLight, geistTheme } from '../utils/geist'
 
 describe('Geist syntax theme', () => {
   it('uses the live Geist light syntax roles', () => {
