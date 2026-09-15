@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
 import type { SearchSection } from './utils/search-sections'
-import { useRoute } from 'vue-router'
 
 const { seo, docs } = useAppConfig()
 
