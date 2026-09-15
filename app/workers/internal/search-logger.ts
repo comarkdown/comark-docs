@@ -3,7 +3,6 @@
  *
  * Triggered by `?debug=search` param.
  */
-import { DEFAULT_CONTENT_NAME } from 'comark-content/runtime'
 import type { ContentFile, Logger, RelationalDatabase } from 'comark-content/runtime'
 
 const PREFIX = '[search:worker]'
@@ -39,35 +38,27 @@ export const logger: Logger = {
   error: (tag, ...args) => console.error(`${PREFIX} ${tag}:`, ...args),
 }
 
-/**
- * What a decoded artifact holds: a snapshot decodes to the source's items, the manifest to an object
- * keyed by path. `with nodes` is the number that matters — the FTS plugin indexes
- * `kind === 'document' && nodes?.length`, so a bodies-less (partial) snapshot builds an empty index.
- */
 export function describeArtifact(decoded: unknown): string {
-  if (Array.isArray(decoded)) {
-    const items = decoded as ContentFile[]
+  const raw = Array.isArray(decoded) ? decoded : (decoded as { items?: unknown } | null)?.items
+  if (Array.isArray(raw)) {
+    const items = raw as ContentFile[]
     const documents = items.filter((item) => item.meta.kind === 'document')
     const withNodes = documents.filter((item) => item.nodes?.length)
     return `${items.length} item(s), ${documents.length} document(s), ${withNodes.length} with nodes`
   }
-  const items = (decoded as { items?: Record<string, unknown> } | null)?.items
-  return `${items ? Object.keys(items).length : 0} manifest item(s)`
-}
-
-/** Mirrors the FTS plugin's `ownId` convention */
-function sourceIdFor(sha: string | null): string {
-  return sha ? `${DEFAULT_CONTENT_NAME}@${sha}` : DEFAULT_CONTENT_NAME
+  return `${raw ? Object.keys(raw as Record<string, unknown>).length : 0} manifest item(s)`
 }
 
 /**
- * Rows in the FTS plugin's index — the one number that separates "nothing was indexed" from "the
- * query found nothing", since `search()` catches SQL errors and returns `[]` either way. Reads the
- * plugin's private table, so it is a diagnostic, not something to build on.
+ * Mirrors the FTS plugin's `ownId` convention
  */
-export async function indexedRows(database: RelationalDatabase, sha: string | null): Promise<number | string> {
+function sourceIdFor(content: { name: string, key: string }): string {
+  return content.key ? `${content.name}@${content.key}` : content.name
+}
+
+export async function indexedRows(database: RelationalDatabase, content: { name: string, key: string }): Promise<number | string> {
   try {
-    const rows = await database.all<{ n: number }>('SELECT count(*) as n FROM __fts_search WHERE source = ?', [sourceIdFor(sha)])
+    const rows = await database.all<{ n: number }>('SELECT count(*) as n FROM __fts_search WHERE source = ?', [sourceIdFor(content)])
     return rows?.[0]?.n ?? 'unknown'
   } catch (error) {
     return `unknown (${error instanceof Error ? error.message : String(error)})`

@@ -125,7 +125,7 @@ async function loadInstance(target: SearchTarget): Promise<SearchInstance> {
 
     const indexStarted = performance.now()
     await content.search('') // pulls the snapshot in and builds the FTS index
-    const rows = await indexedRows(database, target.sha)
+    const rows = await indexedRows(database, content)
     log(`index built in ${since(indexStarted)} for ${target.apiBase} — ${rows} row(s)`)
 
     log(`ready in ${since(started)} (${target.isPreview ? 'preview' : 'prod'} ${target.sha ?? 'unpinned'})`)
