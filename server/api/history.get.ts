@@ -11,6 +11,7 @@ interface PageCommit {
   author?: string
   avatarUrl?: string
   date?: string
+  current?: boolean
 }
 
 interface GraphQLCommitNode {
@@ -26,8 +27,7 @@ interface GraphQLCommitNode {
 interface GraphQLHistoryResponse {
   data?: {
     repository?: {
-      // The head commit itself (production), plus the file's change history.
-      object?: GraphQLCommitNode & {
+      object?: {
         history?: { nodes: GraphQLCommitNode[] }
       }
     }
@@ -42,7 +42,6 @@ query($owner:String!,$repo:String!,$rev:String!,$path:String!,$limit:Int!){
   repository(owner:$owner,name:$repo){
     object(expression:$rev){
       ... on Commit {
-        oid messageHeadline committedDate author{ name user{ login avatarUrl(size:56) } }
         history(first:$limit, path:$path){
           nodes{ oid messageHeadline committedDate author{ name user{ login avatarUrl(size:56) } } }
         }
@@ -73,15 +72,15 @@ export default defineEventHandler(async (event): Promise<PageCommit[]> => {
 
   // Development: read history from the local git repo (no GitHub envs needed).
   if (import.meta.dev) {
-    const [head, file] = await Promise.all([gitLocalHeadCommit(), gitLocalFileHistory(repoPath, HISTORY_LIMIT)])
-    return withProductionHead(head, file)
+    const file = await gitLocalFileHistory(repoPath, HISTORY_LIMIT)
+    return withCurrentVersion(file)
   }
 
-  const rev = getHeadRef()
+  const rev = targetBranch()
   const [owner, repo] = githubRepo().split('/')
 
-  const cache = shaCacheStorage(rev)
-  const cacheKey = `gh:history:v3:${repoPath}`
+  const cache = branchCacheStorage(rev)
+  const cacheKey = `gh:history:v4:${repoPath}`
   const cached = await cache.getItem<PageCommit[]>(cacheKey)
   if (cached) return cached
 
@@ -102,12 +101,10 @@ export default defineEventHandler(async (event): Promise<PageCommit[]> => {
       throw new Error(res.errors.map((e) => e.message).join('; '))
     }
 
-    const object = res.data?.repository?.object
-    const head = object ? toCommit(object) : null
-    const file = (object?.history?.nodes ?? []).map(toCommit)
-    const history = withProductionHead(head, file)
+    const nodes = res.data?.repository?.object?.history?.nodes ?? []
+    const history = withCurrentVersion(nodes.map(toCommit))
 
-    await cache.setItem(cacheKey, history, { ttl: 300 })
+    await cache.setItem(cacheKey, history)
 
     return history
   } catch (error) {

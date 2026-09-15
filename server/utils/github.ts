@@ -268,13 +268,11 @@ export interface PageCommit {
   author?: string
   avatarUrl?: string
   date?: string
-  /** The version production currently serves (the head commit). */
-  production?: boolean
+  current?: boolean
 }
 
-/** Lead the list with the head commit, flagged, deduped against the file history. */
-export function withProductionHead(head: PageCommit | null, commits: PageCommit[]): PageCommit[] {
-  if (!head) return commits
-  const rest = commits.filter((c) => c.sha !== head.sha)
-  return [{ ...head, production: true }, ...rest]
+/** Flag the newest commit — the version this page currently renders. */
+export function withCurrentVersion(commits: PageCommit[]): PageCommit[] {
+  if (!commits.length) return commits
+  return [{ ...commits[0]!, current: true }, ...commits.slice(1)]
 }

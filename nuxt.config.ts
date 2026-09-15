@@ -95,6 +95,7 @@ export default defineNuxtConfig({
       model: 'anthropic/claude-sonnet-5',
     },
     public: {
+      vercelEnv: process.env.VERCEL_ENV || 'development',
       mdc: {
         headings: {
           anchorLinks: {

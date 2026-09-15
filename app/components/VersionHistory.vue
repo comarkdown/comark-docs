@@ -6,10 +6,11 @@ interface PageCommit {
   author?: string
   avatarUrl?: string
   date?: string
-  production?: boolean
+  current?: boolean
 }
 
 const open = useVersionHistory()
+const isProductionDeployment = useRuntimeConfig().public.vercelEnv === 'production'
 
 const content = useDocsContent()
 const route = useRoute()
@@ -52,11 +53,11 @@ function isActive(commit: PageCommit) {
   if (content.value.mode === 'blob' && content.value.ref) {
     return commit.sha === content.value.ref || commit.sha.startsWith(content.value.ref)
   }
-  return content.value.mode === 'prod' && Boolean(commit.production)
+  return content.value.mode === 'prod' && Boolean(commit.current)
 }
 
 function select(commit: PageCommit) {
-  navigateTo(commit.production ? content.value.path : `/blob/${commit.sha}${content.value.path}`)
+  navigateTo(commit.current ? content.value.path : `/blob/${commit.sha}${content.value.path}`)
   open.value = false
 }
 
@@ -107,10 +108,10 @@ function formatDate(date?: string) {
               <span class="inline-flex items-center gap-2">
                 <span class="font-medium text-default">{{ formatDate(commit.date) }}</span>
                 <UBadge
-                  v-if="commit.production"
+                  v-if="commit.current"
                   color="primary"
                   size="sm"
-                  label="Production"
+                  :label="isProductionDeployment ? 'Production' : 'Current'"
                   class="rounded-full"
                 />
               </span>

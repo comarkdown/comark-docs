@@ -97,18 +97,3 @@ export async function gitLocalFileHistory(repoPath: string, limit = 5): Promise<
     return []
   }
 }
-
-/** The current HEAD commit (the local stand-in for the production deploy commit). */
-export async function gitLocalHeadCommit(): Promise<PageCommit | null> {
-  try {
-    const { stdout } = await exec('git', ['log', '-1', '--format=%H%x1f%an%x1f%aI%x1f%s', 'HEAD'], {
-      cwd: repoRoot(),
-      maxBuffer: MAX_BUFFER,
-    })
-    const [sha = '', author, date, message = ''] = stdout.trim().split('\x1F')
-    return sha ? { sha, shortSha: sha.slice(0, 7), message, author, date } : null
-  } catch (error) {
-    console.error('[history] git HEAD lookup failed', error)
-    return null
-  }
-}
