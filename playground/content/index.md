@@ -17,7 +17,7 @@ The first Markdown-driven docs site where content goes live on `git push`. No re
 #links
   :::button
   ---
-  to: /getting-started/introduction
+  to: /docs
   size: lg
   trailing-icon: i-lucide-arrow-right
   ---

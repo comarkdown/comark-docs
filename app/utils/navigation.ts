@@ -1,6 +1,37 @@
 import type { NavigationItem } from 'comark-content'
 import type { RouteLocationNormalized } from 'vue-router'
 
+/** Logical top-level segment of a path, ignoring the active version `base`. */
+export function segmentOf(path: string, base: string): string {
+  const rel = base && path.startsWith(base) ? path.slice(base.length) : path
+  return rel.split('/').filter(Boolean)[0] ?? ''
+}
+
+/** What decides where a header tab links and when it is active. */
+export interface NavGroupTarget {
+  /** Top-level content sections grouped under this tab. */
+  sections?: string[]
+  /**
+   * Explicit link target. Alone it makes a manual tab backed by an app route; together with `sections`
+   * the tab still owns those sections for the sidebar and its active state, and is also active under `to`.
+   */
+  to?: string
+  /** Path prefix that marks the tab active; defaults to `to`. */
+  activePath?: string
+}
+
+/**
+ * Whether a header tab is active on `path`: on any of its `sections`, and under `activePath` or its
+ * own `to` (a target that renders a page rather than redirecting).
+ */
+export function isNavGroupActive(group: NavGroupTarget, path: string, base: string): boolean {
+  const seg = segmentOf(path, base)
+  if (group.sections?.includes(seg)) return true
+  // A target may carry a query or hash (`/play?example=basic`); only its path names a segment.
+  const target = group.activePath ?? group.to
+  return !!target && seg === segmentOf(target.split(/[?#]/)[0]!, base)
+}
+
 export function findPageHeadline(
   navigation: NavigationItem[] | undefined | null,
   path: string | undefined

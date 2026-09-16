@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { findBreadcrumb, findNavigationLayout, findPageHeadline, findSurroundLinks } from '../app/utils/navigation'
+import {
+  findBreadcrumb,
+  findNavigationLayout,
+  findPageHeadline,
+  findSurroundLinks,
+  isNavGroupActive,
+  segmentOf,
+} from '../app/utils/navigation'
 import type { NavigationItem } from 'comark-content'
 
 const nav = [
@@ -171,5 +178,54 @@ describe('findSurroundLinks', () => {
     expect(findSurroundLinks(nav, '/nope')).toEqual([])
     expect(findSurroundLinks(nav, undefined)).toEqual([])
     expect(findSurroundLinks(null, '/a')).toEqual([])
+  })
+})
+
+describe('segmentOf', () => {
+  it('returns the first path segment', () => {
+    expect(segmentOf('/getting-started/installation', '')).toBe('getting-started')
+    expect(segmentOf('/', '')).toBe('')
+  })
+
+  it('ignores the version base', () => {
+    expect(segmentOf('/tree/main/syntax/markdown', '/tree/main')).toBe('syntax')
+    expect(segmentOf('/tree/main', '/tree/main')).toBe('')
+  })
+})
+
+describe('isNavGroupActive', () => {
+  it('marks a sections tab active on any of its sections', () => {
+    const group = { sections: ['getting-started', 'syntax'] }
+    expect(isNavGroupActive(group, '/syntax/markdown', '')).toBe(true)
+    expect(isNavGroupActive(group, '/plugins', '')).toBe(false)
+  })
+
+  it('keeps the sections for a tab that links elsewhere and is active under its target too', () => {
+    const group = { to: '/guide', sections: ['getting-started', 'syntax'] }
+    expect(isNavGroupActive(group, '/getting-started/introduction', '')).toBe(true)
+    expect(isNavGroupActive(group, '/guide', '')).toBe(true)
+    expect(isNavGroupActive(group, '/plugins', '')).toBe(false)
+  })
+
+  it('lets activePath decide for a sections tab outside its sections', () => {
+    const group = { to: '/guide', sections: ['syntax'], activePath: '/handbook' }
+    expect(isNavGroupActive(group, '/syntax/markdown', '')).toBe(true)
+    expect(isNavGroupActive(group, '/handbook/intro', '')).toBe(true)
+    expect(isNavGroupActive(group, '/guide', '')).toBe(false)
+    expect(isNavGroupActive({ sections: ['syntax'], activePath: '/handbook' }, '/handbook/intro', '')).toBe(true)
+  })
+
+  it('marks a manual tab active under its link or activePath', () => {
+    expect(isNavGroupActive({ to: '/play' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play' }, '/play/booking', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play?example=basic', activePath: '/play' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play?example=basic' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play#demo' }, '/play/booking', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play' }, '/syntax', '')).toBe(false)
+  })
+
+  it('respects the version base', () => {
+    expect(isNavGroupActive({ sections: ['syntax'] }, '/tree/main/syntax/markdown', '/tree/main')).toBe(true)
+    expect(isNavGroupActive({ to: '/play' }, '/tree/main/play', '/tree/main')).toBe(true)
   })
 })
