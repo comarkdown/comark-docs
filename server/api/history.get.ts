@@ -81,7 +81,7 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
       gitLocalFileHistory(repoPath, HISTORY_LIMIT, `refs/remotes/origin/${defaultBranch}`),
     ])
     const defaultShas = new Set(defaultFile.map((c) => c.sha))
-    const commits = withMainLatest(withBranchOnly(withCurrentVersion(file), defaultShas), defaultFile[0]?.sha)
+    const commits = withBranchOnly(withCurrentVersion(file), defaultShas)
     return { branch, defaultBranch, commits }
   }
 
@@ -90,7 +90,7 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
   */
   const [owner, repo] = githubRepo().split('/')
   const cache = branchCacheStorage(branch)
-  const cacheKey = `gh:history:v7:${repoPath}`
+  const cacheKey = `gh:history:v8:${repoPath}`
 
   const cached = await cache.getItem<{ defaultBranch?: string; commits: PageCommit[] }>(cacheKey)
   if (cached) {
@@ -120,9 +120,8 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
     let commits = withCurrentVersion(nodes.map(toCommit))
 
     if (defaultBranch && defaultBranch !== branch) {
-      const defaultNodes = repository?.defaultBranchRef?.target?.history?.nodes ?? []
-      const defaultShas = new Set(defaultNodes.map((n) => n.oid))
-      commits = withMainLatest(withBranchOnly(commits, defaultShas), defaultNodes[0]?.oid)
+      const defaultShas = new Set((repository?.defaultBranchRef?.target?.history?.nodes ?? []).map((n) => n.oid))
+      commits = withBranchOnly(commits, defaultShas)
     }
 
     await cache.setItem(cacheKey, { defaultBranch, commits })

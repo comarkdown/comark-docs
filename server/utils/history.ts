@@ -10,12 +10,3 @@ export function withCurrentVersion(commits: PageCommit[]): PageCommit[] {
 export function withBranchOnly(commits: PageCommit[], defaultShas: Set<string>): PageCommit[] {
   return commits.map((commit) => (defaultShas.has(commit.sha) ? commit : { ...commit, branchOnly: true }))
 }
-
-/**
- * Flag the newest commit that touched this page on the default branch.
- * No-ops when `sha` isn't in `commits` — a stale branch whose history doesn't reach that far back.
- */
-export function withMainLatest(commits: PageCommit[], sha: string | undefined): PageCommit[] {
-  if (!sha) return commits
-  return commits.map((commit) => (commit.sha === sha ? { ...commit, mainLatest: true } : commit))
-}

@@ -16,6 +16,12 @@ const branchLabel = computed(() => {
   return `${isProductionDeployment ? 'Production' : 'Preview'} · ${history.value.branch}`
 })
 
+const { github } = useAppConfig()
+const commitUrl = computed(() => {
+  const base = github?.url || (github?.owner && github?.name ? `https://github.com/${github.owner}/${github.name}` : '')
+  return base ? `${base}/commit` : undefined
+})
+
 /** Path the current `commits` belong to, so a reopen on the same page is free. */
 const loadedPath = ref<string>()
 
@@ -111,11 +117,19 @@ function formatDate(date?: string) {
             v-for="commit in commits"
             :key="commit.sha"
           >
-            <button
-              type="button"
-              class="w-full rounded-md px-3 py-2 text-left text-sm"
+            <!--
+              A `div[role=button]`, not a `button`: the GitHub badges below render as real `<a>`s, and an
+              anchor nested inside a native `<button>` is invalid HTML (interactive content in interactive
+              content). `@keydown.stop` on those anchors keeps Enter from also bubbling up to `select()`.
+            -->
+            <div
+              role="button"
+              tabindex="0"
+              class="w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm"
               :class="isActive(commit) ? 'bg-elevated' : 'hover:bg-elevated/50'"
               @click="select(commit)"
+              @keydown.enter="select(commit)"
+              @keydown.space.prevent="select(commit)"
             >
               <span class="w-full flex flex-col gap-1">
                 <span class="inline-flex items-center gap-2">
@@ -128,20 +142,34 @@ function formatDate(date?: string) {
                     class="rounded-full"
                   />
                   <UBadge
-                    v-if="showBranchBadge && commit.branchOnly"
+                    v-if="showBranchBadge && !commit.branchOnly"
+                    :as="commitUrl ? 'a' : 'span'"
+                    :href="commitUrl && `${commitUrl}/${commit.sha}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     color="neutral"
                     variant="outline"
                     size="sm"
-                    :label="history?.branch"
+                    leading-icon="i-simple-icons-github"
+                    :label="history?.defaultBranch"
                     class="rounded-full"
+                    @click.stop
+                    @keydown.stop
                   />
                   <UBadge
-                    v-if="commit.mainLatest && !commit.current"
+                    v-if="showBranchBadge && commit.branchOnly"
+                    :as="commitUrl ? 'a' : 'span'"
+                    :href="commitUrl && `${commitUrl}/${commit.sha}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     color="neutral"
                     variant="outline"
                     size="sm"
-                    :label="`${history?.defaultBranch} latest`"
+                    leading-icon="i-simple-icons-github"
+                    :label="history?.branch"
                     class="rounded-full"
+                    @click.stop
+                    @keydown.stop
                   />
                 </span>
                 <span class="block truncate text-sm text-toned">{{ commit.message }}</span>
@@ -156,7 +184,7 @@ function formatDate(date?: string) {
                   :ui="{ wrapper: 'gap-0' }"
                 />
               </span>
-            </button>
+            </div>
           </li>
         </ul>
       </template>

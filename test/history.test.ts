@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { withBranchOnly, withCurrentVersion, withMainLatest } from '../server/utils/history'
+import { withBranchOnly, withCurrentVersion } from '../server/utils/history'
 import type { PageCommit } from '../shared/types/history'
 
 const commit = (sha: string): PageCommit => ({ sha, shortSha: sha.slice(0, 7), message: sha })
@@ -41,23 +41,5 @@ describe('withBranchOnly', () => {
     // (a file added only on this branch), and every commit shown must then be branch-only.
     const result = withBranchOnly([commit('new-file')], new Set())
     expect(result[0]).toMatchObject({ sha: 'new-file', branchOnly: true })
-  })
-})
-
-describe('withMainLatest', () => {
-  it('flags the commit matching the default branch\'s newest sha', () => {
-    const result = withMainLatest([commit('newer'), commit('older')], 'older')
-    expect(result[0]?.mainLatest).toBeUndefined()
-    expect(result[1]).toMatchObject({ sha: 'older', mainLatest: true })
-  })
-
-  it('leaves commits untouched when unresolved', () => {
-    expect(withMainLatest([commit('aaa')], undefined)[0]?.mainLatest).toBeUndefined()
-  })
-
-  it('no-ops when the sha is not in the list (stale branch)', () => {
-    // The default branch moved past what this branch's history for the page reaches.
-    const result = withMainLatest([commit('aaa'), commit('bbb')], 'not-in-list')
-    expect(result.some((c) => c.mainLatest)).toBe(false)
   })
 })

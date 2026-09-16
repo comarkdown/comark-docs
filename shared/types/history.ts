@@ -10,8 +10,6 @@ export interface PageCommit {
   current?: boolean
   /** On the previewed branch but not (yet) on the default branch. */
   branchOnly?: boolean
-  /** Newest commit that touched this page on the default branch — rendered only when not `current`. */
-  mainLatest?: boolean
 }
 
 /** Response of `/api/history`: a page's commit history plus which branch is deployed. */
