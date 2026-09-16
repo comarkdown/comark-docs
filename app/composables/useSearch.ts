@@ -80,7 +80,7 @@ export function useSearch() {
   }
 
   async function search(query: string, opts?: SearchOptions): Promise<SearchResult[]> {
-    return searchContent(query, opts)
+    return prefixSearchResults(await searchContent(query, opts), content.value.routeBase)
   }
 
   return {
