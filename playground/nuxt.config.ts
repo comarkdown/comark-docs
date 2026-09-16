@@ -1,5 +1,8 @@
 export default defineNuxtConfig({
   extends: ['..'],
+  routeRules: {
+    '/docs': { redirect: '/getting-started/introduction' },
+  },
   site: {
     url: 'https://docs-template.comark.dev',
     name: 'Comark Docs Template',
