@@ -18,5 +18,7 @@ export interface PageHistory {
   branch: string
   /** The repo's default branch, resolved from GitHub — differs from `branch` off a fork/rename. */
   defaultBranch?: string
+  /** The content file's on-disk basename (e.g. `1.introduction.md`), ordering prefix included. */
+  file?: string
   commits: PageCommit[]
 }

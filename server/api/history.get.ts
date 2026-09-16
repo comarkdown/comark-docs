@@ -69,6 +69,7 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
   const item = await content.get(path)
   if (!item || item.meta.kind !== 'document') return { branch, commits: [] }
 
+  const file = `${item.meta.stem.split('/').pop()}${item.meta.extension}`
   const repoPath = `${contentPrefix()}${item.meta.stem}${item.meta.extension}`
 
   /*
@@ -76,13 +77,13 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
   */
   if (import.meta.dev) {
     const defaultBranch = await gitLocalDefaultBranch()
-    const [file, defaultFile] = await Promise.all([
+    const [fileHistory, defaultFile] = await Promise.all([
       gitLocalFileHistory(repoPath, HISTORY_LIMIT),
       gitLocalFileHistory(repoPath, HISTORY_LIMIT, `refs/remotes/origin/${defaultBranch}`),
     ])
     const defaultShas = new Set(defaultFile.map((c) => c.sha))
-    const commits = withBranchOnly(withCurrentVersion(file), defaultShas)
-    return { branch, defaultBranch, commits }
+    const commits = withBranchOnly(withCurrentVersion(fileHistory), defaultShas)
+    return { branch, defaultBranch, file, commits }
   }
 
   /*
@@ -94,7 +95,7 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
 
   const cached = await cache.getItem<{ defaultBranch?: string; commits: PageCommit[] }>(cacheKey)
   if (cached) {
-    return { branch, defaultBranch: cached.defaultBranch, commits: cached.commits }
+    return { branch, defaultBranch: cached.defaultBranch, file, commits: cached.commits }
   }
 
   try {
@@ -126,9 +127,9 @@ export default defineEventHandler(async (event): Promise<PageHistory> => {
 
     await cache.setItem(cacheKey, { defaultBranch, commits })
 
-    return { branch, defaultBranch, commits }
+    return { branch, defaultBranch, file, commits }
   } catch (error) {
     console.error(`[history] failed for ${repoPath}`, error)
-    return { branch, commits: [] }
+    return { branch, file, commits: [] }
   }
 })

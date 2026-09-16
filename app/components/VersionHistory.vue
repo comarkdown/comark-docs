@@ -16,6 +16,8 @@ const branchLabel = computed(() => {
   return `${isProductionDeployment ? 'Production' : 'Preview'} · ${history.value.branch}`
 })
 
+const pageName = computed(() => history.value?.file?.replace(/^\d+\./, '').replace(/\.[^./]+$/, ''))
+
 const { github } = useAppConfig()
 const commitUrl = computed(() => {
   const base = github?.url || (github?.owner && github?.name ? `https://github.com/${github.owner}/${github.name}` : '')
@@ -75,22 +77,16 @@ function formatDate(date?: string) {
 <template>
   <USlideover
     v-model:open="open"
-    title="Version history"
+    :description="branchLabel"
     side="right"
     :overlay="false"
     :modal="false"
   >
-    <template #description>
-      <span class="flex flex-col gap-3">
-        <span class="text-2xs">{{ branchLabel }}</span>
-        <span class="inline-flex items-center gap-1 text-xs text-muted">
-          <UIcon
-            name="i-lucide-triangle-alert"
-            class="size-3 shrink-0"
-          />
-          Only the commits that changed this page are listed.
-        </span>
+    <template #title>
+      <span v-if="pageName">
+        Version history of <code class="text-xs font-mono text-muted">{{ pageName }}</code> page
       </span>
+      <span v-else>Version history</span>
     </template>
 
     <template #body>
