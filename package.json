@@ -45,6 +45,7 @@
     "@iconify-json/simple-icons": "^1.2.93",
     "@iconify-json/vscode-icons": "^1.2.74",
     "@iconify/vue": "^5.0.1",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@nuxt/kit": "^4.5.2",
     "@nuxt/ui": "^4.11.1",
     "@nuxtjs/mcp-toolkit": "^0.18.1",
