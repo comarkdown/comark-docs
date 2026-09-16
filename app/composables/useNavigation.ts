@@ -6,17 +6,8 @@ import type { NavGroupTarget } from '../utils/navigation'
 
 export interface NavGroup extends NavGroupTarget {
   label: string
-  /** Top-level content sections grouped under this tab. */
-  sections?: string[]
   /** Where the tab links: the first leaf page of the first section (default) or the section index page. */
   link?: 'first-leaf' | 'section'
-  /**
-   * Explicit link target. Alone it makes a manual tab backed by an app route; together with `sections`
-   * the tab still owns those sections for the sidebar and its active state, and is also active under `to`.
-   */
-  to?: string
-  /** Path prefix that marks the tab active; defaults to `to`. */
-  activePath?: string
   /** Dropdown items for a manual tab. */
   children?: NavGroupChild[]
 }
@@ -122,11 +113,10 @@ export function useFilteredNavigation(): ComputedRef<NavigationItem[]> {
 
   return computed<NavigationItem[]>(() => {
     const base = content.value.base
-    const seg = segmentOf(route.path, base)
     const nav = navigation.value ?? []
 
     const groups = navGroups(nav, base)
-    const active = groups.find((group) => group.sections?.includes(seg)) ?? groups[0]
+    const active = groups.find((group) => isNavGroupActive(group, route.path, base)) ?? groups[0]
     const sections = active?.sections
     // Manual tabs (no sections) have no content sidebar; fall back to the full tree.
     if (!sections?.length) return nav

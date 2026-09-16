@@ -7,11 +7,14 @@ export function segmentOf(path: string, base: string): string {
   return rel.split('/').filter(Boolean)[0] ?? ''
 }
 
-/** What decides whether a header tab is active. */
+/** What decides where a header tab links and when it is active. */
 export interface NavGroupTarget {
-  /** Top-level content sections the tab owns. */
+  /** Top-level content sections grouped under this tab. */
   sections?: string[]
-  /** Explicit link target. */
+  /**
+   * Explicit link target. Alone it makes a manual tab backed by an app route; together with `sections`
+   * the tab still owns those sections for the sidebar and its active state, and is also active under `to`.
+   */
   to?: string
   /** Path prefix that marks the tab active; defaults to `to`. */
   activePath?: string
