@@ -25,8 +25,8 @@ export function isNavGroupActive(group: NavGroupTarget, path: string, base: stri
   const seg = segmentOf(path, base)
   if (group.sections?.includes(seg)) return true
   // A target may carry a query or hash (`/play?example=basic`); only its path names a segment.
-  if (group.to) return seg === segmentOf((group.activePath ?? group.to).split(/[?#]/)[0]!, base)
-  return false
+  const target = group.activePath ?? group.to
+  return !!target && seg === segmentOf(target.split(/[?#]/)[0]!, base)
 }
 
 export function findPageHeadline(

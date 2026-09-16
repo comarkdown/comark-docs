@@ -212,6 +212,7 @@ describe('isNavGroupActive', () => {
     expect(isNavGroupActive(group, '/syntax/markdown', '')).toBe(true)
     expect(isNavGroupActive(group, '/handbook/intro', '')).toBe(true)
     expect(isNavGroupActive(group, '/guide', '')).toBe(false)
+    expect(isNavGroupActive({ sections: ['syntax'], activePath: '/handbook' }, '/handbook/intro', '')).toBe(true)
   })
 
   it('marks a manual tab active under its link or activePath', () => {
