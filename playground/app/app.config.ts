@@ -2,16 +2,17 @@
 // ecosystem popover, and the footer credit line.
 export default defineAppConfig({
   seo: {
-    siteName: 'Comark Docs',
+    siteName: 'Comark Docs Template',
   },
   header: {
-    title: 'Comark Docs',
+    title: 'Comark Docs Template',
     logo: {
       mark: 'comark',
     },
     ecosystem: [{ mark: 'comark-content', to: 'https://content.comark.dev', label: 'Comark Content' }],
     nav: [
-      { label: 'Documentation', sections: ['getting-started', 'concepts'] },
+      { label: 'Documentation', to: '/docs', sections: ['getting-started', 'writing', 'concepts', 'deployment'] },
+      { label: 'Page', to: '/page' }
     ],
   },
   footer: {

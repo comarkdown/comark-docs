@@ -13,7 +13,8 @@ const { copy: copyLink } = useClipboard()
 const copying = ref(false)
 const site = useSiteConfig()
 
-const mdPath = computed(() => `/raw${route.path}.md`)
+const { rawPrefix } = useRuntimeConfig().public.agentDiscovery
+const mdPath = computed(() => `${rawPrefix}${route.path}.md`)
 const mdUrl = computed(() => `${site.url}${mdPath.value}`)
 
 const { github, docs } = useAppConfig()
@@ -29,8 +30,9 @@ const links = computed(() => [
           label: 'Edit this page on GitHub',
           to: `${githubUrl.value}/edit/${content.value.mode === 'tree' ? content.value.ref : github?.branch || 'main'}/${github?.contentDir || 'content'}/${props.page.meta.stem}${props.page.meta.extension}`,
           target: '_blank',
-          disabled: content.value.mode === 'blob',
-          class: content.value.mode === 'blob' ? 'text-dimmed hover:text-dimmed cursor-not-allowed' : undefined,
+          // /blob/ pins a commit and /pr/ may come from a fork branch this site can't link an editor to.
+          disabled: ['blob', 'pr'].includes(content.value.mode),
+          class: ['blob', 'pr'].includes(content.value.mode) ? 'text-dimmed hover:text-dimmed cursor-not-allowed' : undefined,
         },
         {
           icon: 'i-lucide-star',

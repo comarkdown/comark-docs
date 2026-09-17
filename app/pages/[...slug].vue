@@ -2,30 +2,139 @@
 import { joinURL } from 'ufo'
 import type { NavigationItem } from 'comark-content'
 import { Mermaid } from '@comark/nuxt/plugins/mermaid'
+import {
+  ProseA,
+  ProseAccordion,
+  ProseAccordionItem,
+  ProseBadge,
+  ProseBlockquote,
+  ProseCallout,
+  ProseCard,
+  ProseCardGroup,
+  ProseCaution,
+  ProseCode,
+  ProseCodeCollapse,
+  ProseCodeGroup,
+  ProseCodeIcon,
+  ProseCodePreview,
+  ProseCodeTree,
+  ProseCollapsible,
+  ProseEm,
+  ProseField,
+  ProseFieldGroup,
+  ProseH1,
+  ProseH2,
+  ProseH3,
+  ProseH4,
+  ProseHr,
+  ProseIcon,
+  ProseImg,
+  ProseKbd,
+  ProseLi,
+  ProseNote,
+  ProseOl,
+  ProseP,
+  ProsePre,
+  ProsePrompt,
+  ProseScript,
+  ProseSteps,
+  ProseStrong,
+  ProseTable,
+  ProseTabs,
+  ProseTabsItem,
+  ProseTbody,
+  ProseTd,
+  ProseTh,
+  ProseThead,
+  ProseTip,
+  ProseTr,
+  ProseUl,
+  ProseWarning,
+} from '#components'
 import CodeExplorer from '../components/CodeExplorer.vue'
 import Browser from '../components/Browser.vue'
 
 definePageMeta({
-  layout: 'docs',
   path: '/:slug(.+)',
 })
 
-const { toc, seo } = useAppConfig()
+// Resolve prose eagerly with the docs route instead of the global async components.
+const components = {
+  ProseA,
+  ProseAccordion,
+  ProseAccordionItem,
+  ProseBadge,
+  ProseBlockquote,
+  ProseCallout,
+  ProseCard,
+  ProseCardGroup,
+  ProseCaution,
+  ProseCode,
+  ProseCodeCollapse,
+  ProseCodeGroup,
+  ProseCodeIcon,
+  ProseCodePreview,
+  ProseCodeTree,
+  ProseCollapsible,
+  ProseEm,
+  ProseField,
+  ProseFieldGroup,
+  ProseH1,
+  ProseH2,
+  ProseH3,
+  ProseH4,
+  ProseHr,
+  ProseIcon,
+  ProseImg,
+  ProseKbd,
+  ProseLi,
+  ProseNote,
+  ProseOl,
+  ProseP,
+  ProsePre,
+  ProsePrompt,
+  ProseScript,
+  ProseSteps,
+  ProseStrong,
+  ProseTable,
+  ProseTabs,
+  ProseTabsItem,
+  ProseTbody,
+  ProseTd,
+  ProseTh,
+  ProseThead,
+  ProseTip,
+  ProseTr,
+  ProseUl,
+  ProseWarning,
+  Mermaid,
+  CodeExplorer,
+  Browser,
+}
+
+const { toc } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
 const content = useDocsContent()
+const layout = inject<Ref<NavigationLayout>>('layout')
 
-const { data: page } = await useAsyncData(`${content.value.base}:${content.value.path}`, () =>
+const { data: page } = await useAsyncData(`${content.value.routeBase}:${content.value.path}`, () =>
   content.value.client.get(content.value.path)
 )
 if (!page.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+  // A directory without an index page (e.g. /getting-started) redirects to its first page.
+  const firstLeaf = findFirstLeaf(navigation?.value, prefixLink(content.value.path, content.value.routeBase))
+  if (firstLeaf) {
+    await navigateTo(firstLeaf, { redirectCode: 302 })
+  } else {
+    throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+  }
 }
 
-const selfPath = computed(() => prefixLink(content.value.path, content.value.base))
+const selfPath = computed(() => prefixLink(content.value.path, content.value.routeBase))
 
 const tree = computed(() => {
   const p = page.value
-  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.base) } : p
+  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.routeBase) } : p
 })
 
 const surroundLinks = computed(() => findSurroundLinks(navigation?.value, selfPath.value))
@@ -39,6 +148,9 @@ const description = computed(() => fm.value.seo?.description || fm.value.descrip
 const site = useSiteConfig()
 // Previews (/tree, /blob) canonicalize to the production URL.
 const canonicalUrl = computed(() => joinURL(site.url, content.value.path))
+// The page's markdown twin, so an agent reading the HTML finds it without negotiating again.
+// Previews have no twin of their own, so this follows the canonical to production.
+const markdownUrl = computed(() => `${canonicalUrl.value}.md`)
 
 useRobotsRule(computed(() => (content.value.mode === 'prod' ? 'index, follow' : 'noindex, nofollow')))
 
@@ -50,9 +162,19 @@ useSeoMeta({
   ogUrl: canonicalUrl,
 })
 
-useHead({
-  link: [{ rel: 'canonical', href: canonicalUrl }],
-})
+// Previews are noindex and canonicalize to production, which `useCanonical` cannot express since it
+// builds the canonical from the current route. Same split as nuxt.com, which skips the composable on
+// the unversioned `/docs/*` stubs.
+if (content.value.mode === 'prod') {
+  useCanonical(() => `${content.value.path}.md`)
+} else {
+  useHead({
+    link: [
+      { rel: 'canonical', href: canonicalUrl },
+      { rel: 'alternate', type: 'text/markdown', href: markdownUrl },
+    ],
+  })
+}
 
 const headline = computed(() => findPageHeadline(navigation?.value, selfPath.value))
 
@@ -65,39 +187,26 @@ if (content.value.mode === 'prod') {
 
   const breadcrumb = computed(() => findBreadcrumb(navigation?.value, selfPath.value))
 
-  useHead({
-    script: [
-      {
-        type: 'application/ld+json',
-        innerHTML: computed(() =>
-          jsonLd([
-            {
-              '@context': 'https://schema.org',
-              '@type': 'TechArticle',
-              headline: fm.value.title,
-              description: fm.value.description,
-              url: canonicalUrl.value,
-              inLanguage: 'en',
-              isPartOf: {
-                '@type': 'WebSite',
-                name: seo?.siteName,
-                url: site.url,
-              },
-              author: { '@type': 'Organization', name: seo?.siteName, url: site.url },
-            },
-            // Google requires `item` on every ListItem. Non-page section nodes
-            // (page: false) only have a title — omit them from structured data.
-            breadcrumbListLd([
-              { name: 'Docs', item: site.url },
-              ...breadcrumb.value
-                .filter((item): item is { title: string, path: string } => Boolean(item.path))
-                .map((item) => ({ name: item.title, item: joinURL(site.url, item.path) })),
-            ]),
-          ])
-        ),
-      },
-    ],
-  })
+  // `WebSite`, `WebPage` and the publisher come from nuxt-schema-org, which also owns the `@id` links
+  // between them. Only what is specific to this page is declared here.
+  useSchemaOrg([
+    defineArticle({
+      '@type': 'TechArticle',
+      headline: () => fm.value.title,
+      description: () => fm.value.description,
+      inLanguage: 'en',
+    }),
+    defineBreadcrumb({
+      // Google requires `item` on every ListItem. Non-page section nodes
+      // (page: false) only have a title — omit them from structured data.
+      itemListElement: [
+        { name: 'Docs', item: site.url },
+        ...breadcrumb.value
+          .filter((item): item is { title: string, path: string } => Boolean(item.path))
+          .map((item) => ({ name: item.title, item: joinURL(site.url, item.path) })),
+      ],
+    }),
+  ])
 }
 </script>
 
@@ -116,10 +225,11 @@ if (content.value.mode === 'prod') {
       <MarkdownDocument
         v-if="tree"
         :value="tree"
-        :components="{ Mermaid, CodeExplorer, Browser }"
+        :components="components"
       />
 
       <UContentSurround
+        v-if="layout === 'docs'"
         :surround="surroundLinks as any"
         :ui="{ root: !surroundLinks[0] ? 'sm:grid-cols-1' : 'sm:grid-cols-2' }"
       />

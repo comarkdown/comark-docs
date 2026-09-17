@@ -1,9 +1,9 @@
 import type { RouterConfig } from '@nuxt/schema'
 
 /**
- * Register the versioned preview routes (`/tree/:ref`, `/blob/:ref` and their `/:slug(.+)` docs variants) as
- * real routes reusing the landing and docs page components. They can't be `alias` entries: an alias may not
- * introduce a param (`:ref`) the canonical record lacks — Vue Router warns R0102, accurately.
+ * Register the versioned preview routes (`/tree/:ref`, `/blob/:ref`, `/pr/:number` and their `/:slug(.+)` docs
+ * variants) as real routes reusing the landing and docs page components. They can't be `alias` entries: an alias
+ * may not introduce a param (`:ref`) the canonical record lacks — Vue Router warns R0102, accurately.
  *
  * Deliberate divergence from comark-content: added there in comarkdown/comark-content#79, reverted to aliases in #83.
  * The layer was extracted in between and keeps this on purpose — don't "resync" it away.
@@ -17,13 +17,15 @@ export default <RouterConfig>{
     if (landing) {
       extra.push(
         { ...landing, name: 'landing-tree', path: '/tree/:ref' },
-        { ...landing, name: 'landing-blob', path: '/blob/:ref' }
+        { ...landing, name: 'landing-blob', path: '/blob/:ref' },
+        { ...landing, name: 'landing-pr', path: '/pr/:number(\\d+)' }
       )
     }
     if (docs) {
       extra.push(
         { ...docs, name: 'docs-tree', path: '/tree/:ref/:slug(.+)' },
-        { ...docs, name: 'docs-blob', path: '/blob/:ref/:slug(.+)' }
+        { ...docs, name: 'docs-blob', path: '/blob/:ref/:slug(.+)' },
+        { ...docs, name: 'docs-pr', path: '/pr/:number(\\d+)/:slug(.+)' }
       )
     }
 

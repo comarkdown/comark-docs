@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseBranchName, parseCommitSha, parseRef, parseRepoPath } from '../server/utils/refs'
+import { parseBranchName, parseCommitSha, parsePreviewBranch, parseRef, parseRepoPath } from '../server/utils/refs'
 
 describe('parseCommitSha', () => {
   it('accepts short and full SHAs', () => {
@@ -54,6 +54,26 @@ describe('parseBranchName', () => {
   it('bounds length so a ref cannot be used as a payload', () => {
     expect(parseBranchName('a'.repeat(128))).toBe('a'.repeat(128))
     expect(parseBranchName('a'.repeat(129))).toBeNull()
+  })
+})
+
+describe('parsePreviewBranch', () => {
+  it('accepts ordinary branch names', () => {
+    expect(parsePreviewBranch('main')).toBe('main')
+    expect(parsePreviewBranch('feat/new-docs')).toBe('feat/new-docs')
+  })
+
+  // The bypass: `parseBranchName` alone accepts a SHA (hex chars are ordinary word chars), and
+  // GitHub's `?sha=` resolves it against the upstream repo regardless of which fork it came from.
+  it('rejects SHA-shaped values a bare parseBranchName would accept', () => {
+    expect(parseBranchName('4f2a9c1e8b7d6a5f4e3c2b1a0f9e8d7c6b5a4938')).not.toBeNull()
+    expect(parsePreviewBranch('4f2a9c1e8b7d6a5f4e3c2b1a0f9e8d7c6b5a4938')).toBeNull()
+    expect(parsePreviewBranch('4f2a9c1')).toBeNull() // short SHA too
+  })
+
+  it('still rejects everything parseBranchName already rejects', () => {
+    expect(parsePreviewBranch('../../etc/passwd')).toBeNull()
+    expect(parsePreviewBranch('')).toBeNull()
   })
 })
 

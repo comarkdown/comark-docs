@@ -12,25 +12,16 @@ const title = computed(() => mainNavigation.value.find((item) => item.active)?.l
 
 const menuDrawerOpen = ref(false)
 const tocDrawerOpen = ref(false)
-const navigationRef = ref<HTMLElement | null>(null)
-let observer: IntersectionObserver | undefined
-
-watch(menuDrawerOpen, (open) => {
-  nextTick(() => {
-    if (open) {
-      observer = observeNavigation(navigationRef)
-    } else {
-      observer?.disconnect()
-    }
-  })
-})
+const layout = inject('layout')
 </script>
 
 <template>
   <div
-    class="lg:hidden sticky top-(--ui-header-height) z-10 bg-default -mx-6 p-2 px-6 border-b border-muted flex justify-between"
+    class="lg:hidden sticky top-(--ui-header-height) z-10 bg-default -mx-6 p-2 px-6 border-b border-muted flex h-13"
+    :class="layout === 'page' ? 'justify-end' : 'justify-between'"
   >
     <UDrawer
+      v-if="layout === 'docs'"
       v-model:open="menuDrawerOpen"
       direction="left"
       :title="title"
@@ -51,13 +42,11 @@ watch(menuDrawerOpen, (open) => {
       />
 
       <template #body>
-        <div ref="navigationRef">
-          <UContentNavigation
-            :navigation="sidebarNavigation"
-            variant="link"
-            :collapsible="false"
-          />
-        </div>
+        <UContentNavigation
+          :navigation="sidebarNavigation"
+          variant="link"
+          :collapsible="false"
+        />
       </template>
     </UDrawer>
 

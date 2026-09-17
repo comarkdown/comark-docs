@@ -1,37 +1,35 @@
 import type { NavigationItem } from 'comark-content'
+import type { RouteLocationNormalized } from 'vue-router'
 
-const prefetchedPaths = new Set<string>()
-let nuxtApp: ReturnType<typeof useNuxtApp>
-
-function prefetchPath(path?: string) {
-  if (!path || prefetchedPaths.has(path)) {
-    return
-  }
-  nuxtApp = nuxtApp ?? useNuxtApp()
-  prefetchedPaths.add(path)
-  nuxtApp.hooks.callHook('link:prefetch', path)
+/** Logical top-level segment of a path, ignoring the active version `base`. */
+export function segmentOf(path: string, base: string): string {
+  const rel = base && path.startsWith(base) ? path.slice(base.length) : path
+  return rel.split('/').filter(Boolean)[0] ?? ''
 }
 
-export function observeNavigation(navigationRef: Ref<HTMLElement | null>, observer?: IntersectionObserver) {
-  if (!navigationRef.value || !window.IntersectionObserver) {
-    return
-  }
-  if (observer) {
-    observer.disconnect()
-  }
+/** What decides where a header tab links and when it is active. */
+export interface NavGroupTarget {
+  /** Top-level content sections grouped under this tab. */
+  sections?: string[]
+  /**
+   * Explicit link target. Alone it makes a manual tab backed by an app route; together with `sections`
+   * the tab still owns those sections for the sidebar and its active state, and is also active under `to`.
+   */
+  to?: string
+  /** Path prefix that marks the tab active; defaults to `to`. */
+  activePath?: string
+}
 
-  const prefetchObserver = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) {
-        continue
-      }
-
-      prefetchPath((entry.target as HTMLAnchorElement).href.replace(window.location.origin, ''))
-      prefetchObserver?.unobserve(entry.target)
-    }
-  })
-  navigationRef.value.querySelectorAll<HTMLElement>('a').forEach((element) => prefetchObserver?.observe(element))
-  return prefetchObserver
+/**
+ * Whether a header tab is active on `path`: on any of its `sections`, and under `activePath` or its
+ * own `to` (a target that renders a page rather than redirecting).
+ */
+export function isNavGroupActive(group: NavGroupTarget, path: string, base: string): boolean {
+  const seg = segmentOf(path, base)
+  if (group.sections?.includes(seg)) return true
+  // A target may carry a query or hash (`/play?example=basic`); only its path names a segment.
+  const target = group.activePath ?? group.to
+  return !!target && seg === segmentOf(target.split(/[?#]/)[0]!, base)
 }
 
 export function findPageHeadline(
@@ -56,9 +54,53 @@ function walk(items: NavigationItem[], path: string): boolean {
   return false
 }
 
+export { findFirstLeaf } from '../../utils/navigation'
+
 export interface BreadcrumbItem {
   title: string
   path?: string
+}
+
+export type NavigationLayout = 'docs' | 'page'
+
+export function resolveRouteLayout(
+  navigation: NavigationItem[] | undefined | null,
+  route: Pick<RouteLocationNormalized, 'meta' | 'matched'>,
+  path: string
+): NavigationLayout | undefined {
+  if (route.meta.layout === false) return undefined
+  if (route.meta.layout === 'docs' || route.meta.layout === 'page') return route.meta.layout
+  const layout = findNavigationLayout(navigation, path)
+  const name = route.matched[0]?.name
+  if (!layout && (name === 'slug' || name === 'docs-pr' || name === 'docs-blob' || name === 'docs-tree')) return 'docs'
+  return layout
+}
+
+/** Layout declared by the nearest matching page or directory navigation node. */
+export function findNavigationLayout(
+  navigation: NavigationItem[] | undefined | null,
+  path: string | undefined
+): NavigationLayout | undefined {
+  if (!navigation?.length || !path) return undefined
+
+  let layout: NavigationLayout | undefined
+  const visit = (items: NavigationItem[]) => {
+    for (const item of items) {
+      const isPage = item.path === path
+      const isDirectory = Boolean(
+        item.children?.length
+        && item.path !== '/'
+        && path.startsWith(`${item.path}/`)
+      )
+      if (!isPage && !isDirectory) continue
+
+      if (item.layout === 'docs' || item.layout === 'page') layout = item.layout
+      if (item.children?.length) visit(item.children)
+    }
+  }
+
+  visit(navigation)
+  return layout
 }
 
 /** Trail of navigation items leading to `path`, including the page itself. */

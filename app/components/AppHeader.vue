@@ -4,10 +4,11 @@ const content = useDocsContent()
 const historyOpen = useVersionHistory()
 const assistantOpen = useAssistant()
 const navigation = useMainNavigation()
+const { available: searchAvailable } = useSearch()
 </script>
 
 <template>
-  <UHeader :to="prefixLink(header?.to || '/', content.base)">
+  <UHeader :to="prefixLink(header?.to || '/', content.routeBase)">
     <template #left>
       <AppHeaderBrand />
     </template>
@@ -16,7 +17,7 @@ const navigation = useMainNavigation()
 
     <template #right>
       <UContentSearchButton
-        v-if="header?.search"
+        v-if="header?.search && searchAvailable"
         :collapsed="false"
         :icon="false"
         class="text-muted font-normal hidden lg:inline-flex min-w-[150px]"
@@ -61,7 +62,7 @@ const navigation = useMainNavigation()
       <div class="flex flex-col justify-between h-full">
         <div class="flex flex-col gap-4">
           <UContentSearchButton
-            v-if="header?.search"
+            v-if="header?.search && searchAvailable"
             :collapsed="false"
             size="xl"
             class="w-full font-normal"

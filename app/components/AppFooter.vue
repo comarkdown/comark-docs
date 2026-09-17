@@ -7,8 +7,8 @@ const credits = computed(
 )
 
 const links = computed(() => [
-  { 
-    icon: 'i-lucide-palette',
+  {
+    icon: 'i-lucide-shapes',
     to: '/logos',
     'aria-label': 'Brand assets',
   },

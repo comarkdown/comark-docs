@@ -9,23 +9,12 @@ const props = defineProps<{
   items: FaqItem[]
 }>()
 
-// FAQPage structured data mirrors the visible accordion.
-useHead({
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: jsonLd({
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: props.items.map((item) => ({
-          '@type': 'Question',
-          name: item.label,
-          acceptedAnswer: { '@type': 'Answer', text: item.content },
-        })),
-      }),
-    },
-  ],
-})
+// FAQPage structured data mirrors the visible accordion. The page node is retyped rather than a second
+// one emitted, so the questions hang off the `WebPage` nuxt-schema-org already has, through `mainEntity`.
+useSchemaOrg([
+  defineWebPage({ '@type': 'FAQPage' }),
+  ...props.items.map((item) => defineQuestion({ name: item.label, acceptedAnswer: item.content })),
+])
 </script>
 
 <template>

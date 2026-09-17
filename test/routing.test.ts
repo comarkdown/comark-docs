@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { prefixLink, prefixNavigation, prefixTreeLinks } from '../app/utils/routing'
+import { prefixLink, prefixNavigation, prefixSearchResults, prefixTreeLinks } from '../app/utils/routing'
 
 describe('prefixLink', () => {
   it('prefixes internal links', () => {
@@ -76,5 +76,30 @@ describe('prefixNavigation', () => {
     prefixNavigation(items, '/tree/dev')
     expect(items[0]!.path).toBe('/a')
     expect(items[0]!.children![0]!.path).toBe('/a/b')
+  })
+})
+
+describe('prefixSearchResults', () => {
+  it('prefixes result ids to match the prefixed navigation tree', () => {
+    expect(prefixSearchResults([{ id: '/guide/navigation' }], '/blob/abc123')).toEqual([
+      { id: '/blob/abc123/guide/navigation' },
+    ])
+  })
+
+  it('preserves the section anchor', () => {
+    expect(prefixSearchResults([{ id: '/guide/navigation#usage' }], '/blob/abc123')).toEqual([
+      { id: '/blob/abc123/guide/navigation#usage' },
+    ])
+  })
+
+  it('returns the same array untouched when base is empty', () => {
+    const results = [{ id: '/guide/navigation' }]
+    expect(prefixSearchResults(results, '')).toBe(results)
+  })
+
+  it('does not mutate the input', () => {
+    const results = [{ id: '/guide/navigation' }]
+    prefixSearchResults(results, '/tree/dev')
+    expect(results[0]!.id).toBe('/guide/navigation')
   })
 })

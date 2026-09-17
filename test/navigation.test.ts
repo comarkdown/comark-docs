@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { findBreadcrumb, findPageHeadline, findSurroundLinks } from '../app/utils/navigation'
+import {
+  findBreadcrumb,
+  findNavigationLayout,
+  findPageHeadline,
+  findSurroundLinks,
+  isNavGroupActive,
+  segmentOf,
+} from '../app/utils/navigation'
 import type { NavigationItem } from 'comark-content'
 
 const nav = [
@@ -76,6 +83,67 @@ describe('findBreadcrumb', () => {
   })
 })
 
+describe('findNavigationLayout', () => {
+  const navigation = [
+    {
+      title: 'Examples',
+      path: '/examples',
+      page: false,
+      layout: 'page',
+      children: [
+        { title: 'Overview', path: '/examples/overview' },
+        {
+          title: 'API',
+          path: '/examples/api',
+          page: false,
+          layout: 'docs',
+          children: [{ title: 'Reference', path: '/examples/api/reference' }],
+        },
+      ],
+    },
+    { title: 'Examples extended', path: '/examples-extended', layout: 'docs' },
+  ] as unknown as NavigationItem[]
+
+  it('inherits a directory layout for its pages, including hidden pages', () => {
+    expect(findNavigationLayout(navigation, '/examples/overview')).toBe('page')
+    expect(findNavigationLayout(navigation, '/examples/hidden')).toBe('page')
+  })
+
+  it('lets a nested directory override an inherited layout', () => {
+    expect(findNavigationLayout(navigation, '/examples/api/reference')).toBe('docs')
+  })
+
+  it('does not inherit a layout from a partial path segment match', () => {
+    expect(findNavigationLayout(navigation, '/examples-extended/page')).toBeUndefined()
+  })
+
+  it('supports navigation paths prefixed for version previews', () => {
+    const previewNavigation = [{
+      title: 'Examples',
+      path: '/tree/feature/examples',
+      page: false,
+      layout: 'page',
+      children: [{ title: 'Overview', path: '/tree/feature/examples/overview' }],
+    }] as unknown as NavigationItem[]
+
+    expect(findNavigationLayout(previewNavigation, '/tree/feature/examples/overview')).toBe('page')
+  })
+
+  it('returns undefined without a matching supported layout', () => {
+    expect(findNavigationLayout(navigation, '/unknown')).toBeUndefined()
+    expect(findNavigationLayout(
+      [{ title: 'Custom', path: '/custom', layout: 'custom' }] as unknown as NavigationItem[],
+      '/custom'
+    )).toBeUndefined()
+  })
+
+  it('returns undefined for the landing page or without enough navigation context', () => {
+    expect(findNavigationLayout(navigation, '/')).toBeUndefined()
+    expect(findNavigationLayout([], '/examples')).toBeUndefined()
+    expect(findNavigationLayout(null, undefined)).toBeUndefined()
+  })
+})
+
 describe('findSurroundLinks', () => {
   it('returns the flattened previous and next pages', () => {
     expect(findSurroundLinks(nav, '/getting-started/installation')).toEqual([
@@ -110,5 +178,54 @@ describe('findSurroundLinks', () => {
     expect(findSurroundLinks(nav, '/nope')).toEqual([])
     expect(findSurroundLinks(nav, undefined)).toEqual([])
     expect(findSurroundLinks(null, '/a')).toEqual([])
+  })
+})
+
+describe('segmentOf', () => {
+  it('returns the first path segment', () => {
+    expect(segmentOf('/getting-started/installation', '')).toBe('getting-started')
+    expect(segmentOf('/', '')).toBe('')
+  })
+
+  it('ignores the version base', () => {
+    expect(segmentOf('/tree/main/syntax/markdown', '/tree/main')).toBe('syntax')
+    expect(segmentOf('/tree/main', '/tree/main')).toBe('')
+  })
+})
+
+describe('isNavGroupActive', () => {
+  it('marks a sections tab active on any of its sections', () => {
+    const group = { sections: ['getting-started', 'syntax'] }
+    expect(isNavGroupActive(group, '/syntax/markdown', '')).toBe(true)
+    expect(isNavGroupActive(group, '/plugins', '')).toBe(false)
+  })
+
+  it('keeps the sections for a tab that links elsewhere and is active under its target too', () => {
+    const group = { to: '/guide', sections: ['getting-started', 'syntax'] }
+    expect(isNavGroupActive(group, '/getting-started/introduction', '')).toBe(true)
+    expect(isNavGroupActive(group, '/guide', '')).toBe(true)
+    expect(isNavGroupActive(group, '/plugins', '')).toBe(false)
+  })
+
+  it('lets activePath decide for a sections tab outside its sections', () => {
+    const group = { to: '/guide', sections: ['syntax'], activePath: '/handbook' }
+    expect(isNavGroupActive(group, '/syntax/markdown', '')).toBe(true)
+    expect(isNavGroupActive(group, '/handbook/intro', '')).toBe(true)
+    expect(isNavGroupActive(group, '/guide', '')).toBe(false)
+    expect(isNavGroupActive({ sections: ['syntax'], activePath: '/handbook' }, '/handbook/intro', '')).toBe(true)
+  })
+
+  it('marks a manual tab active under its link or activePath', () => {
+    expect(isNavGroupActive({ to: '/play' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play' }, '/play/booking', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play?example=basic', activePath: '/play' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play?example=basic' }, '/play', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play#demo' }, '/play/booking', '')).toBe(true)
+    expect(isNavGroupActive({ to: '/play' }, '/syntax', '')).toBe(false)
+  })
+
+  it('respects the version base', () => {
+    expect(isNavGroupActive({ sections: ['syntax'] }, '/tree/main/syntax/markdown', '/tree/main')).toBe(true)
+    expect(isNavGroupActive({ to: '/play' }, '/tree/main/play', '/tree/main')).toBe(true)
   })
 })

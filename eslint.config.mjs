@@ -36,7 +36,15 @@ export default createConfigForNuxt({
     // `index.vue`, `docs.vue`, `[...slug].vue` are the framework's naming, not ours.
     // `Browser.vue` is exempt for a different reason: it's addressed from markdown
     // (`::browser`), so its name is part of the content API.
-    files: ['app/pages/**/*.vue', 'app/layouts/**/*.vue', 'app/error.vue', 'app/components/Browser.vue'],
+    files: [
+      'app/pages/**/*.vue',
+      'playground/app/pages/**/*.vue',
+      'app/layouts/**/*.vue',
+      'playground/app/layouts/**/*.vue',
+      'app/error.vue',
+      'playground/app/error.vue',
+      'app/components/Browser.vue',
+    ],
     rules: {
       'vue/multi-word-component-names': 'off',
     },

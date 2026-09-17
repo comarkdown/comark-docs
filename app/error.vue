@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app'
+import type { NavigationItem } from 'comark-content'
 
 defineProps<{
   error: NuxtError
@@ -16,12 +17,24 @@ useSeoMeta({
   description: 'We are sorry but this page could not be found.',
 })
 
-const { data: navigation } = await useAsyncData('navigation', () => prodContent.navigation())
-const { data: files } = useLazyAsyncData('search-sections', () => prodContent.searchSections(), {
-  server: false,
-})
+const content = useDocsContent()
 
-provide('navigation', navigation)
+const [{ data: navigation }, { data: sha }] = await Promise.all([
+  useAsyncData('navigation', () => content.value.client.navigation(), {
+    watch: [() => content.value.routeBase],
+  }),
+  useAsyncData(
+    () => `content-head:${content.value.apiBase}`,
+    () => $fetch<{ sha: string | null }>(`${content.value.apiBase}/head`).then(({ sha }) => sha),
+    { default: () => null, watch: [() => content.value.apiBase] }
+  ),
+])
+
+// Matches app.vue: nav must be prefixed the same way search results are, so the palette can look them up.
+const navTree = computed<NavigationItem[]>(() => prefixNavigation(navigation.value ?? [], content.value.routeBase))
+
+provide('navigation', navTree)
+provide('sha', sha)
 </script>
 
 <template>
@@ -32,11 +45,6 @@ provide('navigation', navigation)
 
     <AppFooter />
 
-    <ClientOnly>
-      <LazyUContentSearch
-        :files="files ?? []"
-        :navigation="navigation ?? []"
-      />
-    </ClientOnly>
+    <AppSearch :navigation="navTree" />
   </UApp>
 </template>

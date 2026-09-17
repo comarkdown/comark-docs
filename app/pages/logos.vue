@@ -36,9 +36,8 @@ useSeoMeta({
   ogUrl: canonicalUrl,
 })
 
-useHead({
-  link: [{ rel: 'canonical', href: canonicalUrl }],
-})
+// No markdown alternate: `/logos` is a Vue page, excluded from negotiation.
+useCanonical()
 
 defineOgImage('DocsSatori', {
   title,

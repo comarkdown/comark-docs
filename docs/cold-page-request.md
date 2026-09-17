@@ -8,7 +8,8 @@ sequenceDiagram
   participant Edge as Edge ISR
   participant SSR as Lambda SSR
   participant ContentRoute as /api/content/**
-  participant Refs as Shared ref cache (content:refs)
+  participant Config as Vercel Global Config
+  participant Refs as Shared ref cache (content:refs:v2)
   participant GH as GitHub
   participant Content as shared content
 
@@ -17,20 +18,26 @@ sequenceDiagram
 
   SSR->>ContentRoute: $fetch (navigation)
   ContentRoute->>Content: getProdContent()
-  Content->>Refs: resolveContentSha(targetBranch, contentDir)
-  alt cache hit (within 60s TTL)
-    Refs-->>Content: cached content sha
-  else cache miss
-    Refs->>GH: commits?sha=<branch>&path=<contentDir>
-    GH-->>Refs: latest content sha
-    Refs-->>Content: content sha
+  Content->>Config: read contentSha (when connected)
+  alt pin set
+    Config-->>Content: pinned content sha
+  else no pin or read failed
+    Config-->>Content: undefined
+    Content->>Refs: resolveContentSha(targetBranch, contentDir)
+    alt cache hit (within 1h fallback TTL)
+      Refs-->>Content: cached content sha
+    else cache miss
+      Refs->>GH: commits?sha=<branch>&path=<contentDir>
+      GH-->>Refs: latest content sha
+      Refs-->>Content: content sha
+    end
   end
   Content->>Content: rebuild if content sha advanced
   Content->>GH: init partial (~36 files, at <content-sha>)
   ContentRoute-->>SSR: nav tree
 
   SSR->>ContentRoute: $fetch (page)
-  ContentRoute->>Content: getProdContent() (same sha → no rebuild)
+  ContentRoute->>Content: getProdContent() (recheck pin; same sha → no rebuild)
   Content->>GH: fetch + parse 1 page (at <content-sha>)
   ContentRoute-->>SSR: parsed page
 
@@ -38,17 +45,26 @@ sequenceDiagram
   Edge-->>Browser: HTML (cached for next visitor)
 ```
 
-**Cost:** one shared-cache lookup for the latest commit touching the content directory + the
-instance builds its index from GitHub once per content revision, then one page parse. All reads
-are pinned to the immutable `<content-sha>`. Code-only commits do not rebuild the content instance.
+**Cost:** with a Global Config pin, a config lookup selects the content SHA. Without a pin, a
+shared-cache lookup selects the latest commit touching the content directory. The instance builds
+its index from GitHub once per content revision, then parses one page. All reads are pinned to the
+immutable `<content-sha>`. Without a Global Config pin, code-only commits do not rebuild the content
+instance.
 
-The ref cache is shared across *instances*, so GitHub is hit once per 60s TTL window
-rather than once per cold start. It is **not** shared across regions — Vercel's
-Runtime Cache is regional (see the note on `refCacheDriver()` in
-`server/utils/cache.ts`), so the ceiling is one GitHub call per region per window.
-This project runs single-region, which is what makes that distinction academic today.
+The production branch pointer is shared across *instances* with a one-hour fallback TTL. The push
+webhook refreshes it before purging ISR, so normal cold starts don't need to resolve the branch
+through GitHub. If a webhook delivery or refresh fails, a request resolves the branch again after
+the fallback TTL instead of serving the old SHA indefinitely.
 
-A ref that doesn't resolve is cached too, for the same window, but **only** when the
+Vercel's Runtime Cache is regional (see the note on `refCacheDriver()` in
+`server/utils/cache.ts`). This project runs in one region, so the webhook refresh reaches every
+instance's shared cache. Additional regions would self-heal when their fallback TTL expires.
+
+Preview deployments, `/tree/:branch`, `/pr/:number`, and preview authorization decisions use a
+600-second TTL because production webhooks don't update them. Negative ref lookups use the same TTL,
+including for the production branch, so a temporary GitHub 404 cannot remain cached indefinitely.
+
+A ref that doesn't resolve is cached too, for 600 seconds, but **only** when the
 caller asks for it (`resolveContentSha(ref, contentDir, { cacheMisses: true })`) — the public
 `/tree/:branch` route does, so a nonexistent branch can't be replayed into one
 GitHub API call per request. The production branch above deliberately does not:
@@ -57,9 +73,11 @@ would turn an expired token into a site-wide outage for the window rather than o
 failed request.
 
 **On a content push**, `server/api/revalidate.post.ts` forces a fresh `resolveContentSha()` lookup,
-which writes the latest content SHA into the same shared ref cache before fanning out ISR
-purges for the affected pages, so a freshly-purged page's next render already
-sees the new SHA instead of waiting out the 60s TTL.
+which writes the latest branch content SHA into the same shared ref cache before fanning out ISR
+purges for the affected pages. Without a Global Config pin, a freshly-purged page's next render sees
+the new SHA. With a pin, the next render stays on the pinned SHA, while the refreshed branch pointer
+is ready if the pin is removed. If the webhook fails, the production pointer refreshes within one
+hour.
 
 Parsed manifests and bodies live under a parser-version + content-SHA namespace. Vercel
 Runtime Cache persists across deployments within an environment, so unrelated deployments can reuse

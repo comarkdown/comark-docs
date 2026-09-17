@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LandingHero from '@nuxt/ui/components/PageHero.vue'
 import LandingStack from '../components/landing/LandingStack.vue'
 import LandingTabs from '../components/landing/LandingTabs.vue'
 import LandingFeatures from '../components/landing/LandingFeatures.vue'
@@ -6,8 +7,10 @@ import LandingFeatureCard from '../components/landing/LandingFeatureCard.vue'
 import LandingFaq from '../components/landing/LandingFaq.vue'
 import LandingCta from '../components/landing/LandingCta.vue'
 import LandingHeroDemo from '../components/landing/LandingHeroDemo.vue'
+import Button from '@nuxt/ui/components/Button.vue'
 
 const landingComponents = {
+  LandingHero,
   LandingStack,
   LandingTabs,
   LandingFeatures,
@@ -15,12 +18,13 @@ const landingComponents = {
   LandingFaq,
   LandingCta,
   LandingHeroDemo,
+  Button
 }
 
 const content = useDocsContent()
 const site = useSiteConfig()
 
-const { data: page } = await useAsyncData(`${content.value.base}:landing`, () => content.value.client.get('/'))
+const { data: page } = await useAsyncData(`${content.value.routeBase}:landing`, () => content.value.client.get('/'))
 if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Landing page not found', fatal: true })
 }
@@ -28,7 +32,7 @@ if (!page.value) {
 // Prefix every internal link in the content tree so it stays within the preview.
 const tree = computed(() => {
   const p = page.value
-  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.base) } : p
+  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.routeBase) } : p
 })
 
 const fm = computed<Record<string, any>>(() => page.value?.data ?? {})
@@ -45,9 +49,10 @@ useSeoMeta({
   ogUrl: site.url,
 })
 
-useHead({
-  link: [{ rel: 'canonical', href: site.url }],
-})
+// The raw prefix, not `/index.md`: the homepage document has no `.md` twin of its own, so this is the
+// URL the module routes at the edge. Same as nuxt.com and ui.nuxt.com.
+const rawPrefix = useRuntimeConfig().public.agentDiscovery?.rawPrefix || '/raw'
+useCanonical(`${rawPrefix}/index.md`)
 
 if (content.value.mode === 'prod') {
   defineOgImage('DocsSatori', {
@@ -55,25 +60,25 @@ if (content.value.mode === 'prod') {
     description: fm.value.seo?.description || fm.value.description,
   })
 
-  // Optional schema.org SoftwareApplication identity, configured through
-  // `docs.schemaOrg` in app.config; nothing is emitted when unset.
+  // Optional schema.org identity, configured through `docs.schemaOrg` in app.config; nothing is
+  // emitted when unset. `organization` becomes its own top-level node (with contactPoint/address it
+  // is what agents check to verify the business); everything else describes the SoftwareApplication.
   const { seo, docs } = useAppConfig()
-  const schemaOrg = docs?.schemaOrg as Record<string, unknown> | undefined
-  if (schemaOrg && Object.keys(schemaOrg).length) {
-    useHead({
-      script: [
-        {
-          type: 'application/ld+json',
-          innerHTML: jsonLd({
-            '@context': 'https://schema.org',
-            '@type': 'SoftwareApplication',
-            name: seo?.siteName,
-            url: site.url,
-            ...schemaOrg,
-          }),
-        },
-      ],
-    })
+  const { organization, ...softwareApp } = (docs?.schemaOrg ?? {}) as Record<string, unknown> & {
+    organization?: Record<string, unknown>
+  }
+  // `WebSite` and `WebPage` come from nuxt-schema-org, which also owns the `@id` links to these.
+  // Both inputs are cast: the app config carries them untyped, as whatever schema.org accepts.
+  const nodes = [
+    ...(Object.keys(softwareApp).length
+      ? [defineSoftwareApp({ name: seo?.siteName, ...softwareApp } as Parameters<typeof defineSoftwareApp>[0])]
+      : []),
+    ...(organization && Object.keys(organization).length
+      ? [defineOrganization({ name: seo?.siteName, ...organization } as Parameters<typeof defineOrganization>[0])]
+      : []),
+  ]
+  if (nodes.length) {
+    useSchemaOrg(nodes)
   }
 }
 </script>

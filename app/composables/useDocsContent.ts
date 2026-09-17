@@ -1,12 +1,10 @@
 import { createContentClient } from 'comark-content/client'
-import { searchSectionsClient } from '../utils/search-sections'
-import type { ContentMode } from '../types/content'
+import type { ActiveContent, ContentMode } from '../types/content'
 import { withLeadingSlash } from 'ufo'
 
 export const prodContent = createContentClient({
   basePath: '/api/content',
   fetch: $fetch,
-  plugins: [searchSectionsClient()],
 })
 
 const clients = new Map<string, typeof prodContent>()
@@ -17,22 +15,10 @@ function getClient(basePath: string) {
     client = createContentClient({
       basePath,
       fetch: $fetch,
-      plugins: [searchSectionsClient()],
     })
     clients.set(basePath, client)
   }
   return client
-}
-
-export interface ActiveContent {
-  mode: ContentMode
-  /** The branch name (tree) or commit SHA (blob); `undefined` in prod. */
-  ref?: string
-  /** Link prefix for this version (`/tree/<branch>`, `/blob/<sha>`, or `''` in prod). */
-  base: string
-  /** The path within the content source (with leading slash). */
-  path: string
-  client: typeof prodContent
 }
 
 /** Resolve the active content client for the current route (from the parsed `[...slug]`). */
@@ -42,25 +28,34 @@ export function useDocsContent(): ComputedRef<ActiveContent> {
     const path = withLeadingSlash(
       Array.isArray(route.params.slug) ? route.params.slug.join('/') : (route.params.slug as string)
     )
+
+    let mode: ContentMode = 'prod'
+    let ref: string | undefined
+    let routeBase = ''
+
     if (route.params.ref && route.path.startsWith('/tree/')) {
-      const encodedRef = encodeURIComponent(route.params.ref as string)
-      return {
-        mode: 'tree',
-        ref: route.params.ref as string,
-        base: `/tree/${encodedRef}`,
-        path,
-        client: getClient(`/api/content/tree/${encodedRef}`),
-      }
+      mode = 'tree'
+      ref = route.params.ref as string
+      routeBase = `/tree/${encodeURIComponent(ref)}`
+    } else if (route.params.ref && route.path.startsWith('/blob/')) {
+      mode = 'blob'
+      ref = route.params.ref as string
+      routeBase = `/blob/${ref}`
+    } else if (route.params.number && route.path.startsWith('/pr/')) {
+      mode = 'pr'
+      ref = route.params.number as string
+      routeBase = `/pr/${ref}`
     }
-    if (route.params.ref && route.path.startsWith('/blob/')) {
-      return {
-        mode: 'blob',
-        ref: route.params.ref as string,
-        base: `/blob/${route.params.ref}`,
-        path,
-        client: getClient(`/api/content/blob/${route.params.ref}`),
-      }
+
+    const apiBase = `/api/content${routeBase}`
+
+    return {
+      mode,
+      ref,
+      routeBase,
+      path,
+      client: mode === 'prod' ? prodContent : getClient(apiBase),
+      apiBase
     }
-    return { mode: 'prod', base: '', path, client: prodContent }
   })
 }
