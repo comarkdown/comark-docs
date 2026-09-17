@@ -4,7 +4,6 @@ const content = useDocsContent()
 const historyOpen = useVersionHistory()
 const assistantOpen = useAssistant()
 const navigation = useMainNavigation()
-const { available: searchAvailable } = useSearch()
 </script>
 
 <template>
@@ -17,7 +16,7 @@ const { available: searchAvailable } = useSearch()
 
     <template #right>
       <UContentSearchButton
-        v-if="header?.search && searchAvailable"
+        v-if="header?.search"
         :collapsed="false"
         :icon="false"
         class="text-muted font-normal hidden lg:inline-flex min-w-[150px]"
@@ -62,7 +61,7 @@ const { available: searchAvailable } = useSearch()
       <div class="flex flex-col justify-between h-full">
         <div class="flex flex-col gap-4">
           <UContentSearchButton
-            v-if="header?.search && searchAvailable"
+            v-if="header?.search"
             :collapsed="false"
             size="xl"
             class="w-full font-normal"

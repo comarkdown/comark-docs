@@ -5,7 +5,7 @@ const props = defineProps<{
   navigation: NavigationItem[]
 }>()
 
-const { search, status, available } = useSearch()
+const { search, status } = useSearch()
 
 const appConfig = useAppConfig()
 
@@ -55,7 +55,6 @@ const groups = computed(() => {
 
 <template>
   <LazyUContentSearch
-    v-if="available"
     :search="search"
     :search-status="status"
     :navigation="navigation"

@@ -18,9 +18,9 @@ function searchDebug(): boolean {
  */
 export function useSearch() {
   const content = useDocsContent()
-  const sha = inject<Ref<string | null>>('sha', ref(null))
+  const sha = inject<Ref<string | null | undefined>>('sha', ref(null))
 
-  /** What to hydrate from, or `null` when this route has nothing searchable. */
+  /** What to hydrate from, or `null` when this route has nothing searchable (yet). */
   const target = computed(() => {
     const isPreview = content.value.mode !== 'prod'
     if (sha.value) return {
@@ -39,13 +39,14 @@ export function useSearch() {
     return null
   })
 
-  const available = computed(() => target.value !== null)
-
   /**
    * Load the database for the current target.
    * No-ops if the target is unchanged.
    */
   async function warmup(): Promise<void> {
+    // Not resolved yet — the `watch` below re-runs this once `sha` lands.
+    if (sha.value === undefined) return
+
     const current = target.value
 
     if (!current) {
@@ -87,6 +88,5 @@ export function useSearch() {
     search,
     status: readonly(status),
     warmup,
-    available,
   }
 }
