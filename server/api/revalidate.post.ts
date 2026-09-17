@@ -43,6 +43,7 @@ export default defineEventHandler(async (event) => {
 
   const payload = JSON.parse(raw) as GitHubPushPayload
   const branch = targetBranch()
+  const contentDir = docs.contentDir
   const expectedRef = `refs/heads/${branch}`
 
   if (payload.ref !== expectedRef) {
@@ -103,10 +104,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing head commit SHA' })
   }
 
-  // Ahead of the purge fan-out, so a freshly-purged page can't re-render against the stale SHA.
-  await cacheSha(branch, headSha)
+  // Bypass the short ref cache and write the canonical path-filtered revision before the purge fan-out,
+  // so a freshly-purged page cannot re-render against a stale or payload-order-dependent content SHA.
+  const contentSha = await resolveContentSha(branch, contentDir, { refresh: true })
 
-  console.log(`[content] revalidate push headSha=${headSha ?? '<none>'}`)
+  console.log(`[content] revalidate push headSha=${headSha} contentSha=${contentSha}`)
 
   const requestId = getHeader(event, 'x-vercel-id') ?? getHeader(event, 'x-request-id') ?? 'local'
   const tag = `[revalidate:${requestId}]`
@@ -127,7 +129,9 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const headContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(headSha) } })
+  // The head snapshot has the same content directory as `contentSha`; populate the namespace that
+  // production instances will read even when later commits in this push only changed code.
+  const headContent = await createSourceContent(headSha, { cache: { driver: cacheDriver(contentSha) } })
   await headContent.init()
   const newItems = headContent.manifest.items
 

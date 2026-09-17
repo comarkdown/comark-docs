@@ -92,6 +92,7 @@ function onKeydown(event: KeyboardEvent) {
         color="neutral"
         size="xs"
         :to="playground"
+        class="hidden sm:inline-flex"
       />
     </div>
 

@@ -7,3 +7,26 @@
 export function jsonLd(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e').replaceAll('&', '\\u0026')
 }
+
+export interface BreadcrumbListEntry {
+  name: string
+  /** Absolute URL. Required by Google for every BreadcrumbList ListItem. */
+  item: string
+}
+
+/**
+ * Build a schema.org BreadcrumbList. Every entry must carry an absolute `item` URL — Google rejects
+ * crumbs that only have a name (e.g. non-page section nodes in the docs nav).
+ */
+export function breadcrumbListLd(entries: BreadcrumbListEntry[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: entries.map((entry, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: entry.name,
+      item: entry.item,
+    })),
+  }
+}

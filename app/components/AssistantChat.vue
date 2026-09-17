@@ -180,8 +180,8 @@ function sourcesLabel(message: UIMessage) {
                 :text="part.text"
                 :streaming="isPartStreaming(part)"
               >
-                <Comark
-                  :markdown="part.text"
+                <Markdown
+                  :value="part.text"
                   :streaming="isPartStreaming(part)"
                   :plugins="plugins"
                   class="text-sm text-muted *:first:mt-0 *:last:mb-0"
@@ -195,9 +195,9 @@ function sourcesLabel(message: UIMessage) {
               />
 
               <template v-else-if="isTextUIPart(part)">
-                <Comark
+                <Markdown
                   v-if="message.role === 'assistant'"
-                  :markdown="part.text"
+                  :value="part.text"
                   :streaming="isPartStreaming(part)"
                   :plugins="plugins"
                   class="*:first:mt-0 *:last:mb-0"

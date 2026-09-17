@@ -6,8 +6,22 @@ definePageMeta({
   layout: 'docs',
 })
 
+const { header } = useAppConfig()
+const brand = computed(() =>
+  header?.logo?.mark === 'comark-content'
+    ? {
+      logo: 'comark-content' as const,
+      name: 'Comark Content',
+      tagline: 'The content layer for Markdown.'
+    } : {
+      logo: 'comark' as const,
+      name: 'Comark',
+      tagline: 'The open-source Markdown parser and renderer.',
+    },
+)
+
 const title = 'Brand assets'
-const description = 'Logos and assets for the Comark ecosystem. Download SVG or PNG, or copy the raw SVG source directly.'
+const description = `Logos and assets for ${brand.value.name}. Download SVG or PNG, or copy the raw SVG source directly.`
 
 const site = useSiteConfig()
 const canonicalUrl = computed(() => joinURL(site.url, '/logos'))
@@ -42,43 +56,20 @@ defineOgImage('DocsSatori', {
     <UPageBody>
       <section>
         <h2 class="text-2xl text-highlighted font-bold">
-          Comark
+          {{ brand.name }}
         </h2>
         <p class="mt-2 mb-6">
-          The open-source Markdown parser and renderer.
+          {{ brand.tagline }}
         </p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <LogoCard
-            logo="comark"
+            :logo="brand.logo"
             name="Black"
             bg="#ffffff"
             color="#0a0a0a"
           />
           <LogoCard
-            logo="comark"
-            name="White"
-            bg="#0a0a0a"
-            color="#ffffff"
-          />
-        </div>
-      </section>
-
-      <section>
-        <h2 class="text-2xl text-highlighted font-bold">
-          Comark Content
-        </h2>
-        <p class="mt-2 mb-6">
-          The content layer for Markdown.
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <LogoCard
-            logo="comark-content"
-            name="Black"
-            bg="#ffffff"
-            color="#0a0a0a"
-          />
-          <LogoCard
-            logo="comark-content"
+            :logo="brand.logo"
             name="White"
             bg="#0a0a0a"
             color="#ffffff"

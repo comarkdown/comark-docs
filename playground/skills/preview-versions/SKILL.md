@@ -13,12 +13,12 @@ Content is served at request time. Production is pinned to a commit SHA; any bra
 | Mode | URL | Content |
 | --- | --- | --- |
 | prod | `/getting-started/introduction` | pinned production SHA |
-| tree | `/tree/main/getting-started/introduction` | branch tip |
+| tree | `/tree/main/getting-started/introduction` | latest commit touching the content directory |
 | blob | `/blob/<sha>/getting-started/introduction` | immutable commit |
 
 Raw markdown mirrors exist at `/raw/**` (and under `/tree/.../raw/` / `/blob/.../raw/`).
 
-Two cache tiers: ISR-cached page HTML at the edge, and a per-SHA runtime cache for parsed Markdown bodies. A GitHub push to the production branch hits `/api/revalidate` and purges ISR.
+Two cache tiers: ISR-cached page HTML at the edge, and a per-parser-version, per-content-SHA runtime cache for parsed Markdown bodies. A GitHub push to the production branch hits `/api/revalidate` and purges ISR.
 
 Keyboard shortcut `g` `h` toggles the version-history panel on a docs page.
 

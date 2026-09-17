@@ -32,10 +32,8 @@ export default defineNuxtModule({
     })
 
     const prerenderRoutes = [
-      '/.well-known/skills',
       '/.well-known/skills/',
       '/.well-known/skills/index.json',
-      '/.well-known/agent-skills',
       '/.well-known/agent-skills/',
       '/.well-known/agent-skills/index.json',
     ]

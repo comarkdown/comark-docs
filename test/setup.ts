@@ -2,6 +2,8 @@
 // importing one directly in a test leaves those names undefined. Declaring the few the tests touch here beats
 // pulling in the whole Nuxt/Nitro harness for a handful of pure functions. `useRuntimeConfig` returns the shape
 // `modules/config.ts` seeds.
+import memoryDriver from 'unstorage/drivers/memory'
+
 export interface TestRuntimeConfig {
   docs: {
     contentDir: string
@@ -41,3 +43,5 @@ globals.createError = (input: { statusCode?: number; statusMessage?: string; mes
   error.statusCode = input.statusCode
   return error
 }
+
+globals.refCacheDriver = () => memoryDriver()

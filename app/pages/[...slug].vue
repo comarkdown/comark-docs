@@ -85,19 +85,14 @@ if (content.value.mode === 'prod') {
               },
               author: { '@type': 'Organization', name: seo?.siteName, url: site.url },
             },
-            {
-              '@context': 'https://schema.org',
-              '@type': 'BreadcrumbList',
-              itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Docs', item: site.url },
-                ...breadcrumb.value.map((item, index) => ({
-                  '@type': 'ListItem',
-                  position: index + 2,
-                  name: item.title,
-                  ...(item.path ? { item: joinURL(site.url, item.path) } : {}),
-                })),
-              ],
-            },
+            // Google requires `item` on every ListItem. Non-page section nodes
+            // (page: false) only have a title — omit them from structured data.
+            breadcrumbListLd([
+              { name: 'Docs', item: site.url },
+              ...breadcrumb.value
+                .filter((item): item is { title: string, path: string } => Boolean(item.path))
+                .map((item) => ({ name: item.title, item: joinURL(site.url, item.path) })),
+            ]),
           ])
         ),
       },
