@@ -36,10 +36,7 @@ export default defineNuxtModule({
     runtimeConfig.agentDiscoverySkillsV2 = catalog
 
     const { resolve } = createResolver(import.meta.url)
-    const indexHandler = resolve('./runtime/server/routes/index')
-    addServerHandler({ route: V2_PREFIX, handler: indexHandler })
-    addServerHandler({ route: `${V2_PREFIX}/`, handler: indexHandler })
-    addServerHandler({ route: V2_INDEX, handler: indexHandler })
+    addServerHandler({ route: V2_INDEX, handler: resolve('./runtime/server/routes/index') })
 
     if (archiveUrls.length) {
       addServerHandler({ route: `${V2_PREFIX}/**`, handler: resolve('./runtime/server/routes/archive') })
