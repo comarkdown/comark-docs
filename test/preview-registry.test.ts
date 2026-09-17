@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseBranchName, parseCommitSha, parsePullNumber } from '../server/utils/refs'
+import { parseBranchName, parseCommitSha, parsePreviewBranch, parsePullNumber } from '../server/utils/refs'
 
 /**
  * `/api/content/blob/:sha` and `/api/content/tree/:branch` are unauthenticated, and each distinct ref they accept costs
@@ -7,7 +7,8 @@ import { parseBranchName, parseCommitSha, parsePullNumber } from '../server/util
  */
 describe('preview ref boundary', () => {
   const blobRoute = (sha: string) => parseCommitSha(sha)
-  const treeRoute = (branch: string) => parseBranchName(decodeURIComponent(branch))
+  // `parsePreviewBranch`, not `parseBranchName`: the route also rejects SHA-shaped refs (refs.test.ts).
+  const treeRoute = (branch: string) => parsePreviewBranch(decodeURIComponent(branch))
 
   it('accepts the refs the app itself generates', () => {
     // `VersionHistory.select` links to /blob/<full sha>; UI shortSha is 7 chars.
@@ -42,6 +43,17 @@ describe('preview ref boundary', () => {
     }
     // A branch merely *containing* these words is still fine.
     expect(treeRoute(encodeURIComponent('feat/pull-based-sync'))).toBe('feat/pull-based-sync')
+  })
+
+  // GitHub's list-commits `?sha=` resolves fork-network commits against the upstream repo
+  // (verified live against a real fork PR), so a SHA accepted here would bypass the authorization
+  // `/blob/:sha` enforces — see `parsePreviewBranch`'s doc comment. `parseBranchName` alone accepts
+  // it, since hex characters are ordinary word characters; only the combined check rejects it.
+  it('turns away commit SHAs, which parseBranchName alone would accept', () => {
+    const sha = '4f2a9c1e8b7d6a5f4e3c2b1a0f9e8d7c6b5a4938'
+    expect(parseBranchName(sha)).not.toBeNull()
+    expect(treeRoute(encodeURIComponent(sha))).toBeNull()
+    expect(treeRoute(encodeURIComponent('4f2a9c1'))).toBeNull() // short SHA too
   })
 })
 

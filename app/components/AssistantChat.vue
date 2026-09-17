@@ -3,7 +3,7 @@ import { DefaultChatTransport, isReasoningUIPart, isTextUIPart, isToolUIPart, ge
 import { useChat } from '@ai-sdk/vue'
 import { isPartStreaming, isToolStreaming } from '@nuxt/ui/utils/ai'
 import rangi from 'comark/plugins/rangi'
-import { geistTheme } from '../../utils/geist-theme'
+import { geistTheme } from '../../utils/geist'
 
 const MAX_INPUT = 1000
 

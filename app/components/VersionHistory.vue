@@ -1,20 +1,28 @@
 <script setup lang="ts">
-interface PageCommit {
-  sha: string
-  shortSha: string
-  message: string
-  author?: string
-  avatarUrl?: string
-  date?: string
-  production?: boolean
-}
-
 const open = useVersionHistory()
+const isProductionDeployment = useRuntimeConfig().public.vercelEnv === 'production'
 
 const content = useDocsContent()
 const route = useRoute()
-const commits = ref<PageCommit[]>([])
+const history = ref<PageHistory>()
 const pending = ref(false)
+
+const commits = computed(() => history.value?.commits ?? [])
+const showBranchBadge = computed(
+  () => history.value?.defaultBranch && history.value.defaultBranch !== history.value.branch
+)
+const branchLabel = computed(() => {
+  if (!history.value) return ''
+  return `${isProductionDeployment ? 'Production' : 'Preview'} · ${history.value.branch}`
+})
+
+const pageName = computed(() => history.value?.file?.replace(/^\d+\./, '').replace(/\.[^./]+$/, ''))
+
+const { github } = useAppConfig()
+const commitUrl = computed(() => {
+  const base = github?.url || (github?.owner && github?.name ? `https://github.com/${github.owner}/${github.name}` : '')
+  return base ? `${base}/commit` : undefined
+})
 
 /** Path the current `commits` belong to, so a reopen on the same page is free. */
 const loadedPath = ref<string>()
@@ -23,9 +31,9 @@ async function loadHistory() {
   const path = content.value.path
   pending.value = true
   try {
-    commits.value = await $fetch<PageCommit[]>('/api/history', { query: { path } })
+    history.value = await $fetch<PageHistory>('/api/history', { query: { path } })
   } catch {
-    commits.value = []
+    history.value = undefined
   } finally {
     loadedPath.value = path
     pending.value = false
@@ -52,11 +60,11 @@ function isActive(commit: PageCommit) {
   if (content.value.mode === 'blob' && content.value.ref) {
     return commit.sha === content.value.ref || commit.sha.startsWith(content.value.ref)
   }
-  return content.value.mode === 'prod' && Boolean(commit.production)
+  return content.value.mode === 'prod' && Boolean(commit.current)
 }
 
 function select(commit: PageCommit) {
-  navigateTo(commit.production ? content.value.path : `/blob/${commit.sha}${content.value.path}`)
+  navigateTo(commit.current ? content.value.path : `/blob/${commit.sha}${content.value.path}`)
   open.value = false
 }
 
@@ -69,11 +77,18 @@ function formatDate(date?: string) {
 <template>
   <USlideover
     v-model:open="open"
-    title="Version history"
+    :description="branchLabel"
     side="right"
     :overlay="false"
     :modal="false"
   >
+    <template #title>
+      <span v-if="pageName">
+        Version history of <code class="text-xs font-mono text-muted">{{ pageName }}</code> page
+      </span>
+      <span v-else>Version history</span>
+    </template>
+
     <template #body>
       <p
         v-if="pending"
@@ -82,53 +97,93 @@ function formatDate(date?: string) {
         Loading…
       </p>
 
-      <p
-        v-else-if="!commits.length"
-        class="text-sm text-muted"
-      >
-        No version history for this page.
-      </p>
-
-      <ul
-        v-else
-        class="space-y-1 -mx-2.5"
-      >
-        <li
-          v-for="commit in commits"
-          :key="commit.sha"
+      <template v-else>
+        <p
+          v-if="!commits.length"
+          class="text-sm text-muted"
         >
-          <button
-            type="button"
-            class="w-full rounded-md px-3 py-2 text-left text-sm"
-            :class="isActive(commit) ? 'bg-elevated' : 'hover:bg-elevated/50'"
-            @click="select(commit)"
+          No version history for this page.
+        </p>
+
+        <ul
+          v-else
+          class="space-y-1 -mx-2.5"
+        >
+          <li
+            v-for="commit in commits"
+            :key="commit.sha"
           >
-            <span class="w-full flex flex-col gap-1">
-              <span class="inline-flex items-center gap-2">
-                <span class="font-medium text-default">{{ formatDate(commit.date) }}</span>
-                <UBadge
-                  v-if="commit.production"
-                  color="primary"
-                  size="sm"
-                  label="Production"
-                  class="rounded-full"
+            <!--
+              A `div[role=button]`, not a `button`: the GitHub badges below render as real `<a>`s, and an
+              anchor nested inside a native `<button>` is invalid HTML (interactive content in interactive
+              content). `@keydown.stop` on those anchors keeps Enter from also bubbling up to `select()`.
+            -->
+            <div
+              role="button"
+              tabindex="0"
+              class="w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm"
+              :class="isActive(commit) ? 'bg-elevated' : 'hover:bg-elevated/50'"
+              @click="select(commit)"
+              @keydown.enter="select(commit)"
+              @keydown.space.prevent="select(commit)"
+            >
+              <span class="w-full flex flex-col gap-1">
+                <span class="inline-flex items-center gap-2">
+                  <span class="font-medium text-default">{{ formatDate(commit.date) }}</span>
+                  <UBadge
+                    v-if="commit.current"
+                    color="primary"
+                    size="sm"
+                    label="Live"
+                    class="rounded-full"
+                  />
+                  <UBadge
+                    v-if="showBranchBadge && !commit.branchOnly"
+                    :as="commitUrl ? 'a' : 'span'"
+                    :href="commitUrl && `${commitUrl}/${commit.sha}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    color="neutral"
+                    variant="outline"
+                    size="sm"
+                    leading-icon="i-simple-icons-github"
+                    :label="history?.defaultBranch"
+                    class="rounded-full"
+                    @click.stop
+                    @keydown.stop
+                  />
+                  <UBadge
+                    v-if="showBranchBadge && commit.branchOnly"
+                    :as="commitUrl ? 'a' : 'span'"
+                    :href="commitUrl && `${commitUrl}/${commit.sha}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    color="neutral"
+                    variant="outline"
+                    size="sm"
+                    leading-icon="i-simple-icons-github"
+                    :label="history?.branch"
+                    class="rounded-full"
+                    @click.stop
+                    @keydown.stop
+                  />
+                </span>
+                <span class="block truncate text-sm text-toned">{{ commit.message }}</span>
+                <UUser
+                  :avatar="{
+                    src: commit.avatarUrl,
+                    alt: commit.author,
+                    class: 'text-[10px] ' + (isActive(commit) ? 'bg-muted dark:bg-muted' : 'dark:bg-dimmed'),
+                  }"
+                  :name="commit.author"
+                  size="2xs"
+                  :ui="{ wrapper: 'gap-0' }"
                 />
               </span>
-              <span class="block truncate text-sm text-toned">{{ commit.message }}</span>
-              <UUser
-                :avatar="{
-                  src: commit.avatarUrl,
-                  alt: commit.author,
-                  class: 'text-[10px] ' + (isActive(commit) ? 'bg-muted dark:bg-muted' : 'dark:bg-dimmed'),
-                }"
-                :name="commit.author"
-                size="2xs"
-                :ui="{ wrapper: 'gap-0' }"
-              />
-            </span>
-          </button>
-        </li>
-      </ul>
+            </div>
+          </li>
+        </ul>
+      </template>
     </template>
   </USlideover>
 </template>

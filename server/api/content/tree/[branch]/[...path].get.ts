@@ -6,15 +6,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Missing branch or path' })
   }
 
-  // Public endpoint: every distinct ref costs a GitHub API call and a preview-content instance — validate first.
-  const branch = parseBranchName(decodeURIComponent(rawBranch))
+  const branch = parsePreviewBranch(decodeURIComponent(rawBranch))
   if (!branch) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid branch name' })
   }
 
   // `cacheMisses`: the ref comes from the URL, so a miss must not re-cost a GitHub call each time.
   const sha = await resolveContentSha(branch, useRuntimeConfig(event).docs.contentDir, { cacheMisses: true })
-  const content = await getPreviewContent(sha, `/api/content/tree/${encodeURIComponent(branch)}`)
-
-  return await content.handler(toWebRequest(event))
+  return servePreview(event, sha, `/tree/${rawBranch}`)
 })

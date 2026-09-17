@@ -24,7 +24,7 @@ const landingComponents = {
 const content = useDocsContent()
 const site = useSiteConfig()
 
-const { data: page } = await useAsyncData(`${content.value.base}:landing`, () => content.value.client.get('/'))
+const { data: page } = await useAsyncData(`${content.value.routeBase}:landing`, () => content.value.client.get('/'))
 if (!page.value) {
   throw createError({ statusCode: 404, statusMessage: 'Landing page not found', fatal: true })
 }
@@ -32,7 +32,7 @@ if (!page.value) {
 // Prefix every internal link in the content tree so it stays within the preview.
 const tree = computed(() => {
   const p = page.value
-  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.base) } : p
+  return p ? { ...p, nodes: prefixTreeLinks(p.nodes, content.value.routeBase) } : p
 })
 
 const fm = computed<Record<string, any>>(() => page.value?.data ?? {})

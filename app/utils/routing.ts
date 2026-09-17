@@ -35,3 +35,9 @@ export function prefixNavigation<T extends { path: string; children?: T[] }>(ite
     ...(item.children?.length ? { children: prefixNavigation(item.children, base) } : {}),
   }))
 }
+
+/** Search results carry raw content paths; the palette matches them against the (prefixed) navigation tree. */
+export function prefixSearchResults<T extends { id: string }>(results: T[], base: string): T[] {
+  if (!base) return results
+  return results.map((result) => ({ ...result, id: prefixLink(result.id, base) }))
+}

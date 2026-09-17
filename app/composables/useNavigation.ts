@@ -57,7 +57,7 @@ export function useMainNavigation(): ComputedRef<NavigationMenuItem[]> {
   const navigation = inject<Ref<NavigationItem[]>>('navigation', ref([]))
 
   return computed<NavigationMenuItem[]>(() => {
-    const base = content.value.base
+    const base = content.value.routeBase
 
     const bySegment = new Map<string, NavigationItem>()
     for (const item of navigation.value ?? []) bySegment.set(segmentOf(item.path, base), item)
@@ -112,7 +112,7 @@ export function useFilteredNavigation(): ComputedRef<NavigationItem[]> {
   const navigation = inject<Ref<NavigationItem[]>>('navigation', ref([]))
 
   return computed<NavigationItem[]>(() => {
-    const base = content.value.base
+    const base = content.value.routeBase
     const nav = navigation.value ?? []
 
     const groups = navGroups(nav, base)

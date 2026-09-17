@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import rangi from 'comark/plugins/rangi'
-import { geistTheme } from '../../../utils/geist-theme'
+import { geistTheme } from '../../../utils/geist'
 
 const props = defineProps<{
   /** Markdown source: shown highlighted in the source tab, rendered live in the output tab. */

@@ -185,7 +185,7 @@ export default defineAppConfig({
       // info: 'i-tabler-info-square-rounded-filled',
     },
   },
-  // `seo.siteName`, `header.title` and `github.*` are deliberately NOT defaulted here: modules/config.ts seeds
+  // `seo.siteName`, `header.title` and `github.*` are deliberately NOT defaulted here: modules/config/ seeds
   // them into `nuxt.options.appConfig`, and app.config values — even empty strings — would win over those.
   header: {
     to: '/',

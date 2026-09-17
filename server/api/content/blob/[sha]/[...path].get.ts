@@ -20,7 +20,6 @@ export default defineEventHandler(async (event) => {
   // Also resolves short SHAs so one commit pins one content instance.
   const fullSha = await authorizePreviewSha(sha)
 
-  const content = await getPreviewContent(fullSha, `/api/content/blob/${sha}`)
-
-  return await content.handler(toWebRequest(event))
+  // Head-of-branch requests reuse the shared prod instance; `servePreview()` handles that.
+  return servePreview(event, fullSha, `/blob/${rawSha}`)
 })

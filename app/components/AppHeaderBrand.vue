@@ -72,7 +72,7 @@ onMounted(() => {
     </div>
 
     <NuxtLink
-      :to="prefixLink(header?.to || '/', cms.base)"
+      :to="prefixLink(header?.to || '/', cms.routeBase)"
       :aria-label="header?.logo?.alt || header?.title"
       class="text-highlighted!"
     >
