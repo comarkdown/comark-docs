@@ -53,7 +53,7 @@ Users install the skills with:
 npx skills add https://your-docs-domain.com
 ```
 
-Each skill is a directory with a `SKILL.md` whose frontmatter includes a `description`; `name` defaults to the directory name. The v0.2 catalog includes a SHA-256 digest of each `SKILL.md` and points its artifact URL at the same file served by the v0.1 route. Supporting files remain available alongside that artifact.
+Each skill is a directory with a `SKILL.md` whose frontmatter includes a `description`; `name` defaults to the directory name. In the v0.2 catalog, a skill containing only `SKILL.md` uses the `skill-md` artifact served by the v0.1 route. A skill with supporting files is bundled as a deterministic `.tar.gz` archive. Every entry includes a SHA-256 digest of its downloadable artifact.
 
 Skills are scanned at build time from the filesystem (they ship with the app, not with GitHub-sourced content), so a skill change needs a redeploy. Override the directory with `agentDiscovery.skills.dir`.
 

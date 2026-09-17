@@ -1,7 +1,7 @@
 import { addPrerenderRoutes, addServerHandler, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import type { ModuleOptions as AgentDiscoveryOptions, SkillEntry } from 'nuxt-agent-discovery'
 import { join } from 'pathe'
-import { buildV2Catalog, type SkillV2Entry } from './utils'
+import { buildV2Catalog, type SkillV2Catalog } from './utils'
 
 const V2_PREFIX = '/.well-known/agent-skills'
 const V2_INDEX = `${V2_PREFIX}/index.json`
@@ -9,12 +9,12 @@ const logger = useLogger('comark-docs')
 
 interface SkillsRuntimeConfig {
   agentDiscoverySkills?: { skills: SkillEntry[] }
-  agentDiscoverySkillsV2?: { skills: SkillV2Entry[] }
+  agentDiscoverySkillsV2?: SkillV2Catalog
 }
 
 declare module '@nuxt/schema' {
   interface RuntimeConfig {
-    agentDiscoverySkillsV2?: { skills: SkillV2Entry[] }
+    agentDiscoverySkillsV2?: SkillV2Catalog
   }
 }
 
@@ -29,23 +29,28 @@ export default defineNuxtModule({
     const agentDiscovery = (nuxt.options as typeof nuxt.options & { agentDiscovery?: AgentDiscoveryOptions }).agentDiscovery
     const configuredDir = typeof agentDiscovery?.skills === 'object' ? agentDiscovery.skills.dir : undefined
     const skillsDir = join(nuxt.options.rootDir, configuredDir || 'skills')
+    const archivesDir = join(nuxt.options.buildDir, 'agent-skills-v2')
+    const catalog = await buildV2Catalog(skillsDir, archivesDir, skills)
+    const archiveUrls = catalog.skills.filter(skill => skill.type === 'archive').map(skill => skill.url)
 
-    runtimeConfig.agentDiscoverySkillsV2 = {
-      skills: await buildV2Catalog(skillsDir, skills),
-    }
+    runtimeConfig.agentDiscoverySkillsV2 = catalog
 
     const { resolve } = createResolver(import.meta.url)
-    const handler = resolve('./runtime/server/routes/index')
-    addServerHandler({ route: V2_PREFIX, handler })
-    addServerHandler({ route: `${V2_PREFIX}/`, handler })
-    addServerHandler({ route: V2_INDEX, handler })
+    const indexHandler = resolve('./runtime/server/routes/index')
+    addServerHandler({ route: V2_PREFIX, handler: indexHandler })
+    addServerHandler({ route: `${V2_PREFIX}/`, handler: indexHandler })
+    addServerHandler({ route: V2_INDEX, handler: indexHandler })
+
+    if (archiveUrls.length) {
+      addServerHandler({ route: `${V2_PREFIX}/**`, handler: resolve('./runtime/server/routes/archive') })
+    }
 
     // Match nuxt-agent-discovery's prerender policy. The explicit index path
     // avoids the file/directory collision caused by prerendering both roots.
     const llms = (nuxt.options as typeof nuxt.options & { llms?: { prerender?: boolean } }).llms
     const staticBuild = Boolean((nuxt.options as typeof nuxt.options & { _generate?: boolean })._generate)
     if (staticBuild || llms?.prerender !== false) {
-      addPrerenderRoutes(V2_INDEX)
+      addPrerenderRoutes([V2_INDEX, ...archiveUrls])
     }
 
     nuxt.hook('agent-discovery:extend', ({ links }) => {
