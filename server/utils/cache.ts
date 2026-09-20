@@ -17,7 +17,7 @@ function runtimeCacheDriver(base: string, ttl?: number): Driver {
  * Bump when content parser/plugin configuration, relevant parser dependencies, or cached derived
  * data changes. Keeping this explicit lets unrelated deployments reuse immutable content artifacts.
  */
-export const CONTENT_PARSER_VERSION = 'v4'
+export const CONTENT_PARSER_VERSION = 'v5'
 
 /**
  * A ref pinned via `withRef()` is treated as immutable, so it can be cached for a long time.
