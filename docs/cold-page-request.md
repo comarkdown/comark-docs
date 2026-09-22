@@ -83,3 +83,13 @@ Parsed manifests and bodies live under a parser-version + content-SHA namespace.
 Runtime Cache persists across deployments within an environment, so unrelated deployments can reuse
 immutable content artifacts. `CONTENT_PARSER_VERSION` must be bumped when parser/plugin configuration,
 relevant parser dependencies, or cached derived data changes.
+
+**Client-side navigation** fetches `_payload.json` alongside the page, and Vercel's ISR default
+(`max-age=0, must-revalidate`) means the browser revalidates it on every navigation rather than
+trusting a stale copy for minutes — the webhook purge above takes effect immediately there too.
+For prod pages, `server/middleware/payload-etag.ts` sets a weak `etag` from `resolveProdSha()`,
+so revalidation is a cheap conditional request answered `304` from the edge's ISR entry, not a
+full re-download. Preview payloads (`/tree/**`, `/blob/**`, `/pr/**`) skip this — they render from
+their own pinned instance rather than the prod head, and they're low-traffic and `noindex`, so a
+full re-download on every nav there is an acceptable trade against resolving a second SHA per
+request.
