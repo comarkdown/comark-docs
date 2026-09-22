@@ -154,12 +154,12 @@ export default defineEventHandler(async (event) => {
   const baseURL = `${protocol}://${host}`
 
   // Lets the deployment call itself while Vercel Authentication is on (preview deploys).
-  const selfCall: Record<string, string> = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+  const baseHeaders: Record<string, string> = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
     ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
     : {}
 
   // `x-prerender-revalidate` regenerates the ISR entry for the URL being fetched.
-  const purgeHeaders = { ...selfCall, 'x-prerender-revalidate': bypassToken }
+  const purgeHeaders = { ...baseHeaders, 'x-prerender-revalidate': bypassToken }
 
   // Vercel's native waitUntil, not Nitro's `event.waitUntil` — that one can orphan async work here.
   waitUntil(
@@ -171,7 +171,7 @@ export default defineEventHandler(async (event) => {
       // - Cache parsed items for the pages to purge and re-render
       const warmResults = await timings.time('warm', () =>
         settleInBatches(pathsToWarm, REVALIDATE_CONCURRENCY, (path) =>
-          $fetch(path, { baseURL, method: 'GET', headers: selfCall }).catch((error) => {
+          $fetch(path, { baseURL, method: 'GET', headers: baseHeaders }).catch((error) => {
             console.error(`${tag}   ✗ ${path}`, error?.statusCode ?? error?.message ?? error)
             throw error
           })
