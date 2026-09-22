@@ -255,8 +255,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/api/content/blob/*/manifest.json': { isr: true }, // Immutable since SHA-pinned
         '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
         '/api/code-explorer/**': { isr },
-        '/_payload.json': { swr: true },
-        '/**/_payload.json': { swr: true },
       }
 
       if (existsSync(contentPath)) {

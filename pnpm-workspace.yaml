@@ -20,3 +20,7 @@ overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
   comark: ^0.7.0
+
+patchedDependencies:
+  nuxt@4.5.2: patches/nuxt@4.5.2.patch
+  '@nuxt/nitro-server@4.5.2': patches/@nuxt__nitro-server@4.5.2.patch
