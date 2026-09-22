@@ -256,10 +256,10 @@ export default defineNuxtModule<ComarkDocsOptions>({
         '/api/content/blob/*/snapshot/*': { isr: true }, // Immutable since SHA-pinned
         '/api/code-explorer/**': { isr },
         '/_payload.json': {
-          headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },
+          headers: { 'cache-control': `public, max-age=10` },
         },
         '/**/_payload.json': {
-          headers: { 'cache-control': `public, max-age=${isr}, s-maxage=${isr}, stale-while-revalidate=60` },
+          headers: { 'cache-control': `public, max-age=10` },
         },
       }
 
