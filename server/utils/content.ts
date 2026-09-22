@@ -2,7 +2,7 @@ import { type ContentSource, DEFAULT_CONTENT_NAME } from 'comark-content'
 import fs from 'comark-content/sources/fs'
 import github from 'comark-content/sources/github'
 import { withSnapshot } from 'comark-content/sources/snapshot'
-import { createRuntimeContentInstance } from '../../utils/content.ts'
+import { createRuntimeContentInstance } from '../../utils/factory.ts'
 
 /**
  * The instance serving requests in this layer.

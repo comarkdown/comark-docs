@@ -4,7 +4,7 @@ import { DEFAULT_CONTENT_NAME } from 'comark-content'
 import { writeSnapshots } from 'comark-content/build'
 import fs from 'comark-content/sources/fs'
 import { join } from 'pathe'
-import { createBuildContentInstance } from '../../utils/content'
+import { createBuildContentInstance } from '../../utils/factory'
 import { resolveSnapshotSha } from './utils'
 
 const logger = useLogger('comark-docs')
