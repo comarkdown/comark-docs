@@ -65,13 +65,6 @@ provide('sha', sha)
 const historyOpen = useVersionHistory()
 
 const { assistant } = useAppConfig()
-const assistantOpen = useAssistant()
-
-// Mounting pulls the AI SDK + shiki chunks, so the panel only mounts after the first open.
-const assistantMounted = ref(false)
-watch(assistantOpen, (isOpen) => {
-  if (isOpen) assistantMounted.value = true
-})
 
 defineShortcuts({
   // Disabled `d` for now as it prevents the playground editor to work with the `d` letter
@@ -87,26 +80,33 @@ defineShortcuts({
       color="var(--ui-text-highlighted)"
     />
 
-    <AppHeader />
+    <div class="flex">
+      <div class="flex-1 min-w-0">
+        <AppHeader />
 
-    <UMain>
-      <Suspense>
-        <LayoutsPage v-if="navigationLayout === 'page'">
-          <NuxtPage />
-        </LayoutsPage>
-        <LayoutsDocs v-else-if="navigationLayout === 'docs'">
-          <NuxtPage />
-        </LayoutsDocs>
-        <NuxtPage v-else />
-      </Suspense>
-    </UMain>
+        <UMain>
+          <Suspense>
+            <LayoutsPage v-if="navigationLayout === 'page'">
+              <NuxtPage />
+            </LayoutsPage>
+            <LayoutsDocs v-else-if="navigationLayout === 'docs'">
+              <NuxtPage />
+            </LayoutsDocs>
+            <NuxtPage v-else />
+          </Suspense>
+        </UMain>
 
-    <AppFooter />
+        <AppFooter />
+      </div>
+
+      <ClientOnly>
+        <LazyAssistantChat v-if="assistant?.enabled" />
+      </ClientOnly>
+    </div>
 
     <ClientOnly>
       <AppSearch :navigation="navTree" />
       <LazyVersionHistory />
-      <LazyAssistantChat v-if="assistant?.enabled && assistantMounted" />
     </ClientOnly>
   </UApp>
 </template>
