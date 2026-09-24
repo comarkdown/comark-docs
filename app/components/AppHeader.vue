@@ -27,7 +27,7 @@ const navigation = useMainNavigation()
         label="Ask AI"
         color="neutral"
         variant="outline"
-        @click="assistantOpen = true"
+        @click="assistantOpen = !assistantOpen"
       />
 
       <UButton
