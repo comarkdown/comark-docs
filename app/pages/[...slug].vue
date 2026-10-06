@@ -187,6 +187,17 @@ if (content.value.mode === 'prod') {
 
   const breadcrumb = computed(() => findBreadcrumb(navigation?.value, selfPath.value))
 
+  // Last commit touching the page's source file, from the per-commit map the sitemap also reads.
+  const { data: modified } = await useFetch('/api/last-modified', {
+    key: `last-modified:${content.value.path}`,
+    query: { path: content.value.path },
+    default: () => ({ date: null }),
+  })
+
+  // A "FAQ" section built from an accordion doubles as FAQPage data. The page node is retyped rather
+  // than a second one emitted, the same as LandingFaq, so the questions hang off the existing `WebPage`.
+  const faq = extractFaq(page.value?.nodes)
+
   // `WebSite`, `WebPage` and the publisher come from nuxt-schema-org, which also owns the `@id` links
   // between them. Only what is specific to this page is declared here.
   useSchemaOrg([
@@ -195,7 +206,14 @@ if (content.value.mode === 'prod') {
       headline: () => fm.value.title,
       description: () => fm.value.description,
       inLanguage: 'en',
+      ...(modified.value?.date ? { dateModified: modified.value.date } : {}),
     }),
+    ...(faq.length
+      ? [
+          defineWebPage({ '@type': 'FAQPage' }),
+          ...faq.map((entry) => defineQuestion({ name: entry.question, acceptedAnswer: entry.answer })),
+        ]
+      : []),
     defineBreadcrumb({
       // Google requires `item` on every ListItem. Non-page section nodes
       // (page: false) only have a title — omit them from structured data.
