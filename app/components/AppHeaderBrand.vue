@@ -61,7 +61,6 @@ onMounted(() => {
         viewBox="0 0 16 16"
         width="16"
       >
-        <title>Slash forward icon</title>
         <path
           clip-rule="evenodd"
           d="m4.02 15.4.3-.7 6-14 .29-.68 1.37.59-.3.69-6 14-.29.68z"

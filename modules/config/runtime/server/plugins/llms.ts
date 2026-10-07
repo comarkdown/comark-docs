@@ -58,13 +58,18 @@ function navigationSections(navigation: NavigationItem[]): LLMsSection[] {
   return sections
 }
 
-/** Every page in the subtree, depth first, linked on its page URL. */
+/**
+ * Every page in the subtree, depth first, linked on its page URL. A directory `index.md` is both the
+ * section node and its own first child, so a path seen twice is listed once, keeping its description.
+ */
 function pageLinks(items: NavigationItem[]): NonNullable<LLMsSection['links']> {
   const links: NonNullable<LLMsSection['links']> = []
   const collect = (entries: NavigationItem[]) => {
     for (const entry of entries) {
       if (entry.page !== false && entry.path && entry.path !== '/') {
-        links.push({ title: entry.title, description: entry.description, href: entry.path })
+        const seen = links.find((link) => link.href === entry.path)
+        if (seen) seen.description ||= entry.description
+        else links.push({ title: entry.title, description: entry.description, href: entry.path })
       }
       if (entry.children?.length) collect(entry.children)
     }
