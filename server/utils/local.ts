@@ -77,31 +77,6 @@ export function gitLocalSource(ref: string, dir: string): Source {
   }
 }
 
-/**
- * repoPath → committer date of the last commit touching it, for every file under `dir`, in one `git log`
- * pass (local equivalent of the aliased GraphQL query in `docs-pages.ts`). Newest commits come first, so
- * the first date seen for a file is its last change.
- */
-export async function gitLocalLastModified(dir: string): Promise<Map<string, string>> {
-  const dates = new Map<string, string>()
-  try {
-    const { stdout } = await exec('git', ['log', '--format=%x1e%cI', '--name-only', 'HEAD', '--', dir], {
-      cwd: repoRoot(),
-      maxBuffer: MAX_BUFFER,
-    })
-    for (const block of stdout.split('\x1E')) {
-      const [date, ...files] = block.split('\n').map((line) => line.trim()).filter(Boolean)
-      if (!date) continue
-      for (const file of files) {
-        if (!dates.has(file)) dates.set(file, date)
-      }
-    }
-  } catch (error) {
-    console.error(`[dates] git log failed for ${dir}`, error)
-  }
-  return dates
-}
-
 /** The commits that touched a repo file, newest first (local equivalent of the GitHub commits API). */
 export async function gitLocalFileHistory(repoPath: string, limit = 5, rev = 'HEAD'): Promise<PageCommit[]> {
   try {

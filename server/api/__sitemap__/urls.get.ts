@@ -1,14 +1,18 @@
-/**
- * Sitemap source for `@nuxtjs/sitemap`: every public page, with pages hidden from the sidebar included,
- * and `lastmod` from the last commit touching each page's source file.
- */
+import type { NavigationItem } from 'comark-content'
+
+/** Sitemap source for `@nuxtjs/sitemap`. */
 export default defineEventHandler(async () => {
   const content = await getProdContent()
-  const [pages, dates] = await Promise.all([listDocsPages(content), docsPageDates(content)])
+  const navigation = await content.navigation()
 
-  const url = (loc: string) => {
-    const lastmod = dates.get(loc)
-    return lastmod ? { loc, lastmod } : { loc }
+  const urls: string[] = ['/', '/logos']
+  const collect = (items: NavigationItem[]) => {
+    for (const item of items) {
+      if (item.page !== false && item.path) urls.push(item.path)
+      if (item.children?.length) collect(item.children)
+    }
   }
-  return [url('/'), { loc: '/logos' }, ...pages.map((page) => url(page.path))]
+  collect(navigation)
+
+  return [...new Set(urls)].map((loc) => ({ loc }))
 })

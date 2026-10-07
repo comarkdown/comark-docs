@@ -187,13 +187,6 @@ if (content.value.mode === 'prod') {
 
   const breadcrumb = computed(() => findBreadcrumb(navigation?.value, selfPath.value))
 
-  // Last commit touching the page's source file, from the per-commit map the sitemap also reads.
-  const { data: modified } = await useFetch('/api/last-modified', {
-    key: `last-modified:${content.value.path}`,
-    query: { path: content.value.path },
-    default: () => ({ date: null }),
-  })
-
   // A "FAQ" section built from an accordion doubles as FAQPage data. The page node is retyped rather
   // than a second one emitted, the same as LandingFaq, so the questions hang off the existing `WebPage`.
   const faq = extractFaq(page.value?.nodes)
@@ -206,7 +199,6 @@ if (content.value.mode === 'prod') {
       headline: () => fm.value.title,
       description: () => fm.value.description,
       inLanguage: 'en',
-      ...(modified.value?.date ? { dateModified: modified.value.date } : {}),
     }),
     ...(faq.length
       ? [
