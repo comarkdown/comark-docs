@@ -45,7 +45,7 @@ export default defineNuxtModule<ComarkDocsOptions>({
     // Untyped view: `site` (nuxt-site-config) and `appConfig` aren't typed until app.config is generated.
     const nuxtOptions = nuxt.options as typeof nuxt.options & {
       site?: { url?: string; name?: string; description?: string }
-      appConfig: Record<string, unknown>
+      appConfig: Record<string, Record<string, unknown> | undefined>
       mcp?: false | { name?: string; version?: string; route?: string }
       agentDiscovery?: AgentDiscoveryOptions
     }
