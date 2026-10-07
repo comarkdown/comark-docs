@@ -12,7 +12,7 @@
   "license": "MIT",
   "packageManager": "pnpm@12.4.2",
   "engines": {
-    "node": "^22.19.0 || ^24.11.0 || >=26.0.0"
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
   },
   "files": [
     "app",
@@ -48,7 +48,7 @@
     "@iconify-json/unjs": "^1.2.4",
     "@iconify-json/vscode-icons": "^1.2.77",
     "@iconify/vue": "^5.0.1",
-    "@nuxt/kit": "^4.5.2",
+    "@nuxt/kit": "^4.6.0",
     "@nuxt/ui": "^4.11.1",
     "@nuxtjs/mcp-toolkit": "^0.21.0",
     "@nuxtjs/robots": "^6.2.3",
@@ -86,7 +86,7 @@
     "zod": "^4.6.5"
   },
   "peerDependencies": {
-    "nuxt": "^4.5.0"
+    "nuxt": "^4.6.0"
   },
   "devDependencies": {
     "@nuxt/devtools-kit": "4.0.0-alpha.20",
@@ -96,7 +96,7 @@
     "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@opentelemetry/sdk-trace-node": "^2.11.0",
     "eslint": "^10.10.0",
-    "nuxt": "^4.5.2",
+    "nuxt": "^4.6.0",
     "typescript": "^6.0.3",
     "vitest": "^5.0.1",
     "vue-tsc": "^3.3.11"
