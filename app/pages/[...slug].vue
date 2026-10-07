@@ -141,6 +141,9 @@ const surroundLinks = computed(() => findSurroundLinks(navigation?.value, selfPa
 
 const fm = computed<Record<string, any>>(() => page.value?.data ?? {})
 const tocLinks = computed<any[]>(() => (page.value?.meta as any)?.toc?.links ?? [])
+// Landing-style pages (e.g. /ecosystem) have no headings to list, so the aside would only hold the
+// page actions and squeeze the content. Docs pages keep it for the menu and page actions.
+const showAside = computed(() => layout?.value !== 'page' || tocLinks.value.length > 0)
 
 const title = computed(() => fm.value.seo?.title || fm.value.title)
 const description = computed(() => fm.value.seo?.description || fm.value.description)
@@ -213,7 +216,11 @@ if (content.value.mode === 'prod') {
 <template>
   <UPage
     v-if="page"
-    :ui="{ root: 'lg:grid-cols-12 flex-col-reverse', center: 'lg:col-span-9', right: 'lg:col-span-3' }"
+    :ui="{
+      root: 'lg:grid-cols-12 flex-col-reverse',
+      center: showAside ? 'lg:col-span-9' : 'lg:col-span-12',
+      right: 'lg:col-span-3',
+    }"
   >
     <UPageHeader
       :title="fm.title"
@@ -235,7 +242,10 @@ if (content.value.mode === 'prod') {
       />
     </UPageBody>
 
-    <template #right>
+    <template
+      v-if="showAside"
+      #right
+    >
       <UContentToc
         highlight
         highlight-color="primary"
