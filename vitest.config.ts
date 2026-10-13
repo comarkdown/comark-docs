@@ -8,8 +8,27 @@ export default defineConfig({
   // `transformSync`, hence the cast.
   oxc: { tsconfig: false } as never,
   test: {
-    include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
-    setupFiles: ['test/setup.ts'],
-    environment: 'node',
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
+          exclude: ['test/e2e/**'],
+          setupFiles: ['test/setup.ts'],
+          environment: 'node',
+        },
+      },
+      {
+        // Runs against the built playground (`pnpm build`), so it catches what only breaks once bundled.
+        test: {
+          name: 'e2e',
+          include: ['test/e2e/**/*.test.ts'],
+          globalSetup: ['test/e2e/setup.ts'],
+          environment: 'node',
+          // A cold page pulls its content from GitHub and OG images render through satori.
+          testTimeout: 60_000,
+        },
+      },
+    ],
   },
 })
