@@ -1,0 +1,133 @@
+nitropack@2.13.4, two fixes until a Nitro v2 release ships them:
+
+1. dist/presets/vercel/utils.mjs: nitrojs/nitro#4651, header-only Vercel routes need `continue: true`.
+2. dist/rollup/index.mjs: externals map files back to pattern exports (`comark/plugins/*`).
+   Without it, layer components importing a comark plugin crash SSR on Nuxt 4.6.
+   Not upstream yet.
+
+Each patched block is tagged with a `[comark-docs patch]` comment.
+
+diff --git a/dist/presets/vercel/utils.mjs b/dist/presets/vercel/utils.mjs
+index 6b4a25e30eceded9b820a446c3c4519f4f43c0ac..8a807ea3d67b754e2bc409914105cf97fb7ff5d9 100644
+--- a/dist/presets/vercel/utils.mjs
++++ b/dist/presets/vercel/utils.mjs
+@@ -129,19 +129,24 @@ function generateBuildConfig(nitro, o11Routes) {
+       )
+     },
+     routes: [
+-      // Redirect and header rules
+-      ...rules.filter(([_, routeRules]) => routeRules.redirect || routeRules.headers).map(([path, routeRules]) => {
++      // [comark-docs patch] nitrojs/nitro#4651, merged in Nitro v2 but not released yet.
++      // Header-only rules (least specific first, so more specific headers override on `continue`)
++      ...rules.filter(([_, routeRules]) => routeRules.headers && !routeRules.redirect).reverse().map(([path, routeRules]) => ({
++        src: path.replace("/**", "/(.*)"),
++        headers: routeRules.headers,
++        continue: true
++      })),
++      // Redirect rules
++      ...rules.filter(
++        (entry) => !!entry[1].redirect
++      ).map(([path, routeRules]) => {
+         let route = {
+-          src: path.replace("/**", "/(.*)")
++          src: path.replace("/**", "/(.*)"),
++          status: routeRules.redirect.statusCode,
++          headers: {
++            Location: routeRules.redirect.to.replace("/**", "/$1")
++          }
+         };
+-        if (routeRules.redirect) {
+-          route = defu(route, {
+-            status: routeRules.redirect.statusCode,
+-            headers: {
+-              Location: routeRules.redirect.to.replace("/**", "/$1")
+-            }
+-          });
+-        }
+         if (routeRules.headers) {
+           route = defu(route, { headers: routeRules.headers });
+         }
+diff --git a/dist/rollup/index.mjs b/dist/rollup/index.mjs
+index 9aadcbc7925e965062670f1d86436f8e0830b200..3d55aefa5647fe6f313aa86abf3ae2e34c3aebab 100644
+--- a/dist/rollup/index.mjs
++++ b/dist/rollup/index.mjs
+@@ -413,10 +413,19 @@ function externals$1(opts) {
+         }
+         const packageEntry = tryResolve(pkgName, importer);
+         if (packageEntry !== id) {
+-          const guessedSubpath = await lookupNodeModuleSubpath(id).catch(() => null);
+-          const resolvedGuess = guessedSubpath && tryResolve(join(pkgName, guessedSubpath), importer);
+-          if (resolvedGuess === id) {
+-            trackedExternals.add(resolvedGuess);
++          // [comark-docs patch] Map files back to pattern exports (`comark/plugins/*`), not upstream yet.
++          const resolvesToId = (subpath) => !!subpath && tryResolve(join(pkgName, subpath), importer) === id;
++          const exactSubpath = await lookupNodeModuleSubpath(id).catch(
++            () => null
++          );
++          const guessedSubpath = resolvesToId(exactSubpath) ? exactSubpath : (
++            // `lookupNodeModuleSubpath` only matches exact export targets
++            (await lookupPatternExportSubpaths(id)).find(
++              (subpath) => resolvesToId(subpath)
++            )
++          );
++          if (guessedSubpath) {
++            trackedExternals.add(id);
+             return {
+               id: join(pkgName, guessedSubpath),
+               external: true
+@@ -686,6 +695,55 @@ function applyProductionCondition(exports$1) {
+     applyProductionCondition(exports$1[key]);
+   }
+ }
++// [comark-docs patch] Pattern-export lookup used by the externals plugin above.
++async function lookupPatternExportSubpaths(id) {
++  const { dir, name, subpath } = parseNodeModulePath$1(id);
++  if (!dir || !name || !subpath) {
++    return [];
++  }
++  const { exports } = await readPackageJSON(join(dir, name)).catch(
++    () => ({})
++  );
++  return findPatternExportSubpaths(exports, subpath);
++}
++function findPatternExportSubpaths(exports, subpath) {
++  if (!exports || typeof exports !== "object" || Array.isArray(exports)) {
++    return [];
++  }
++  const subpaths = [];
++  for (const [key, value] of Object.entries(exports)) {
++    if (!key.startsWith("./") || key.split("*").length !== 2) {
++      continue;
++    }
++    for (const target of exportTargets(value)) {
++      const parts = target.split("*");
++      if (parts.length !== 2) {
++        continue;
++      }
++      const [prefix, suffix] = parts;
++      if (subpath.length > prefix.length + suffix.length && subpath.startsWith(prefix) && subpath.endsWith(suffix)) {
++        const match = subpath.slice(
++          prefix.length,
++          subpath.length - suffix.length
++        );
++        subpaths.push(key.replace("*", match));
++      }
++    }
++  }
++  return subpaths;
++}
++function exportTargets(value) {
++  if (typeof value === "string") {
++    return [value];
++  }
++  if (Array.isArray(value)) {
++    return value.flatMap((item) => exportTargets(item));
++  }
++  if (value && typeof value === "object") {
++    return Object.values(value).flatMap((item) => exportTargets(item));
++  }
++  return [];
++}
+ async function isFile$1(file) {
+   try {
+     const stat = await promises.stat(file);
