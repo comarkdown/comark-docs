@@ -19,9 +19,3 @@ minimumReleaseAgeExclude:
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
-
-patchedDependencies:
-  # Until released in Nitro v2, two fixes on top of 2.13.4:
-  # - nitrojs/nitro#4651: header-only Vercel routes need `continue: true`.
-  # - Externals map files back to pattern exports, or layer components importing `comark/plugins/*` crash SSR.
-  nitropack@2.13.4: patches/nitropack@2.13.4.patch
