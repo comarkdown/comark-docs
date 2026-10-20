@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { type AddressInfo, createServer } from 'node:net'
 import { fileURLToPath } from 'node:url'
@@ -47,7 +48,12 @@ export default async function setup(project: TestProject) {
 
   const port = await freePort()
   const server = spawn(process.execPath, [entry], {
-    env: { ...process.env, HOST: '127.0.0.1', PORT: String(port) },
+    env: {
+      NUXT_APP_SECRET: randomBytes(32).toString('base64'),
+      ...process.env,
+      HOST: '127.0.0.1',
+      PORT: String(port),
+    },
     // Server logs land in the test output: the `[request error]` line is what explains a failing route.
     stdio: ['ignore', 'inherit', 'inherit'],
   })
