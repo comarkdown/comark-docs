@@ -78,6 +78,7 @@ export default defineNuxtConfig({
   },
   nitro: {
     alias: layerIconAliases(),
+    externals: { inline: ['comark/'] },
     // MCP tool handlers reach the request through `useEvent()`.
     experimental: { asyncContext: true },
     vercel: {

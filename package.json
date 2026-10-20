@@ -34,8 +34,9 @@
     "typecheck": "nuxt typecheck playground",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "vitest run --project unit",
+    "test:e2e": "vitest run --project e2e",
+    "test:watch": "vitest --project unit",
     "dev:prepare": "nuxt prepare playground"
   },
   "dependencies": {
@@ -95,6 +96,7 @@
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/sdk-trace-node": "^2.12.0",
+    "es-module-lexer": "^3.0.2",
     "eslint": "^10.13.0",
     "nuxt": "^4.6.2",
     "typescript": "^6.0.3",

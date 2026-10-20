@@ -19,5 +19,3 @@ minimumReleaseAgeExclude:
 overrides:
   # Keep the workspace on a single h3 major (v1), matching comark-content.
   h3: ^1.15.11
-  # Until nitrojs/nitro#4651 is released: header-only Vercel routes need `continue: true`.
-  nitropack: https://pkg.pr.new/nitrojs/nitro/nitropack@4651
