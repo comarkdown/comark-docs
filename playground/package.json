@@ -13,6 +13,6 @@
     "nuxt": "^4.6.2"
   },
   "devDependencies": {
-    "nuxtseo-layer-devtools": "^5.3.6"
+    "nuxtseo-devtools-host": "^1.0.2"
   }
 }
