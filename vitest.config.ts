@@ -13,7 +13,7 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
-          exclude: ['test/e2e/**'],
+          exclude: ['test/e2e/**', 'test/vercel/**'],
           setupFiles: ['test/setup.ts'],
           environment: 'node',
         },
@@ -27,6 +27,14 @@ export default defineConfig({
           environment: 'node',
           // A cold page pulls its content from GitHub and OG images render through satori.
           testTimeout: 60_000,
+        },
+      },
+      {
+        // Reads the Vercel build output (`NITRO_PRESET=vercel pnpm build`), checking what a deploy would get.
+        test: {
+          name: 'vercel',
+          include: ['test/vercel/**/*.test.ts'],
+          environment: 'node',
         },
       },
     ],

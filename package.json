@@ -36,6 +36,7 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run --project unit",
     "test:e2e": "vitest run --project e2e",
+    "test:vercel": "vitest run --project vercel",
     "test:watch": "vitest --project unit",
     "dev:prepare": "nuxt prepare playground"
   },
