@@ -2,6 +2,7 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { expectSelfContainedBundle } from '../server-bundle'
 
 const outputDir = fileURLToPath(new URL('../../playground/.vercel/output/', import.meta.url))
 const functionsDir = join(outputDir, 'functions')
@@ -149,6 +150,11 @@ describe('server function', () => {
   it(`stays under ${MAX_FUNCTION_MB} MB`, () => {
     const bytes = walk(serverDir).reduce((total, file) => total + lstatSync(file).size, 0)
     expect(bytes / 1024 / 1024).toBeLessThan(MAX_FUNCTION_MB)
+  })
+
+  // Vercel uploads the function directory alone, with its own traced `node_modules/`.
+  it('resolves every import inside the function', async () => {
+    await expectSelfContainedBundle(serverDir)
   })
 
   // Without it a cold start walks the content repository on GitHub.
