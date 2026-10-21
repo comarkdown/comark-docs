@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { baseURL, fetchWithFailure, INTRO_PAGE, NOT_FOUND_SLUG, SITE_URL } from './utils'
+import { fetchWithFailure, INTRO_PAGE, NOT_FOUND_SLUG, request, SITE_URL } from './utils'
 
 let requestId = 0
 
 /** Calls the MCP server over streamable HTTP, without a session. */
 async function mcp<T>(method: string, params?: Record<string, unknown>): Promise<T> {
-  const response = await fetch(new URL('/mcp', baseURL), {
+  const response = await request('/mcp', {
     method: 'POST',
     headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
     body: JSON.stringify({ jsonrpc: '2.0', id: ++requestId, method, params }),

@@ -72,11 +72,13 @@ Each skill is a directory with a `SKILL.md` whose frontmatter includes a `descri
 
 ```bash
 pnpm install
-pnpm dev       # runs the playground
-pnpm lint      # correctness-only ESLint (no stylistic rules — see eslint.config.mjs)
-pnpm test      # Vitest over the pure utils
-pnpm test:e2e  # Vitest against the built playground (`pnpm build` first)
-pnpm typecheck # vue-tsc across the layer + playground
+pnpm dev         # runs the playground
+pnpm lint        # correctness-only ESLint (no stylistic rules — see eslint.config.mjs)
+pnpm test        # Vitest over the pure utils
+pnpm test:e2e    # Vitest against the built playground (`pnpm build` first)
+pnpm test:vercel # Vitest over the Vercel output (`NITRO_PRESET=vercel pnpm build` first)
+pnpm test:smoke  # the e2e suite against a deployment (`SMOKE_URL=https://… pnpm test:smoke`)
+pnpm typecheck   # vue-tsc across the layer + playground
 ```
 
 To develop the layer against a consumer app in a sibling checkout:
