@@ -5,12 +5,36 @@ interface Tab {
   description?: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   items: Tab[]
   reverse?: boolean | string
-}>()
+  /**
+   * Where the headline, title and description go: `side` stacks them above the
+   * tab list in its column; `center` and `left` put them above both columns,
+   * centered or left-aligned.
+   */
+  header?: 'side' | 'center' | 'left'
+}>(), {
+  reverse: false,
+  header: 'side',
+})
 
 const reversed = computed(() => props.reverse === true || props.reverse === 'true' || props.reverse === '')
+const stacked = computed(() => props.header !== 'side')
+
+/**
+ * One grid for every layout: the header, tab list and panel are its items. On
+ * the side layout, the panel spans both rows of the other column, and the
+ * shorter column sits at the bottom; stacked, the header spans both columns
+ * and the tab list and panel are top-aligned below it.
+ */
+const tabColumn = computed(() => reversed.value ? 'lg:col-start-2' : 'lg:col-start-1')
+const panelColumn = computed(() => reversed.value ? 'lg:col-start-1' : 'lg:col-start-2')
+const headerClass = computed(() => {
+  if (!stacked.value) return [tabColumn.value, 'lg:self-end']
+  return props.header === 'center' ? 'lg:col-span-2 mx-auto max-w-2xl text-center' : 'lg:col-span-2 max-w-2xl'
+})
+const panelClass = computed(() => [panelColumn.value, stacked.value ? 'lg:row-start-2 lg:self-start' : 'lg:row-start-1 lg:row-span-2 lg:self-end'])
 
 const activeIndex = ref(0)
 
@@ -54,83 +78,89 @@ function onKeydown(event: KeyboardEvent) {
       container: 'max-w-6xl py-16 sm:py-16 lg:py-16',
     }"
   >
-    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-end">
+    <div
+      class="grid lg:grid-cols-2 gap-x-12 lg:gap-x-16 gap-y-10"
+      :class="stacked ? 'lg:gap-y-16' : 'lg:grid-rows-[1fr_auto]'"
+    >
       <div
-        class="space-y-10"
-        :class="reversed ? 'lg:order-last' : ''"
+        v-if="$slots.headline || $slots.title || $slots.description"
+        :class="headerClass"
       >
-        <div>
-          <p
-            v-if="$slots.headline"
-            class="font-mono font-medium text-xs text-primary uppercase tracking-[0.12em]"
-          >
-            // <slot name="headline" /> //
-          </p>
-          <h2
-            v-if="$slots.title"
-            class="mt-6 text-3xl sm:text-4xl font-medium tracking-tight leading-tight text-highlighted"
-          >
-            <slot
-              name="title"
-              unwrap="p"
-            />
-          </h2>
-          <p
-            v-if="$slots.description"
-            class="mt-4 text-base toned max-w-lg"
-          >
-            <slot
-              name="description"
-              unwrap="p"
-            />
-          </p>
-        </div>
-
-        <div
-          role="tablist"
-          aria-orientation="vertical"
-          class="space-y-2"
-          @keydown="onKeydown"
+        <p
+          v-if="$slots.headline"
+          class="font-mono font-medium text-xs text-primary uppercase tracking-[0.12em]"
         >
-          <button
-            v-for="(item, i) in items"
-            :id="tabId(i)"
-            :key="item.title"
-            ref="tabs"
-            type="button"
-            role="tab"
-            :aria-selected="activeIndex === i"
-            :aria-controls="panelId(i)"
-            :tabindex="activeIndex === i ? 0 : -1"
-            class="w-full flex gap-4 p-4 rounded-xl border text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            :class="activeIndex === i ? 'bg-elevated/50 border-muted' : 'hover:bg-elevated/50 border-transparent'"
-            @click="activeIndex = i"
-          >
-            <span
-              v-if="item.icon"
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated"
-            >
-              <UIcon
-                :name="item.icon"
-                class="size-5 text-primary"
-              />
-            </span>
-            <div>
-              <h3 class="text-sm font-medium tracking-tight text-highlighted">
-                {{ item.title }}
-              </h3>
-              <p
-                v-if="item.description"
-                class="mt-1 text-sm leading-relaxed text-toned"
-              >
-                {{ item.description }}
-              </p>
-            </div>
-          </button>
-        </div>
+          // <slot name="headline" /> //
+        </p>
+        <h2
+          v-if="$slots.title"
+          class="mt-6 text-3xl sm:text-4xl font-medium tracking-tight leading-tight text-highlighted"
+        >
+          <slot
+            name="title"
+            unwrap="p"
+          />
+        </h2>
+        <p
+          v-if="$slots.description"
+          class="mt-4 text-base toned"
+          :class="stacked ? '' : 'max-w-lg'"
+        >
+          <slot
+            name="description"
+            unwrap="p"
+          />
+        </p>
       </div>
 
-      <div class="relative rounded-2xl overflow-hidden">
+      <div
+        role="tablist"
+        aria-orientation="vertical"
+        class="space-y-2"
+        :class="[tabColumn, stacked && 'lg:self-start']"
+        @keydown="onKeydown"
+      >
+        <button
+          v-for="(item, i) in items"
+          :id="tabId(i)"
+          :key="item.title"
+          ref="tabs"
+          type="button"
+          role="tab"
+          :aria-selected="activeIndex === i"
+          :aria-controls="panelId(i)"
+          :tabindex="activeIndex === i ? 0 : -1"
+          class="w-full flex gap-4 p-4 rounded-xl border text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          :class="activeIndex === i ? 'bg-elevated/50 border-muted' : 'hover:bg-elevated/50 border-transparent'"
+          @click="activeIndex = i"
+        >
+          <span
+            v-if="item.icon"
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated"
+          >
+            <UIcon
+              :name="item.icon"
+              class="size-5 text-primary"
+            />
+          </span>
+          <div>
+            <h3 class="text-sm font-medium tracking-tight text-highlighted">
+              {{ item.title }}
+            </h3>
+            <p
+              v-if="item.description"
+              class="mt-1 text-sm leading-relaxed text-toned"
+            >
+              {{ item.description }}
+            </p>
+          </div>
+        </button>
+      </div>
+
+      <div
+        class="relative min-w-0"
+        :class="panelClass"
+      >
         <div
           v-for="(_, i) in items"
           v-show="activeIndex === i"
@@ -139,6 +169,7 @@ function onKeydown(event: KeyboardEvent) {
           role="tabpanel"
           :aria-labelledby="tabId(i)"
           :tabindex="0"
+          class="*:first:mt-0 *:last:mb-0"
         >
           <slot :name="`code-${i}`" />
         </div>
