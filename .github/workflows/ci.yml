@@ -44,3 +44,21 @@ jobs:
       # tarball (https://pkg.pr.new/comarkdown/comark-docs@<sha>), so downstream sites
       # can test the layer before a release. Requires the pkg.pr.new GitHub App.
       - run: pnpx pkg-pr-new publish --compact --no-template --pnpm
+
+  # The Vercel output as a deploy would get it: ISR functions and their TTLs, the bypass token, the server function.
+  vercel:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          package-manager-cache: false
+          node-version: '24'
+      - run: npm i -g --force corepack && corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          NITRO_PRESET: vercel
+          VERCEL_BYPASS_TOKEN: ci-placeholder-bypass-token-0000000000
+      - run: pnpm test:vercel
