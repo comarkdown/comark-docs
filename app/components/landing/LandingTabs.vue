@@ -54,83 +54,82 @@ function onKeydown(event: KeyboardEvent) {
       container: 'max-w-6xl py-16 sm:py-16 lg:py-16',
     }"
   >
-    <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-end">
-      <div
-        class="space-y-10"
-        :class="reversed ? 'lg:order-last' : ''"
+    <div
+      v-if="$slots.headline || $slots.title || $slots.description"
+      class="mx-auto max-w-2xl text-center"
+    >
+      <p
+        v-if="$slots.headline"
+        class="font-mono font-medium text-xs text-primary uppercase tracking-[0.12em]"
       >
-        <div>
-          <p
-            v-if="$slots.headline"
-            class="font-mono font-medium text-xs text-primary uppercase tracking-[0.12em]"
-          >
-            // <slot name="headline" /> //
-          </p>
-          <h2
-            v-if="$slots.title"
-            class="mt-6 text-3xl sm:text-4xl font-medium tracking-tight leading-tight text-highlighted"
-          >
-            <slot
-              name="title"
-              unwrap="p"
-            />
-          </h2>
-          <p
-            v-if="$slots.description"
-            class="mt-4 text-base toned max-w-lg"
-          >
-            <slot
-              name="description"
-              unwrap="p"
-            />
-          </p>
-        </div>
+        // <slot name="headline" /> //
+      </p>
+      <h2
+        v-if="$slots.title"
+        class="mt-6 text-3xl sm:text-4xl font-medium tracking-tight leading-tight text-highlighted"
+      >
+        <slot
+          name="title"
+          unwrap="p"
+        />
+      </h2>
+      <p
+        v-if="$slots.description"
+        class="mt-4 text-base toned"
+      >
+        <slot
+          name="description"
+          unwrap="p"
+        />
+      </p>
+    </div>
 
-        <div
-          role="tablist"
-          aria-orientation="vertical"
-          class="space-y-2"
-          @keydown="onKeydown"
+    <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+      <div
+        role="tablist"
+        aria-orientation="vertical"
+        class="space-y-2"
+        :class="reversed ? 'lg:order-last' : ''"
+        @keydown="onKeydown"
+      >
+        <button
+          v-for="(item, i) in items"
+          :id="tabId(i)"
+          :key="item.title"
+          ref="tabs"
+          type="button"
+          role="tab"
+          :aria-selected="activeIndex === i"
+          :aria-controls="panelId(i)"
+          :tabindex="activeIndex === i ? 0 : -1"
+          class="w-full flex gap-4 p-4 rounded-xl border text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          :class="activeIndex === i ? 'bg-elevated/50 border-muted' : 'hover:bg-elevated/50 border-transparent'"
+          @click="activeIndex = i"
         >
-          <button
-            v-for="(item, i) in items"
-            :id="tabId(i)"
-            :key="item.title"
-            ref="tabs"
-            type="button"
-            role="tab"
-            :aria-selected="activeIndex === i"
-            :aria-controls="panelId(i)"
-            :tabindex="activeIndex === i ? 0 : -1"
-            class="w-full flex gap-4 p-4 rounded-xl border text-left transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            :class="activeIndex === i ? 'bg-elevated/50 border-muted' : 'hover:bg-elevated/50 border-transparent'"
-            @click="activeIndex = i"
+          <span
+            v-if="item.icon"
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated"
           >
-            <span
-              v-if="item.icon"
-              class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-elevated"
+            <UIcon
+              :name="item.icon"
+              class="size-5 text-primary"
+            />
+          </span>
+          <div>
+            <h3 class="text-sm font-medium tracking-tight text-highlighted">
+              {{ item.title }}
+            </h3>
+            <p
+              v-if="item.description"
+              class="mt-1 text-sm leading-relaxed text-toned"
             >
-              <UIcon
-                :name="item.icon"
-                class="size-5 text-primary"
-              />
-            </span>
-            <div>
-              <h3 class="text-sm font-medium tracking-tight text-highlighted">
-                {{ item.title }}
-              </h3>
-              <p
-                v-if="item.description"
-                class="mt-1 text-sm leading-relaxed text-toned"
-              >
-                {{ item.description }}
-              </p>
-            </div>
-          </button>
-        </div>
+              {{ item.description }}
+            </p>
+          </div>
+        </button>
       </div>
 
-      <div class="relative rounded-2xl overflow-hidden">
+      <div class="relative min-w-0">
         <div
           v-for="(_, i) in items"
           v-show="activeIndex === i"
@@ -139,6 +138,7 @@ function onKeydown(event: KeyboardEvent) {
           role="tabpanel"
           :aria-labelledby="tabId(i)"
           :tabindex="0"
+          class="*:first:mt-0 *:last:mb-0"
         >
           <slot :name="`code-${i}`" />
         </div>
