@@ -23,12 +23,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.deployment.sha }}
-      - uses: actions/setup-node@v6
-        with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm test:smoke
         env:
           SMOKE_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}

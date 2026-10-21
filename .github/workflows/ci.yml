@@ -22,12 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       # Lint and unit tests need no generated types, so they run before `prepare`
       # and fail fast.
       - run: pnpm lint
@@ -51,12 +46,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm build
         env:
           NITRO_PRESET: vercel
@@ -69,11 +59,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup
         with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
+          install: false
       - run: ./scripts/test-pack.sh
 
   # comark.dev, a site extending the layer, built against this commit instead of the version it pins.
@@ -87,9 +75,7 @@ jobs:
         with:
           repository: comarkdown/comark
           path: .consumer
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup
         with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
+          install: false
       - run: ./scripts/test-consumer.sh .consumer
