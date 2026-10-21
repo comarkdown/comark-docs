@@ -75,6 +75,7 @@ pnpm install
 pnpm dev       # runs the playground
 pnpm lint      # correctness-only ESLint (no stylistic rules — see eslint.config.mjs)
 pnpm test      # Vitest over the pure utils
+pnpm test:e2e  # Vitest against the built playground (`pnpm build` first)
 pnpm typecheck # vue-tsc across the layer + playground
 ```
 
