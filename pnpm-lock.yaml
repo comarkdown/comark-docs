@@ -251,14 +251,17 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
       comark-content:
-        specifier: ^0.4.1
-        version: 0.4.1(@vercel/functions@3.10.1(ws@8.22.0))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.5.0)
+        specifier: https://pkg.pr.new/comark-content@130
+        version: https://pkg.pr.new/comark-content@130(@vercel/functions@3.10.1(ws@8.22.0))(beautiful-mermaid@1.1.3)(db0@0.3.4)(forges@https://pkg.pr.new/forges@1aba0ce)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.5.0)
       defu:
         specifier: ^6.1.7
         version: 6.1.7
       exsolve:
         specifier: ^1.1.3
         version: 1.1.3
+      forges:
+        specifier: https://pkg.pr.new/forges@1aba0ce
+        version: https://pkg.pr.new/forges@1aba0ce
       js-yaml:
         specifier: ^5.5.0
         version: 5.5.0
@@ -3364,9 +3367,15 @@ packages:
   colortranslator@5.0.0:
     resolution: {integrity: sha512-Z3UPUKasUVDFCDYAjP2fmlVRf1jFHJv1izAmPjiOa0OCIw1W7iC8PZ2GsoDa8uZv+mKyWopxxStT9q05+27h7w==}
 
-  comark-content@0.4.1:
-    resolution: {integrity: sha512-z0nuo3PM53FwBYbxP4rNrUo1QW7jv8YO44HDYaGm2Wx4pmHsLqKdsA6CiHcSOaURze6m7my0Z0YFaLL77LtDUA==}
+  comark-content@https://pkg.pr.new/comark-content@130:
+    resolution: {integrity: sha512-BGX568rmHEMs40dXzHVA6wH51ECDKeSDmva75IDUoiTM2ymySY4widH71ViwqkaRZeNytgKyGhnmR+6ynj2g7g==, tarball: https://pkg.pr.new/comark-content@130}
+    version: 0.4.1
     hasBin: true
+    peerDependencies:
+      forges: ^0.2.0
+    peerDependenciesMeta:
+      forges:
+        optional: true
 
   comark@0.7.0:
     resolution: {integrity: sha512-680hLtUOBcvBEJCD+iCU20jk5TrIJlIcE6X4npdC4x7LBhCvmiYJgByozR2fKav6DYw7AYoXsJVae65kXV6Qhw==}
@@ -4090,6 +4099,11 @@ packages:
   foreground-child@3.3.1:
     resolution: {integrity: sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw==}
     engines: {node: '>=14'}
+
+  forges@https://pkg.pr.new/forges@1aba0ce:
+    resolution: {integrity: sha512-T3oVX1DKhcuvs0ovqK//W+mgoWGQzo5CZqlyzqQJcxF2XZ/N5PRLAq4YoIuAL0oK/tihre2fLaPcIFpr3vCEUQ==, tarball: https://pkg.pr.new/forges@1aba0ce}
+    version: 0.2.0
+    engines: {node: '>=22.18'}
 
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -9877,7 +9891,7 @@ snapshots:
 
   colortranslator@5.0.0: {}
 
-  comark-content@0.4.1(@vercel/functions@3.10.1(ws@8.22.0))(beautiful-mermaid@1.1.3)(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.5.0):
+  comark-content@https://pkg.pr.new/comark-content@130(@vercel/functions@3.10.1(ws@8.22.0))(beautiful-mermaid@1.1.3)(db0@0.3.4)(forges@https://pkg.pr.new/forges@1aba0ce)(ioredis@5.11.1(supports-color@10.2.2))(rangi@2.2.0)(shiki@4.5.0):
     dependencies:
       citty: 0.2.2
       comark: 0.7.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
@@ -9889,6 +9903,8 @@ snapshots:
       slugify: 1.6.9
       ufo: 1.6.4
       unstorage: 1.17.6(@vercel/functions@3.10.1(ws@8.22.0))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))
+    optionalDependencies:
+      forges: https://pkg.pr.new/forges@1aba0ce
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -10703,6 +10719,8 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
+
+  forges@https://pkg.pr.new/forges@1aba0ce: {}
 
   forwarded@0.2.0: {}
 
