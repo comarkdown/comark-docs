@@ -1,11 +1,6 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  // Transform without a tsconfig. oxc would otherwise resolve the root stub, which
-  // points into `playground/.nuxt/` and so only exists after `nuxt prepare` — a fresh
-  // clone (and CI, which tests before preparing) ran zero tests. Nothing under test
-  // needs tsconfig semantics. Absent from Vite's `OxcOptions` type but forwarded to
-  // `transformSync`, hence the cast.
   oxc: { tsconfig: false } as never,
   test: {
     projects: [
@@ -13,7 +8,7 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
-          exclude: ['test/e2e/**', 'test/vercel/**'],
+          exclude: ['test/e2e/**', 'test/vercel/**', 'test/smoke/**'],
           setupFiles: ['test/setup.ts'],
           environment: 'node',
         },
@@ -35,6 +30,19 @@ export default defineConfig({
           name: 'vercel',
           include: ['test/vercel/**/*.test.ts'],
           environment: 'node',
+        },
+      },
+      {
+        // The e2e suite against a deployment (`SMOKE_URL`), plus what only Vercel can answer.
+        test: {
+          name: 'smoke',
+          include: ['test/e2e/**/*.test.ts', 'test/smoke/**/*.test.ts'],
+          // Reads the local build output, which a deployment does not have.
+          exclude: ['test/e2e/bundle.test.ts'],
+          globalSetup: ['test/smoke/setup.ts'],
+          environment: 'node',
+          // Cold starts included.
+          testTimeout: 60_000,
         },
       },
     ],

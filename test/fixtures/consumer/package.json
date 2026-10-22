@@ -1,0 +1,9 @@
+{
+  "name": "comark-docs-consumer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "comark-docs": "set by scripts/test-pack.sh",
+    "nuxt": "^4.6.2"
+  }
+}
