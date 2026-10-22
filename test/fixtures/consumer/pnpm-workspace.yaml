@@ -6,3 +6,10 @@ blockExoticSubdeps: false
 allowBuilds:
   esbuild: false
   vue-demi: false
+
+minimumReleaseAgeExclude:
+  - '@comark/nuxt'
+  - '@comark/vue'
+  - comark
+  - comark-content
+  - nuxt-agent-discovery
