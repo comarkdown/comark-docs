@@ -22,12 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       # Lint and unit tests need no generated types, so they run before `prepare`
       # and fail fast.
       - run: pnpm lint
@@ -51,14 +46,36 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          package-manager-cache: false
-          node-version: '24'
-      - run: npm i -g --force corepack && corepack enable
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm build
         env:
           NITRO_PRESET: vercel
           VERCEL_BYPASS_TOKEN: ci-placeholder-bypass-token-0000000000
       - run: pnpm test:vercel
+
+  # The layer as a site installs it: packed, outside the workspace, built in a fresh app.
+  pack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          install: false
+      - run: ./scripts/test-pack.sh
+
+  # comark.dev, a site extending the layer, built against this commit instead of the version it pins.
+  # cms.comark.dev joins once its repository is public, a private one would need a token secret.
+  consumer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: comarkdown/comark
+          path: .consumer
+      - uses: ./.github/actions/setup
+        with:
+          install: false
+      - run: ./scripts/test-consumer.sh .consumer

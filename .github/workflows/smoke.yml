@@ -1,0 +1,35 @@
+name: smoke
+
+# Vercel's GitHub integration reports every deployment, preview and production, through this event.
+# Content-only pushes skip the build (Ignored Build Step), so they deploy nothing and run nothing here.
+on: deployment_status
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.deployment.id }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: smoke (${{ github.event.deployment.environment }})
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # The tests of the deployed commit, not the default branch's.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.deployment.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm test:smoke
+        env:
+          SMOKE_URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+          SMOKE_ENVIRONMENT: ${{ github.event.deployment.environment }}
+          # Vercel project → Deployment Protection → Protection Bypass for Automation.
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # Set the repository variable to `true` to also call the assistant, which costs AI Gateway calls.
+          SMOKE_ASSISTANT: ${{ vars.SMOKE_ASSISTANT }}

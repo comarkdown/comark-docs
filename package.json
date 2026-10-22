@@ -37,6 +37,7 @@
     "test": "vitest run --project unit",
     "test:e2e": "vitest run --project e2e",
     "test:vercel": "vitest run --project vercel",
+    "test:smoke": "vitest run --project smoke",
     "test:watch": "vitest --project unit",
     "dev:prepare": "nuxt prepare playground"
   },

@@ -57,13 +57,11 @@ function resolveFunction(path: string) {
   return { dest, expiration }
 }
 
-function walk(dir: string, files: string[] = []): string[] {
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) walk(path, files)
-    else files.push(path)
-  }
-  return files
+/** Files under `dir`, skipping symlinks such as the ISR functions, which all link to the server function. */
+function filesIn(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => join(entry.parentPath, entry.name))
 }
 
 /** Nitro inlines each server asset as a raw chunk named after the asset, exporting its contents as a string. */
@@ -124,7 +122,7 @@ describe('ISR', () => {
 
   // The push webhook purges pages with it, without one content updates wait for the TTL.
   it('gives every ISR function the same bypass token', () => {
-    const configs = walk(functionsDir)
+    const configs = filesIn(functionsDir)
       .filter((file) => file.endsWith('.prerender-config.json'))
       .map((file) => ({ file: relative(functionsDir, file), ...readJSON<PrerenderConfig>(file) }))
 
@@ -148,7 +146,7 @@ describe('server function', () => {
   })
 
   it(`stays under ${MAX_FUNCTION_MB} MB`, () => {
-    const bytes = walk(serverDir).reduce((total, file) => total + lstatSync(file).size, 0)
+    const bytes = filesIn(serverDir).reduce((total, file) => total + lstatSync(file).size, 0)
     expect(bytes / 1024 / 1024).toBeLessThan(MAX_FUNCTION_MB)
   })
 
