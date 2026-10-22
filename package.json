@@ -76,7 +76,7 @@
     "js-yaml": "^5.5.0",
     "motion-v": "^2.8.0",
     "nuxt-agent-discovery": "^0.7.1",
-    "nuxt-llms": "https://pkg.pr.new/nuxt-content/nuxt-llms/nuxt-llms@f6a9730",
+    "nuxt-llms": "^0.3.0",
     "nuxt-og-image": "^7.0.7",
     "nuxt-schema-org": "^7.0.1",
     "nuxt-seo-utils": "^9.0.1",

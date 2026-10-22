@@ -6,8 +6,6 @@ allowBuilds:
   unrs-resolver: false
   vue-demi: false
 
-blockExoticSubdeps: false
-
 minimumReleaseAgeExclude:
   # First-party packages, published and consumed here in the same session.
   - '@comark/nuxt'

@@ -1,7 +1,3 @@
-# The layer depends on a pkg.pr.new build of nuxt-llms, which pnpm blocks in subdependencies by default.
-# Remove once nuxt-llms ships a registry release the layer can depend on instead.
-blockExoticSubdeps: false
-
 # pnpm fails a non-interactive install on unreviewed build scripts, same decisions as the repo root.
 allowBuilds:
   esbuild: false
