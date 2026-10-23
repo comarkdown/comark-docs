@@ -7,7 +7,7 @@ export default defineConfig({
       {
         test: {
           name: 'unit',
-          include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
+          include: ['test/**/*.test.ts', 'modules/**/*.test.ts', 'scripts/**/*.test.mjs'],
           exclude: ['test/e2e/**', 'test/vercel/**', 'test/smoke/**'],
           setupFiles: ['test/setup.ts'],
           environment: 'node',

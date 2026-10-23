@@ -1,0 +1,98 @@
+name: bundle-size
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bundle-size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Builds and measures `main` and the PR side by side, posted by `bundle-size-comment.yml`.
+  analyze:
+    name: analyze (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        target: [base, pr]
+
+    steps:
+      - name: Check out the PR merge
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      # Both snapshots come from the PR's script, so they share one format even when it changes.
+      - name: Keep the PR's report script
+        run: cp scripts/bundle-size/report.mjs "$RUNNER_TEMP/report.mjs"
+      - name: Check out the base revision
+        if: matrix.target == 'base'
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: ./.github/actions/setup
+      - name: Build with the analyzer
+        run: |
+          {
+            echo "build.analyze.enabled=true"
+            echo "build.analyze.template=raw-data"
+            echo "build.analyze.filename=$GITHUB_WORKSPACE/playground/.nuxt/analyze/{name}.json"
+            echo "build.analyze.projectRoot=$GITHUB_WORKSPACE/"
+          } > playground/.nuxtrc
+          pnpm build
+      - name: Snapshot the bundle
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # Both sides render the same content, so the comparison only reflects code.
+          NUXT_DOCS_GITHUB_BRANCH: ${{ github.event.pull_request.base.sha }}
+          SNAPSHOT_SHA: ${{ matrix.target == 'base' && github.event.pull_request.base.sha || github.event.pull_request.head.sha }}
+        run: |
+          # nuxt-og-image signs its image URLs with it.
+          NUXT_APP_SECRET="$(openssl rand -base64 32)" PORT=3000 node playground/.output/server/index.mjs &
+          timeout 60 bash -c 'until curl -sf -o /dev/null http://localhost:3000/robots.txt; do sleep 1; done'
+          node "$RUNNER_TEMP/report.mjs" snapshot \
+            --root playground \
+            --analyze playground/.nuxt/analyze/client.json \
+            --url http://localhost:3000 \
+            --label ${{ matrix.target }} \
+            --sha "$SNAPSHOT_SHA" \
+            --output "$RUNNER_TEMP/bundle-size/${{ matrix.target }}.json"
+      - name: Upload the snapshot
+        uses: actions/upload-artifact@v7
+        with:
+          name: bundle-size-${{ matrix.target }}
+          path: ${{ runner.temp }}/bundle-size/${{ matrix.target }}.json
+          if-no-files-found: error
+          retention-days: 1
+
+  # One artifact with both snapshots and the PR number, for the comment workflow to validate.
+  report:
+    needs: analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download the snapshots
+        uses: actions/download-artifact@v8
+        with:
+          pattern: bundle-size-*
+          path: ${{ runner.temp }}/bundle-size
+          merge-multiple: true
+      - name: Write the bundle context
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: printf '{"prNumber":%s}\n' "$PR_NUMBER" > "$RUNNER_TEMP/bundle-size/context.json"
+      - name: Upload the report
+        uses: actions/upload-artifact@v7
+        with:
+          name: bundle-size-report
+          path: ${{ runner.temp }}/bundle-size
+          if-no-files-found: error
+          retention-days: 7
