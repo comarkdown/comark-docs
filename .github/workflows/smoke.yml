@@ -20,7 +20,7 @@ jobs:
 
     steps:
       # The tests of the deployed commit, not the default branch's.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.deployment.sha }}
           persist-credentials: false
