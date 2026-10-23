@@ -137,6 +137,13 @@ jobs:
               return
             }
 
+            // `main` can move between the snapshot and this run: skip like a stale head, the next push reports again.
+            const baseSnapshot = JSON.parse(fs.readFileSync(path.join(artifactDirectory, 'base.json'), 'utf8'))
+            if (baseSnapshot?.sha !== pull.base.sha) {
+              core.info(`Skipping PR #${bundleContext.prNumber}: its base moved since the snapshot.`)
+              return
+            }
+
             core.setOutput('should-comment', 'true')
             core.setOutput('number', String(bundleContext.prNumber))
             core.setOutput('base-sha', pull.base.sha)
