@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest'
 import { comarkContent, DEFAULT_CONTENT_NAME, readArtifact } from 'comark-content'
 import { writeSnapshots } from 'comark-content/build'
 import fsSource from 'comark-content/sources/fs'
-import githubSource from 'comark-content/sources/github'
+import forgeSource from 'comark-content/sources/forge'
 import snapshot, { withSnapshot } from 'comark-content/sources/snapshot'
 import { createContentClient } from 'comark-content/client'
 import { comarkContent as runtimeComarkContent, DEFAULT_CONTENT_NAME as RUNTIME_CONTENT_NAME, readArtifact as runtimeReadArtifact } from 'comark-content/runtime'
@@ -48,7 +48,7 @@ describe('comark-content contract', () => {
       comarkContent,
       readArtifact,
       fsSource,
-      githubSource,
+      forgeSource,
       createContentClient,
       runtimeComarkContent,
       runtimeReadArtifact,

@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { createStorage } from 'unstorage'
+import { github } from 'forges/github'
 import { fetchLastContentCommit } from '../../utils/github'
 
 export interface GitHubCommit {
@@ -39,6 +40,12 @@ export function githubRepo(): string {
 export function githubToken(): string | undefined {
   const { docs } = useRuntimeConfig()
   return docs.githubToken || process.env.GITHUB_TOKEN || undefined
+}
+
+/** A forges GitHub provider, authenticated with {@link githubToken} when one is set. */
+export function githubProvider() {
+  const token = githubToken()
+  return github(token ? { auth: { type: 'token', token } } : {})
 }
 
 /** Production branch, resolved per request: content pushes skip redeploys (`vercel.json` `ignoreCommand`). */
