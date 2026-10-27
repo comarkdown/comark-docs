@@ -2,11 +2,11 @@ import { resolve } from 'node:path'
 import { parseMarkdown, type MarkdownDocument } from 'comark'
 import rangi from 'comark/plugins/rangi'
 import fs from 'comark-content/sources/fs'
-import github from 'comark-content/sources/github'
+import forge from 'comark-content/sources/forge'
 import { geistTheme } from '../../../utils/geist.ts'
 
 // A read source for one example directory. Dev: working tree. Prod: authenticated GitHub — the repo may be
-// private, so jsDelivr / unauthenticated raw are out. Mirrors {@link contentSource}'s dev/prod split.
+// private, so the provider carries the token. Mirrors {@link contentSource}'s dev/prod split.
 function exampleSource(repo: string, branch: string, dirPath: string) {
   const { docs } = useRuntimeConfig()
 
@@ -15,14 +15,7 @@ function exampleSource(repo: string, branch: string, dirPath: string) {
     return fs(resolve(docs.repoRoot, dirPath))
   }
 
-  return github({
-    repo,
-    branch,
-    path: dirPath,
-    token: githubToken(),
-    // `branch` is typically an immutable commit SHA => cache hard.
-    ttl: 60 * 60 * 24,
-  })
+  return forge({ provider: githubProvider(), repo, ref: branch, path: dirPath })
 }
 
 const CONCURRENCY = 10

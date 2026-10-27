@@ -1,6 +1,6 @@
 import { type ContentSource, DEFAULT_CONTENT_NAME } from 'comark-content'
 import fs from 'comark-content/sources/fs'
-import github from 'comark-content/sources/github'
+import forge from 'comark-content/sources/forge'
 import { withSnapshot } from 'comark-content/sources/snapshot'
 import { createRuntimeContentInstance } from '../../utils/factory.ts'
 
@@ -151,13 +151,11 @@ function contentSource(): ContentSource {
     }
   }
 
-  const source = github({
+  const source = forge({
+    provider: githubProvider(),
     repo: githubRepo(),
-    branch: targetBranch(),
+    ref: targetBranch(),
     path: docs.contentDir,
-    token: githubToken(),
-    // Reads happen through `withRef(<sha>)`, an immutable commit => cache hard.
-    ttl: 60 * 60 * 24,
   })
 
   // Snaphot build during build time by `modules/snapshot/` is used.
