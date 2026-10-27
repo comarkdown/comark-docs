@@ -18,10 +18,13 @@ interface NuxtTraceContext {
   name?: string
 }
 
+/** `ssrContext.url` carries the query and hash; keep them out of exported spans. */
+const urlPath = (ctx: NuxtTraceContext) => ctx.ssrContext?.url?.split(/[?#]/)[0]
+
 /** Span name and attributes per channel. Names stay low-cardinality; request-specific values go in attributes. */
 const NUXT_CHANNELS: Record<string, (ctx: NuxtTraceContext) => [name: string, attributes: Attributes]> = {
-  'nuxt.render': (ctx) => ['nuxt.render', { 'url.path': ctx.ssrContext?.url, 'nuxt.render.streaming': ctx.streaming }],
-  'nuxt.island': (ctx) => [`nuxt.island ${ctx.islandContext?.name ?? ''}`.trim(), { 'url.path': ctx.ssrContext?.url }],
+  'nuxt.render': (ctx) => ['nuxt.render', { 'url.path': urlPath(ctx), 'nuxt.render.streaming': ctx.streaming }],
+  'nuxt.island': (ctx) => [`nuxt.island ${ctx.islandContext?.name ?? ''}`.trim(), { 'url.path': urlPath(ctx) }],
   'nuxt.data': (ctx) => ['nuxt.data', { 'nuxt.data.key': ctx.key, 'nuxt.data.function': ctx.functionName }],
   'nuxt.plugin': (ctx) => [`nuxt.plugin ${ctx.plugin?.name ?? ''}`.trim(), {}],
   'nuxt.middleware': (ctx) => [`nuxt.middleware ${ctx.middleware?.name ?? ''}`.trim(), { 'nuxt.middleware.global': ctx.middleware?.global }],
