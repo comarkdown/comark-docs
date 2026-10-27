@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Check out the PR merge
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       # Both snapshots come from the PR's script, so they share one format even when it changes.
@@ -33,7 +33,7 @@ jobs:
         run: cp scripts/bundle-size/report.mjs "$RUNNER_TEMP/report.mjs"
       - name: Check out the base revision
         if: matrix.target == 'base'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.sha }}
