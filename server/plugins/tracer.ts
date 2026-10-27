@@ -18,8 +18,19 @@ interface NuxtTraceContext {
   name?: string
 }
 
-/** `ssrContext.url` carries the query and hash; keep them out of exported spans. */
-const urlPath = (ctx: NuxtTraceContext) => ctx.ssrContext?.url?.split(/[?#]/)[0]
+/**
+ * Only the pathname of `ssrContext.url` is exported: it carries the query and hash, and island
+ * requests supply their own, possibly absolute, URL.
+ */
+const urlPath = (ctx: NuxtTraceContext) => {
+  const url = ctx.ssrContext?.url
+  if (!url) return undefined
+  try {
+    return new URL(url, 'http://localhost').pathname
+  } catch {
+    return undefined
+  }
+}
 
 /** Span name and attributes per channel. Names stay low-cardinality; request-specific values go in attributes. */
 const NUXT_CHANNELS: Record<string, (ctx: NuxtTraceContext) => [name: string, attributes: Attributes]> = {
