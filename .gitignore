@@ -11,3 +11,4 @@ dist
 .DS_Store
 .history
 .pnpm-store
+.amp/portals/*
