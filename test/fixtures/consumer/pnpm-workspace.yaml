@@ -9,7 +9,3 @@ minimumReleaseAgeExclude:
   - comark
   - comark-content
   - nuxt-agent-discovery
-
-# TEMPORARY: the layer depends on pkg.pr.new builds of comark-content and forges, which pnpm
-# rejects as exotic subdependencies. Remove once comark-content 0.5 and forges 0.3.0 are released.
-blockExoticSubdeps: false
