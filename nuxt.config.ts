@@ -27,6 +27,8 @@ export default defineNuxtConfig({
     'nuxt-agent-discovery',
   ],
   ignore: ['content/**'],
+  // Publishes Nuxt's `nuxt.*` diagnostics channels; server/plugins/tracer.ts turns them into OTel spans.
+  tracingChannel: true,
   ui: { content: true, prose: true },
   sitemap: {
     // Content is the source of truth: the app sources would only add the static Vue pages.
