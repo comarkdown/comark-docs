@@ -89,7 +89,7 @@
     "zod": "^4.6.7"
   },
   "peerDependencies": {
-    "nuxt": "^4.6.0"
+    "nuxt": "^4.6.2"
   },
   "devDependencies": {
     "@nuxt/devtools-kit": "4.0.0-beta.5",
