@@ -1,24 +1,9 @@
 <script setup lang="ts">
-import LandingHero from '@nuxt/ui/components/PageHero.vue'
-import LandingStack from '../components/landing/LandingStack.vue'
-import LandingTabs from '../components/landing/LandingTabs.vue'
-import LandingFeatures from '../components/landing/LandingFeatures.vue'
-import LandingFeatureCard from '../components/landing/LandingFeatureCard.vue'
-import LandingFaq from '../components/landing/LandingFaq.vue'
-import LandingCta from '../components/landing/LandingCta.vue'
-import LandingHeroDemo from '../components/landing/LandingHeroDemo.vue'
 import Button from '@nuxt/ui/components/Button.vue'
 
 const landingComponents = {
-  LandingHero,
-  LandingStack,
-  LandingTabs,
-  LandingFeatures,
-  LandingFeatureCard,
-  LandingFaq,
-  LandingCta,
-  LandingHeroDemo,
-  Button
+  ...byFileName(import.meta.glob('../components/content/landing/*.{vue,ts}', { eager: true, import: 'default' })),
+  Button,
 }
 
 const content = useDocsContent()

@@ -24,6 +24,7 @@
     "nuxt.config.ts",
     "nuxt.schema.ts",
     "index.d.ts",
+    "lint.mjs",
     "README.md"
   ],
   "scripts": {
@@ -32,7 +33,8 @@
     "build": "nuxt build playground",
     "generate": "nuxt generate playground",
     "typecheck": "nuxt typecheck playground",
-    "lint": "eslint .",
+    "lint": "eslint . && pnpm lint:content",
+    "lint:content": "cd playground && comark-lint \"content/**/*.md\"",
     "lint:fix": "eslint . --fix",
     "test": "vitest run --project unit",
     "test:e2e": "vitest run --project e2e",
@@ -99,6 +101,7 @@
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@opentelemetry/sdk-trace-node": "^2.12.0",
+    "comark-linter": "^0.7.6",
     "es-module-lexer": "^3.0.2",
     "eslint": "^10.13.0",
     "nuxt": "^4.6.2",

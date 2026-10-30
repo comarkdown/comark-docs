@@ -326,6 +326,9 @@ importers:
       '@opentelemetry/sdk-trace-node':
         specifier: ^2.12.0
         version: 2.12.0(@opentelemetry/api@1.9.1)
+      comark-linter:
+        specifier: ^0.7.6
+        version: 0.7.6(comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
       es-module-lexer:
         specifier: ^3.0.2
         version: 3.0.2
@@ -3402,6 +3405,158 @@ packages:
       forges: ^0.3.0
     peerDependenciesMeta:
       forges:
+        optional: true
+
+  comark-linter@0.7.6:
+    resolution: {integrity: sha512-GxfjHWmt9SVa303DFhTOadv2ycFNlxsHMDl10+qMTUawgGbWleUxJQ1iAUZk6lMPr/NsFyVdcIlbkeAhfn4hDw==}
+    engines: {node: '>=22.12.0'}
+    hasBin: true
+    peerDependencies:
+      '@eslint/markdown': ^8.0.0
+      comark: ^0.8.0
+      comark-annotate: ^0.7.6
+      comark-badge: ^0.7.6
+      comark-cards: ^0.7.6
+      comark-carousel: ^0.7.6
+      comark-cast: ^0.7.6
+      comark-charts: ^0.7.6
+      comark-chips: ^0.7.6
+      comark-cjk: ^0.7.6
+      comark-code: ^0.7.6
+      comark-code-notes: ^0.7.6
+      comark-colors: ^0.7.6
+      comark-comments: ^0.7.6
+      comark-critic: ^0.7.6
+      comark-deflist: ^0.7.6
+      comark-details: ^0.7.6
+      comark-diagrams: ^0.7.6
+      comark-diff: ^0.7.6
+      comark-embed: ^0.7.6
+      comark-fields: ^0.7.6
+      comark-figure: ^0.7.6
+      comark-file-tree: ^0.7.6
+      comark-footnotes: ^0.7.6
+      comark-github: ^0.7.6
+      comark-icon: ^0.7.6
+      comark-keys: ^0.7.6
+      comark-links: ^0.7.6
+      comark-magic-move: ^0.7.6
+      comark-mark: ^0.7.6
+      comark-mathml: ^0.7.6
+      comark-media: ^0.7.6
+      comark-metrics: ^0.7.6
+      comark-outline: ^0.7.6
+      comark-pele: ^1.1.0
+      comark-properties: ^0.7.6
+      comark-qr: ^0.7.6
+      comark-quiz: ^0.7.6
+      comark-reading-time: ^0.7.6
+      comark-sources: ^0.7.6
+      comark-steps: ^0.7.6
+      comark-table: ^0.7.6
+      comark-tabs: ^0.7.6
+      comark-tests: ^0.7.6
+      comark-ui: ^0.7.6
+      comark-xref: ^0.7.6
+      comark-zoom: ^0.7.6
+      eslint: ^9.15.0 || ^10.0.0
+      vite-doctor: ^0.1.0
+    peerDependenciesMeta:
+      '@eslint/markdown':
+        optional: true
+      comark-annotate:
+        optional: true
+      comark-badge:
+        optional: true
+      comark-cards:
+        optional: true
+      comark-carousel:
+        optional: true
+      comark-cast:
+        optional: true
+      comark-charts:
+        optional: true
+      comark-chips:
+        optional: true
+      comark-cjk:
+        optional: true
+      comark-code:
+        optional: true
+      comark-code-notes:
+        optional: true
+      comark-colors:
+        optional: true
+      comark-comments:
+        optional: true
+      comark-critic:
+        optional: true
+      comark-deflist:
+        optional: true
+      comark-details:
+        optional: true
+      comark-diagrams:
+        optional: true
+      comark-diff:
+        optional: true
+      comark-embed:
+        optional: true
+      comark-fields:
+        optional: true
+      comark-figure:
+        optional: true
+      comark-file-tree:
+        optional: true
+      comark-footnotes:
+        optional: true
+      comark-github:
+        optional: true
+      comark-icon:
+        optional: true
+      comark-keys:
+        optional: true
+      comark-links:
+        optional: true
+      comark-magic-move:
+        optional: true
+      comark-mark:
+        optional: true
+      comark-mathml:
+        optional: true
+      comark-media:
+        optional: true
+      comark-metrics:
+        optional: true
+      comark-outline:
+        optional: true
+      comark-pele:
+        optional: true
+      comark-properties:
+        optional: true
+      comark-qr:
+        optional: true
+      comark-quiz:
+        optional: true
+      comark-reading-time:
+        optional: true
+      comark-sources:
+        optional: true
+      comark-steps:
+        optional: true
+      comark-table:
+        optional: true
+      comark-tabs:
+        optional: true
+      comark-tests:
+        optional: true
+      comark-ui:
+        optional: true
+      comark-xref:
+        optional: true
+      comark-zoom:
+        optional: true
+      eslint:
+        optional: true
+      vite-doctor:
         optional: true
 
   comark@0.8.1:
@@ -9951,6 +10106,12 @@ snapshots:
       - rangi
       - shiki
       - uploadthing
+
+  comark-linter@0.7.6(comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2)):
+    dependencies:
+      comark: 0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
+    optionalDependencies:
+      eslint: 10.13.0(jiti@2.7.0)(supports-color@10.2.2)
 
   comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0):
     dependencies:
