@@ -57,10 +57,10 @@ export { default } from 'comark-docs/lint.mjs'
 ```
 
 ```bash
-pnpm lint-comark "content/**/*.md" -c comark-lint.config.ts
+pnpm comark-lint "content/**/*.md"
 ```
 
-Run it from the site's root, where `content/` is. It knows the components the layer renders: Nuxt UI's prose components and those in the layer's `app/components/content/`.
+Run it from the site's root, where `content/` and `comark-lint.config.ts` are. It knows the components the layer renders: Nuxt UI's prose components and those in the layer's `app/components/content/`.
 
 ## Agent Skills
 

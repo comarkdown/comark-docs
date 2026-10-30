@@ -327,8 +327,8 @@ importers:
         specifier: ^2.12.0
         version: 2.12.0(@opentelemetry/api@1.9.1)
       comark-linter:
-        specifier: ^0.7.2
-        version: 0.7.2(comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
+        specifier: ^0.7.6
+        version: 0.7.6(comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2))
       es-module-lexer:
         specifier: ^3.0.2
         version: 3.0.2
@@ -3407,57 +3407,58 @@ packages:
       forges:
         optional: true
 
-  comark-linter@0.7.2:
-    resolution: {integrity: sha512-cfc+SDv8FzBnQjazqBP7nwlrPVifxL7ViPIveRP/QqcqWuwJKG46VyMSABxV7n7B76Z13TQF+qEWV67UZ7HRPQ==}
+  comark-linter@0.7.6:
+    resolution: {integrity: sha512-GxfjHWmt9SVa303DFhTOadv2ycFNlxsHMDl10+qMTUawgGbWleUxJQ1iAUZk6lMPr/NsFyVdcIlbkeAhfn4hDw==}
     engines: {node: '>=22.12.0'}
     hasBin: true
     peerDependencies:
       '@eslint/markdown': ^8.0.0
       comark: ^0.8.0
-      comark-annotate: ^0.7.2
-      comark-badge: ^0.7.2
-      comark-cards: ^0.7.2
-      comark-carousel: ^0.7.2
-      comark-cast: ^0.7.2
-      comark-charts: ^0.7.2
-      comark-chips: ^0.7.2
-      comark-cjk: ^0.7.2
-      comark-code: ^0.7.2
-      comark-code-notes: ^0.7.2
-      comark-colors: ^0.7.2
-      comark-critic: ^0.7.2
-      comark-deflist: ^0.7.2
-      comark-details: ^0.7.2
-      comark-diagrams: ^0.7.2
-      comark-diff: ^0.7.2
-      comark-embed: ^0.7.2
-      comark-fields: ^0.7.2
-      comark-figure: ^0.7.2
-      comark-file-tree: ^0.7.2
-      comark-footnotes: ^0.7.2
-      comark-github: ^0.7.2
-      comark-icon: ^0.7.2
-      comark-keys: ^0.7.2
-      comark-links: ^0.7.2
-      comark-magic-move: ^0.7.2
-      comark-mark: ^0.7.2
-      comark-mathml: ^0.7.2
-      comark-media: ^0.7.2
-      comark-metrics: ^0.7.2
-      comark-outline: ^0.7.2
+      comark-annotate: ^0.7.6
+      comark-badge: ^0.7.6
+      comark-cards: ^0.7.6
+      comark-carousel: ^0.7.6
+      comark-cast: ^0.7.6
+      comark-charts: ^0.7.6
+      comark-chips: ^0.7.6
+      comark-cjk: ^0.7.6
+      comark-code: ^0.7.6
+      comark-code-notes: ^0.7.6
+      comark-colors: ^0.7.6
+      comark-comments: ^0.7.6
+      comark-critic: ^0.7.6
+      comark-deflist: ^0.7.6
+      comark-details: ^0.7.6
+      comark-diagrams: ^0.7.6
+      comark-diff: ^0.7.6
+      comark-embed: ^0.7.6
+      comark-fields: ^0.7.6
+      comark-figure: ^0.7.6
+      comark-file-tree: ^0.7.6
+      comark-footnotes: ^0.7.6
+      comark-github: ^0.7.6
+      comark-icon: ^0.7.6
+      comark-keys: ^0.7.6
+      comark-links: ^0.7.6
+      comark-magic-move: ^0.7.6
+      comark-mark: ^0.7.6
+      comark-mathml: ^0.7.6
+      comark-media: ^0.7.6
+      comark-metrics: ^0.7.6
+      comark-outline: ^0.7.6
       comark-pele: ^1.1.0
-      comark-properties: ^0.7.2
-      comark-qr: ^0.7.2
-      comark-quiz: ^0.7.2
-      comark-reading-time: ^0.7.2
-      comark-sources: ^0.7.2
-      comark-steps: ^0.7.2
-      comark-table: ^0.7.2
-      comark-tabs: ^0.7.2
-      comark-tests: ^0.7.2
-      comark-ui: ^0.7.2
-      comark-xref: ^0.7.2
-      comark-zoom: ^0.7.2
+      comark-properties: ^0.7.6
+      comark-qr: ^0.7.6
+      comark-quiz: ^0.7.6
+      comark-reading-time: ^0.7.6
+      comark-sources: ^0.7.6
+      comark-steps: ^0.7.6
+      comark-table: ^0.7.6
+      comark-tabs: ^0.7.6
+      comark-tests: ^0.7.6
+      comark-ui: ^0.7.6
+      comark-xref: ^0.7.6
+      comark-zoom: ^0.7.6
       eslint: ^9.15.0 || ^10.0.0
       vite-doctor: ^0.1.0
     peerDependenciesMeta:
@@ -3484,6 +3485,8 @@ packages:
       comark-code-notes:
         optional: true
       comark-colors:
+        optional: true
+      comark-comments:
         optional: true
       comark-critic:
         optional: true
@@ -10104,7 +10107,7 @@ snapshots:
       - shiki
       - uploadthing
 
-  comark-linter@0.7.2(comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2)):
+  comark-linter@0.7.6(comark@0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.13.0(jiti@2.7.0)(supports-color@10.2.2)):
     dependencies:
       comark: 0.8.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
     optionalDependencies:

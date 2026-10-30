@@ -1,7 +1,7 @@
 // @ts-check
-// A comark-linter config for sites extending this layer. Run `lint-comark` from the site's root:
-//   lint-comark "content/**/*.md" -c comark-lint.config.ts
-// with a config that re-exports it: `export { default } from 'comark-docs/lint.mjs'`.
+// A comark-linter config for sites extending this layer. Run `comark-lint` from the site's root:
+//   comark-lint "content/**/*.md"
+// next to a `comark-lint.config.ts` that re-exports it: `export { default } from 'comark-docs/lint.mjs'`.
 // Plain JavaScript, since Node won't strip types from a file in node_modules.
 import { readdirSync } from 'node:fs'
 import { basename, dirname } from 'node:path'
