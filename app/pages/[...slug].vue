@@ -51,8 +51,8 @@ import {
   ProseUl,
   ProseWarning,
 } from '#components'
-import CodeExplorer from '../components/CodeExplorer.vue'
-import Browser from '../components/Browser.vue'
+import CodeExplorer from '../components/prose/CodeExplorer.vue'
+import Browser from '../components/prose/Browser.vue'
 
 definePageMeta({
   path: '/:slug(.+)',
