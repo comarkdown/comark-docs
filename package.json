@@ -24,6 +24,7 @@
     "nuxt.config.ts",
     "nuxt.schema.ts",
     "index.d.ts",
+    "lint.mjs",
     "README.md"
   ],
   "scripts": {

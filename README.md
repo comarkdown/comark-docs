@@ -43,6 +43,25 @@ From there, the docs cover everything:
 - [Architecture](https://docs-template.comark.dev/concepts/architecture) and [versioned previews](https://docs-template.comark.dev/concepts/versioned-previews)
 - [Deploying on Vercel](https://docs-template.comark.dev/deployment/vercel) — webhook, Ignored Build Step, content rollback
 
+## Linting content
+
+`lint.mjs` is a [comark-linter](https://comark-ui.onmax.me/lint/) config that knows the components the layer renders and resolves links to your pages the way comark-content does, so it reports unknown components, unclosed blocks, and broken links and anchors in `content/`:
+
+```bash
+pnpm add -D comark-linter
+```
+
+```ts
+// comark-lint.config.ts
+export { default } from 'comark-docs/lint.mjs'
+```
+
+```bash
+pnpm lint-comark "content/**/*.md" -c comark-lint.config.ts
+```
+
+Run it from the site's root, where `content/` is.
+
 ## Agent Skills
 
 Drop skills into a `skills/` directory at the app root and [nuxt-agent-discovery](https://github.com/benjamincanac/nuxt-agent-discovery) serves them at `/.well-known/skills/`, following the [Agent Skills Discovery RFC](https://github.com/cloudflare/agent-skills-discovery-rfc) (v0.1). Users install them with:
