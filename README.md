@@ -60,7 +60,7 @@ export { default } from 'comark-docs/lint.mjs'
 pnpm lint-comark "content/**/*.md" -c comark-lint.config.ts
 ```
 
-Run it from the site's root, where `content/` is. It knows Nuxt UI's prose components, the layer's, and any you put in your own `app/components/prose/`, which @comark/nuxt registers globally so Markdown can use them.
+Run it from the site's root, where `content/` is. It knows the components the layer renders: Nuxt UI's prose components and those in the layer's `app/components/content/`.
 
 ## Agent Skills
 

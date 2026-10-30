@@ -34,7 +34,7 @@ export default createConfigForNuxt({
   .append({
     // Page, layout and error component names come from Nuxt's file-based routing —
     // `index.vue`, `docs.vue`, `[...slug].vue` are the framework's naming, not ours.
-    // `app/components/prose/` is exempt for a different reason: Markdown addresses those
+    // `app/components/content/` is exempt for a different reason: Markdown addresses those
     // components by name (`::browser`), so their names are part of the content API.
     files: [
       'app/pages/**/*.vue',
@@ -43,7 +43,7 @@ export default createConfigForNuxt({
       'playground/app/layouts/**/*.vue',
       'app/error.vue',
       'playground/app/error.vue',
-      'app/components/prose/**/*.vue',
+      'app/components/content/**/*.vue',
     ],
     rules: {
       'vue/multi-word-component-names': 'off',

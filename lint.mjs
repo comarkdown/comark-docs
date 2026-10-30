@@ -3,7 +3,7 @@
 //   lint-comark "content/**/*.md" -c comark-lint.config.ts
 // with a config that re-exports it: `export { default } from 'comark-docs/lint.mjs'`.
 // Plain JavaScript, since Node won't strip types from a file in node_modules.
-import { existsSync, readdirSync } from 'node:fs'
+import { readdirSync } from 'node:fs'
 import { basename, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { comarkContent } from 'comark-content'
@@ -14,7 +14,6 @@ const kebab = (/** @type {string} */ name) => name.replace(/[A-Z]/g, (c, i) => (
 
 /** The kebab-case names of the components in a folder and its subfolders. */
 function componentsIn(/** @type {string} */ dir) {
-  if (!existsSync(dir)) return []
   return readdirSync(dir, { recursive: true, encoding: 'utf8' })
     .map(file => basename(file).match(/^(\w+)\.(vue|ts)$/)?.[1])
     .filter(name => name !== undefined)
@@ -23,13 +22,11 @@ function componentsIn(/** @type {string} */ dir) {
 
 const nuxtUi = dirname(fileURLToPath(import.meta.resolve('@nuxt/ui/components/Button.vue')))
 
-// What Markdown resolves by name: the global components of `components/prose/`, which Nuxt UI
-// registers for its prose and @comark/nuxt for this layer and the site, plus every Nuxt UI
-// component with the `u-` prefix, such as `::u-button`.
+// What the pages pass to `MarkdownDocument`: Nuxt UI's prose components and the layer's
+// `app/components/content/`, plus every Nuxt UI component with the `u-` prefix, such as `::u-button`.
 const components = [
   ...componentsIn(`${nuxtUi}/prose`),
-  ...componentsIn(fileURLToPath(new URL('app/components/prose', import.meta.url))),
-  ...componentsIn('app/components/prose'),
+  ...componentsIn(fileURLToPath(new URL('app/components/content', import.meta.url))),
   ...readdirSync(nuxtUi).filter(file => file.endsWith('.vue')).map(file => `u-${kebab(basename(file, '.vue'))}`),
 ]
 

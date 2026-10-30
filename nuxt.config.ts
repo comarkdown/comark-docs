@@ -27,6 +27,13 @@ export default defineNuxtConfig({
     'nuxt-agent-discovery',
   ],
   ignore: ['content/**'],
+  components: [
+    // Markdown components keep the name Markdown addresses them by: `CodeExplorer`, not `ContentCodeExplorer`.
+    // Not global: the pages pass them to `MarkdownDocument` themselves (`app/utils/content-components.ts`).
+    // Relative to this layer's srcDir: `~` would resolve to the site's.
+    { path: 'components/content', pathPrefix: false },
+    'components',
+  ],
   // Publishes Nuxt's `nuxt.*` diagnostics channels; server/plugins/tracer.ts turns them into OTel spans.
   tracingChannel: true,
   ui: { content: true, prose: true },

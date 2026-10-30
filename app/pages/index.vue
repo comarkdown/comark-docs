@@ -1,25 +1,7 @@
 <script setup lang="ts">
-import LandingHero from '@nuxt/ui/components/PageHero.vue'
-import LandingStack from '../components/prose/LandingStack.vue'
-import LandingTabs from '../components/prose/LandingTabs.vue'
-import LandingFeatures from '../components/prose/LandingFeatures.vue'
-import LandingFeatureCard from '../components/prose/LandingFeatureCard.vue'
-import LandingFaq from '../components/prose/LandingFaq.vue'
-import LandingCta from '../components/prose/LandingCta.vue'
-import LandingHeroDemo from '../components/prose/LandingHeroDemo.vue'
 import Button from '@nuxt/ui/components/Button.vue'
 
-const landingComponents = {
-  LandingHero,
-  LandingStack,
-  LandingTabs,
-  LandingFeatures,
-  LandingFeatureCard,
-  LandingFaq,
-  LandingCta,
-  LandingHeroDemo,
-  Button
-}
+const landingComponents = { ...contentComponents, Button }
 
 const content = useDocsContent()
 const site = useSiteConfig()
