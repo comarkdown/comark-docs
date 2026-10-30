@@ -9,7 +9,11 @@ definePageMeta({
 })
 
 // Resolve prose eagerly with the docs route instead of the global async components.
-const components = { ...prose, ...contentComponents, Mermaid }
+const components = {
+  ...prose,
+  ...byFileName(import.meta.glob('../components/content/*.{vue,ts}', { eager: true, import: 'default' })),
+  Mermaid,
+}
 
 const { toc } = useAppConfig()
 const navigation = inject<Ref<NavigationItem[]>>('navigation')
