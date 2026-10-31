@@ -12,7 +12,6 @@ minimumReleaseAgeExclude:
   - '@comark/vue'
   - comark
   - comark-content
-  - comark-linter
   - nuxt-agent-discovery
 
 overrides:
