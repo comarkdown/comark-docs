@@ -3,7 +3,6 @@ import { addServerPlugin, createResolver, defineNuxtModule, useLogger } from '@n
 import { defu } from 'defu'
 import type { ModuleOptions as AgentDiscoveryOptions } from 'nuxt-agent-discovery'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
-import { globalNuxtUiComponents } from '../../utils/markdown-globals.mjs'
 import { getPackageJsonMetadata, inferSiteURL, resolveContentDir } from './utils'
 
 const logger = useLogger('comark-docs')
@@ -135,15 +134,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
       codeExplorer: {
         allowRepos: options.codeExplorer?.allowRepos || [],
       },
-    })
-
-    // Extend Nuxt UI components to make them global and usable in markdown by consumers.
-    nuxt.hook('components:extend', (components) => {
-      for (const component of globalNuxtUiComponents) {
-        const entry = components.find((c) => c.pascalName === component)
-        if (!entry) continue
-        entry.global = true
-      }
     })
 
     const rawMcpOptions = nuxtOptions.mcp
