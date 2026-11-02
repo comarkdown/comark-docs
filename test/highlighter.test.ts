@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
@@ -9,8 +9,12 @@ import defaultHighlighter from '../utils/highlighter'
 
 async function parse(highlighter: ComarkPlugin) {
   const dir = await mkdtemp(join(tmpdir(), 'comark-docs-highlighter-'))
-  await writeFile(join(dir, 'index.md'), '```ts\nconst answer = 42\n```\n')
-  return JSON.stringify(await createBuildContentInstance({ source: fsSource(dir) }, highlighter).get('/'))
+  try {
+    await writeFile(join(dir, 'index.md'), '```ts\nconst answer = 42\n```\n')
+    return JSON.stringify(await createBuildContentInstance({ source: fsSource(dir) }, highlighter).get('/'))
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
 }
 
 // `comarkDocs.highlighter` replaces rangi: the plugin a site passes runs, and the default one doesn't.
