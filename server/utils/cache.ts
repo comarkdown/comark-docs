@@ -19,6 +19,12 @@ function runtimeCacheDriver(base: string, ttl?: number): Driver {
  */
 export const CONTENT_PARSER_VERSION = 'v6'
 
+/** The parser version, plus a hash of the site's `comarkDocs.highlighter` when it sets one. */
+function parserVersion(): string {
+  const { highlighterVersion } = useRuntimeConfig().docs
+  return highlighterVersion ? `${CONTENT_PARSER_VERSION}-${highlighterVersion}` : CONTENT_PARSER_VERSION
+}
+
 /**
  * A ref pinned via `withRef()` is treated as immutable, so it can be cached for a long time.
  */
@@ -29,7 +35,7 @@ const IMMUTABLE_TTL = 60 * 60 * 24
  * Base namespace is per parser version and keys are per-sha.
  */
 export function contentCacheDriver(): Driver {
-  return runtimeCacheDriver(`content:${CONTENT_PARSER_VERSION}`, IMMUTABLE_TTL)
+  return runtimeCacheDriver(`content:${parserVersion()}`, IMMUTABLE_TTL)
 }
 
 /**
@@ -50,7 +56,7 @@ export function refCacheDriver(ttl: number): Driver {
  * Namespace is per-sha and keys start with `gh:`.
  */
 export function shaCacheStorage(sha: string): Storage {
-  return createStorage({ driver: runtimeCacheDriver(`content:${CONTENT_PARSER_VERSION}:${sha}`, IMMUTABLE_TTL) })
+  return createStorage({ driver: runtimeCacheDriver(`content:${parserVersion()}:${sha}`, IMMUTABLE_TTL) })
 }
 
 /** Short TTL. `branch` is mutable. */

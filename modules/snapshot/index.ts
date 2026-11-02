@@ -1,8 +1,10 @@
 import { mkdir, stat } from 'node:fs/promises'
+import type { ComarkPlugin } from 'comark'
 import { defineNuxtModule, useLogger } from '@nuxt/kit'
 import { DEFAULT_CONTENT_NAME } from 'comark-content'
 import { writeSnapshots } from 'comark-content/build'
 import fs from 'comark-content/sources/fs'
+import { createJiti } from 'jiti'
 import { join } from 'pathe'
 import { createBuildContentInstance } from '../../utils/factory'
 import { resolveSnapshotSha } from './utils'
@@ -54,11 +56,17 @@ export default defineNuxtModule({
         return
       }
 
-      // `withRef` stamps the artifact with the commit.
-      // At runtime, even with a different commit, we can reuse unchanged bodies.
-      const content = createBuildContentInstance({ source: fs(contentPath) }).withRef(sha)
-
       try {
+        // The highlighter the runtime parser imports through `#comark-docs/highlighter`, loaded with Nuxt's
+        // aliases like the bundle resolves it. jiti also transpiles the layer's own `.ts` in node_modules.
+        const highlighter = await createJiti(import.meta.url, { alias: nuxt.options.alias }).import<ComarkPlugin>(
+          nuxt.options.alias['#comark-docs/highlighter']!,
+          { default: true },
+        )
+        // `withRef` stamps the artifact with the commit.
+        // At runtime, even with a different commit, we can reuse unchanged bodies.
+        const content = createBuildContentInstance({ source: fs(contentPath) }, highlighter).withRef(sha)
+
         const writeStart = performance.now()
         await writeSnapshots(content, { dir })
         const writeMs = Math.round(performance.now() - writeStart)

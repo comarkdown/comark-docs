@@ -1,5 +1,6 @@
-import { existsSync, readdirSync } from 'node:fs'
-import { addServerPlugin, createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
+import { createHash } from 'node:crypto'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { addServerPlugin, createResolver, defineNuxtModule, resolvePath, useLogger } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { ModuleOptions as AgentDiscoveryOptions } from 'nuxt-agent-discovery'
 import { getGitBranch, getGitEnv, getGitRoot, getLocalGitInfo } from '../../utils/git'
@@ -25,6 +26,11 @@ export interface ComarkDocsOptions {
     /** GitHub repos (`owner/name`) `/api/code-explorer` may read. Defaults to the content repo only. */
     allowRepos?: string[]
   }
+  /**
+   * Module whose default export is the comark plugin that highlights code blocks in content, such as
+   * `shiki({ themes })`, resolved from the app root. Defaults to rangi with the layer's Geist theme.
+   */
+  highlighter?: string
   /** @deprecated Use `agentDiscovery.skills` instead. */
   skills?: {
     dir?: string
@@ -216,6 +222,17 @@ export default defineNuxtModule<ComarkDocsOptions>({
     // scanned from `server/plugins/` so the hook runs ahead of the nuxt-agent-discovery bridge (see the plugin).
     const { resolve } = createResolver(import.meta.url)
     addServerPlugin(resolve('./runtime/server/plugins/llms'))
+
+    // The runtime parser imports the highlighter through this alias, and the snapshot module loads the same file.
+    const highlighter = options.highlighter
+      ? await resolvePath(options.highlighter, { cwd: rootDir })
+      : resolve('../../utils/highlighter.ts')
+    nuxt.options.alias['#comark-docs/highlighter'] = highlighter
+    // A site's highlighter changes the parsed output, so it gets its own content cache namespace. The hash covers
+    // this file only, not what it imports; the configuration page says so.
+    nuxt.options.runtimeConfig.docs.highlighterVersion = options.highlighter
+      ? createHash('sha256').update(readFileSync(highlighter)).digest('hex').slice(0, 8)
+      : ''
 
     // ISR rules here (not `$production`) so they merge cleanly across npm layers; content sections need a redeploy.
     if (!nuxt.options.dev && options.isr !== false) {

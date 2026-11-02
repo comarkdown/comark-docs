@@ -262,6 +262,9 @@ importers:
       forges:
         specifier: ^0.3.0
         version: 0.3.0
+      jiti:
+        specifier: ^2.7.0
+        version: 2.7.0
       js-yaml:
         specifier: ^5.5.0
         version: 5.5.0
