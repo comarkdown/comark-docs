@@ -1,13 +1,15 @@
 import { mkdir, stat } from 'node:fs/promises'
-import { defineNuxtModule, useLogger } from '@nuxt/kit'
+import { createResolver, defineNuxtModule, useLogger } from '@nuxt/kit'
 import { DEFAULT_CONTENT_NAME } from 'comark-content'
 import { writeSnapshots } from 'comark-content/build'
 import fs from 'comark-content/sources/fs'
 import { join } from 'pathe'
 import { createBuildContentInstance } from '../../utils/factory'
+import defaultHighlighter from '../../utils/highlighter'
 import { resolveSnapshotSha } from './utils'
 
 const logger = useLogger('comark-docs')
+const defaultHighlighterPath = createResolver(import.meta.url).resolve('../../utils/highlighter.ts')
 
 /** Where the snapshot lives in the build, and the server-asset namespace it is read back through. */
 const ASSET_BASE = 'comark-content'
@@ -56,7 +58,13 @@ export default defineNuxtModule({
 
       // `withRef` stamps the artifact with the commit.
       // At runtime, even with a different commit, we can reuse unchanged bodies.
-      const content = createBuildContentInstance({ source: fs(contentPath) }).withRef(sha)
+      // The highlighter the runtime parser imports through `#comark-docs/highlighter`. The layer's default is
+      // imported statically, since Node won't strip types from a `.ts` file in node_modules.
+      const highlighterPath = nuxt.options.alias['#comark-docs/highlighter']!
+      const highlighter = highlighterPath === defaultHighlighterPath
+        ? defaultHighlighter
+        : (await import(highlighterPath)).default
+      const content = createBuildContentInstance({ source: fs(contentPath) }, highlighter).withRef(sha)
 
       try {
         const writeStart = performance.now()

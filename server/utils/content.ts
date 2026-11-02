@@ -3,6 +3,7 @@ import fs from 'comark-content/sources/fs'
 import forge from 'comark-content/sources/forge'
 import { withSnapshot } from 'comark-content/sources/snapshot'
 import { createRuntimeContentInstance } from '../../utils/factory.ts'
+import highlighter from '#comark-docs/highlighter'
 
 /**
  * The instance serving requests in this layer.
@@ -22,10 +23,13 @@ function getBaseContent(): DocsContent {
 }
 
 function createBaseContent() {
-  return createRuntimeContentInstance({
-    source: contentSource(),
-    cache: { driver: contentCacheDriver() },
-  })
+  return createRuntimeContentInstance(
+    {
+      source: contentSource(),
+      cache: { driver: contentCacheDriver() },
+    },
+    highlighter,
+  )
 }
 
 /**

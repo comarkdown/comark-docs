@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -5,6 +6,8 @@ export default defineConfig({
   test: {
     projects: [
       {
+        // The alias `modules/config` points at the site's highlighter, here the layer's default.
+        resolve: { alias: { '#comark-docs/highlighter': fileURLToPath(new URL('utils/highlighter.ts', import.meta.url)) } },
         test: {
           name: 'unit',
           include: ['test/**/*.test.ts', 'modules/**/*.test.ts', 'scripts/**/*.test.mjs'],
