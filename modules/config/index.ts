@@ -228,7 +228,8 @@ export default defineNuxtModule<ComarkDocsOptions>({
       ? await resolvePath(options.highlighter, { cwd: rootDir })
       : resolve('../../utils/highlighter.ts')
     nuxt.options.alias['#comark-docs/highlighter'] = highlighter
-    // A site's highlighter changes the parsed output, so it gets its own content cache namespace.
+    // A site's highlighter changes the parsed output, so it gets its own content cache namespace. The hash covers
+    // this file only, not what it imports; the configuration page says so.
     nuxt.options.runtimeConfig.docs.highlighterVersion = options.highlighter
       ? createHash('sha256').update(readFileSync(highlighter)).digest('hex').slice(0, 8)
       : ''
