@@ -136,16 +136,6 @@ export default defineNuxtModule<ComarkDocsOptions>({
       },
     })
 
-    // Extend Nuxt UI components to make them global and usable in markdown by consumers.
-    nuxt.hook('components:extend', (components) => {
-      const globalComponents = ['UButton', 'UPageHero']
-      for (const component of globalComponents) {
-        const entry = components.find((c) => c.pascalName === component)
-        if (!entry) continue
-        entry.global = true
-      }
-    })
-
     const rawMcpOptions = nuxtOptions.mcp
     const mcp = defu(rawMcpOptions || undefined, {
       name: `${siteName} Docs`,

@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import Button from '@nuxt/ui/components/Button.vue'
-
-const landingComponents = {
-  ...byFileName(import.meta.glob('../components/content/landing/*.{vue,ts}', { eager: true, import: 'default' })),
-  Button,
-}
+const landingComponents = byFileName(import.meta.glob('../components/content/landing/*.{vue,ts}', { eager: true, import: 'default' }))
 
 const content = useDocsContent()
 const site = useSiteConfig()

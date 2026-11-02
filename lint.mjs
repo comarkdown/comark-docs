@@ -23,11 +23,10 @@ function componentsIn(/** @type {string} */ dir) {
 const nuxtUi = dirname(fileURLToPath(import.meta.resolve('@nuxt/ui/components/Button.vue')))
 
 // What the pages pass to `MarkdownDocument`: Nuxt UI's prose components and the layer's
-// `app/components/content/`, plus every Nuxt UI component with the `u-` prefix, such as `::u-button`.
+// `app/components/content/`, which re-exports the Nuxt UI components Markdown uses, such as `::button`.
 const components = [
   ...componentsIn(`${nuxtUi}/prose`),
   ...componentsIn(fileURLToPath(new URL('app/components/content', import.meta.url))),
-  ...readdirSync(nuxtUi).filter(file => file.endsWith('.vue')).map(file => `u-${kebab(basename(file, '.vue'))}`),
 ]
 
 // Each page's URL, mapped to its file the way comark-content derives the URL from it.
