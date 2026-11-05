@@ -84,6 +84,7 @@
     "nuxt-schema-org": "^7.0.1",
     "nuxt-seo-utils": "^9.0.1",
     "nuxt-workers": "^0.1.0",
+    "ofetch": "^1.5.1",
     "pathe": "^2.0.3",
     "rangi": "^2.2.0",
     "satori": "^0.63.2",
@@ -108,6 +109,6 @@
     "nuxt": "^4.6.4",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0",
-    "vue-tsc": "^3.3.14"
+    "vue-tsc": "3.3.13"
   }
 }
