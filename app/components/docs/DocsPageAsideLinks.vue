@@ -8,9 +8,8 @@ const props = defineProps<{ page: ContentFile }>()
 const route = useRoute()
 const toast = useToast()
 const content = useDocsContent()
-const { copy, copied } = useClipboard()
+const { copy } = useClipboard()
 const { copy: copyLink } = useClipboard()
-const copying = ref(false)
 const site = useSiteConfig()
 
 const { rawPrefix } = useRuntimeConfig().public.agentDiscovery
@@ -22,6 +21,10 @@ const githubUrl = computed(
   () => github?.url || (github?.owner && github?.name ? `https://github.com/${github.owner}/${github.name}` : '')
 )
 
+// The raw markdown route reads production content, so a versioned preview has nothing to open.
+const isProd = computed(() => content.value.mode === 'prod')
+const disabledLinkClass = 'text-dimmed hover:text-dimmed cursor-not-allowed'
+
 const links = computed(() => [
   ...(githubUrl.value
     ? [
@@ -32,7 +35,7 @@ const links = computed(() => [
           target: '_blank',
           // /blob/ pins a commit and /pr/ may come from a fork branch this site can't link an editor to.
           disabled: ['blob', 'pr'].includes(content.value.mode),
-          class: ['blob', 'pr'].includes(content.value.mode) ? 'text-dimmed hover:text-dimmed cursor-not-allowed' : undefined,
+          class: ['blob', 'pr'].includes(content.value.mode) ? disabledLinkClass : undefined,
         },
         {
           icon: 'i-lucide-star',
@@ -42,23 +45,19 @@ const links = computed(() => [
         },
       ]
     : []),
+  {
+    icon: 'i-simple-icons-markdown',
+    label: 'Open as Markdown',
+    to: mdPath.value,
+    target: '_blank',
+    disabled: !isProd.value,
+    class: !isProd.value ? disabledLinkClass : undefined,
+  },
   ...((docs?.asideLinks ?? []).map((link: { label: string; icon?: string; to: string; target?: string }) => ({
     target: '_blank',
     ...link,
   })) as PageLink[]),
 ])
-
-async function copyPage() {
-  copying.value = true
-  try {
-    const md = await $fetch<string>(mdPath.value)
-    copy(md)
-  } catch {
-    toast.add({ title: 'Could not copy page.', color: 'error' })
-  } finally {
-    copying.value = false
-  }
-}
 
 const aiPrompt = computed(() => `Read ${mdUrl.value} so I can ask questions about it.`)
 const items = [
@@ -73,6 +72,22 @@ const items = [
           color: 'success',
           icon: 'i-lucide-check',
         })
+      },
+    },
+    {
+      label: 'Copy page',
+      icon: 'i-lucide-copy',
+      async onSelect() {
+        try {
+          copy(await $fetch<string>(mdPath.value))
+          toast.add({
+            title: 'Page copied to clipboard',
+            color: 'success',
+            icon: 'i-lucide-check',
+          })
+        } catch {
+          toast.add({ title: 'Could not copy page.', color: 'error' })
+        }
       },
     },
   ],
@@ -111,18 +126,6 @@ const items = [
       :links="links"
       :ui="{ list: 'gap-2.5' }"
     />
-    <UButton
-      :disabled="content.mode !== 'prod'"
-      :loading="copying"
-      :icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
-      :color="copied ? 'success' : 'neutral'"
-      :label="copied ? 'Copied!' : 'Copy page'"
-      variant="link"
-      class="px-0 py-0 font-normal"
-      :class="{ 'text-muted': !copied }"
-      :ui="{ leadingIcon: 'size-3.5' }"
-      @click="copyPage"
-    />
     <UDropdownMenu
       v-slot="{ open }"
       :items="items"
@@ -135,7 +138,7 @@ const items = [
         variant="link"
         aria-label="Open copy actions menu"
         label="Open in Chat"
-        :disabled="content.mode !== 'prod'"
+        :disabled="!isProd"
         class="font-normal px-0 py-0"
         trailing-icon="i-lucide-chevron-down"
         :ui="{

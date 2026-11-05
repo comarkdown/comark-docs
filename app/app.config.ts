@@ -241,7 +241,7 @@ export default defineAppConfig({
     },
     // schema.org SoftwareApplication identity for the landing page JSON-LD; empty = no block emitted.
     schemaOrg: {},
-    // Extra links appended to the docs page aside (below Copy page / Edit).
+    // Extra links appended to the docs page aside (below the built-in links).
     asideLinks: [] as { label: string; icon?: string; to: string; target?: string }[],
   },
 })
