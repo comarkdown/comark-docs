@@ -10,7 +10,7 @@ export default defineConfig({
         resolve: { alias: { '#comark-docs/highlighter': fileURLToPath(new URL('utils/highlighter.ts', import.meta.url)) } },
         test: {
           name: 'unit',
-          include: ['test/**/*.test.ts', 'modules/**/*.test.ts', 'scripts/**/*.test.mjs'],
+          include: ['test/**/*.test.ts', 'modules/**/*.test.ts'],
           exclude: ['test/e2e/**', 'test/vercel/**', 'test/smoke/**'],
           setupFiles: ['test/setup.ts'],
           environment: 'node',

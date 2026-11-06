@@ -12,8 +12,11 @@ concurrency:
   group: bundle-size-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+env:
+  NUXT_BUNDLE_ANALYZER_VERSION: 0.1.5
+
 jobs:
-  # Builds and measures `main` and the PR side by side, posted by `bundle-size-comment.yml`.
+  # Analyzes `main` and the PR side by side, compared and posted by `bundle-size-comment.yml`.
   analyze:
     name: analyze (${{ matrix.target }})
     runs-on: ubuntu-latest
@@ -24,75 +27,24 @@ jobs:
         target: [base, pr]
 
     steps:
-      - name: Check out the PR merge
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      # Both snapshots come from the PR's script, so they share one format even when it changes.
-      - name: Keep the PR's report script
-        run: cp scripts/bundle-size/report.mjs "$RUNNER_TEMP/report.mjs"
-      - name: Check out the base revision
-        if: matrix.target == 'base'
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          ref: ${{ github.event.pull_request.base.sha }}
+          # The base commit for `base`, the PR merged into it for `pr`.
+          ref: ${{ matrix.target == 'base' && github.event.pull_request.base.sha || '' }}
       - uses: ./.github/actions/setup
-      - name: Build with the analyzer
-        run: |
-          {
-            echo "build.analyze.enabled=true"
-            echo "build.analyze.template=raw-data"
-            echo "build.analyze.filename=$GITHUB_WORKSPACE/playground/.nuxt/analyze/{name}.json"
-            echo "build.analyze.projectRoot=$GITHUB_WORKSPACE/"
-          } > playground/.nuxtrc
-          pnpm build
-      - name: Snapshot the bundle
+      # With npx, so the analyzer needs no entry in the lockfile.
+      - name: Analyze the playground
+        run: npx --yes "nuxt-bundle-analyzer@$NUXT_BUNDLE_ANALYZER_VERSION" playground --name ${{ matrix.target }} --no-serve
         env:
+          # The content snapshot confirms its commit with GitHub, so both sides ship one.
           GITHUB_TOKEN: ${{ github.token }}
-          # Both sides render the same content, so the comparison only reflects code.
-          NUXT_DOCS_GITHUB_BRANCH: ${{ github.event.pull_request.base.sha }}
-          SNAPSHOT_SHA: ${{ matrix.target == 'base' && github.event.pull_request.base.sha || github.event.pull_request.head.sha }}
-        run: |
-          # nuxt-og-image signs its image URLs with it.
-          NUXT_APP_SECRET="$(openssl rand -base64 32)" PORT=3000 node playground/.output/server/index.mjs &
-          timeout 60 bash -c 'until curl -sf -o /dev/null http://localhost:3000/robots.txt; do sleep 1; done'
-          node "$RUNNER_TEMP/report.mjs" snapshot \
-            --root playground \
-            --analyze playground/.nuxt/analyze/client.json \
-            --url http://localhost:3000 \
-            --label ${{ matrix.target }} \
-            --sha "$SNAPSHOT_SHA" \
-            --output "$RUNNER_TEMP/bundle-size/${{ matrix.target }}.json"
-      - name: Upload the snapshot
-        uses: actions/upload-artifact@v7
+          # The analysis build peaks around 5.5 GB, above Node's default heap.
+          NODE_OPTIONS: --max-old-space-size=8192
+          NUXT_TELEMETRY_DISABLED: 1
+      - uses: actions/upload-artifact@v7
         with:
-          name: bundle-size-${{ matrix.target }}
-          path: ${{ runner.temp }}/bundle-size/${{ matrix.target }}.json
-          if-no-files-found: error
-          retention-days: 1
-
-  # One artifact with both snapshots and the PR number, for the comment workflow to validate.
-  report:
-    needs: analyze
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Download the snapshots
-        uses: actions/download-artifact@v8
-        with:
-          pattern: bundle-size-*
-          path: ${{ runner.temp }}/bundle-size
-          merge-multiple: true
-      - name: Write the bundle context
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: printf '{"prNumber":%s}\n' "$PR_NUMBER" > "$RUNNER_TEMP/bundle-size/context.json"
-      - name: Upload the report
-        uses: actions/upload-artifact@v7
-        with:
-          name: bundle-size-report
-          path: ${{ runner.temp }}/bundle-size
+          name: ${{ matrix.target }}
+          path: playground/node_modules/.cache/nuxt-bundle-analyzer/${{ matrix.target }}
           if-no-files-found: error
           retention-days: 7
