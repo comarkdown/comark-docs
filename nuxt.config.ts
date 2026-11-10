@@ -15,7 +15,7 @@ export default defineNuxtConfig({
     resolve('./modules/config/index.ts'),
     resolve('./modules/css.ts'),
     '@nuxt/ui',
-    '@comark/nuxt',
+    '@comark/vue',
     '@nuxtjs/robots',
     '@nuxtjs/sitemap',
     'nuxt-seo-utils',

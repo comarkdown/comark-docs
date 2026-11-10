@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { joinURL } from 'ufo'
 import type { NavigationItem } from 'comark-content'
-import { Mermaid } from '@comark/nuxt/plugins/mermaid'
+import { Mermaid } from '@comark/vue/plugins/mermaid'
 import * as prose from '@nuxt/ui/components/prose'
 
 definePageMeta({

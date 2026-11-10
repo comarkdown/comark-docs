@@ -46,7 +46,7 @@
   "dependencies": {
     "@ai-sdk/gateway": "^4.0.138",
     "@ai-sdk/vue": "^4.0.165",
-    "@comark/nuxt": "^0.9.0",
+    "@comark/vue": "^0.9.1",
     "@iconify-json/logos": "^1.2.19",
     "@iconify-json/lucide": "^1.2.152",
     "@iconify-json/simple-icons": "^1.2.101",
@@ -70,7 +70,7 @@
     "@vueuse/core": "^15.0.0",
     "ai": "^7.0.165",
     "beautiful-mermaid": "^1.1.3",
-    "comark": "^0.9.0",
+    "comark": "^0.9.1",
     "comark-content": "^0.5.1",
     "defu": "^6.1.7",
     "exsolve": "^1.2.0",

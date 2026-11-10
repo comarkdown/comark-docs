@@ -8,7 +8,6 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   # First-party packages, published and consumed here in the same session.
-  - '@comark/nuxt'
   - '@comark/vue'
   - comark
   - comark-content
