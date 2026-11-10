@@ -175,9 +175,9 @@ importers:
       '@ai-sdk/vue':
         specifier: ^4.0.165
         version: 4.0.165(vue@3.5.44(typescript@6.0.3))(zod@4.6.7)
-      '@comark/nuxt':
-        specifier: ^0.9.0
-        version: 0.9.0(78d8882cbd5ad9e9fd80ab339e669834)
+      '@comark/vue':
+        specifier: ^0.9.1
+        version: 0.9.1(@nuxt/kit@4.6.4(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@nuxt/schema@4.6.4)(beautiful-mermaid@1.1.3)(rangi@2.2.0)(vue@3.5.44(typescript@6.0.3))
       '@iconify-json/logos':
         specifier: ^1.2.19
         version: 1.2.19
@@ -248,11 +248,11 @@ importers:
         specifier: ^1.1.3
         version: 1.1.3
       comark:
-        specifier: ^0.9.0
-        version: 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
+        specifier: ^0.9.1
+        version: 0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)
       comark-content:
         specifier: ^0.5.1
-        version: 0.5.1(beautiful-mermaid@1.1.3)(forges@0.3.2)(rangi@2.2.0)(shiki@4.5.0)(unstorage@1.17.6(@vercel/functions@3.11.0(ws@8.22.0))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2)))
+        version: 0.5.1(beautiful-mermaid@1.1.3)(forges@0.3.2)(rangi@2.2.0)(unstorage@1.17.6(@vercel/functions@3.11.0(ws@8.22.0))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2)))
       defu:
         specifier: ^6.1.7
         version: 6.1.7
@@ -273,7 +273,7 @@ importers:
         version: 2.11.1(@vueuse/core@15.0.0(vue@3.5.44(typescript@6.0.3)))(vue@3.5.44(typescript@6.0.3))
       nuxt-agent-discovery:
         specifier: ^0.8.1
-        version: 0.8.1(9401279e3f5e91394538e74e21237f01)
+        version: 0.8.1(dae1a4b5e2b4ad09a1b93a771fe12e1d)
       nuxt-llms:
         specifier: ^0.3.1
         version: 0.3.1(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
@@ -334,7 +334,7 @@ importers:
         version: 2.12.0(@opentelemetry/api@1.10.0)
       comark-linter:
         specifier: ^0.10.0
-        version: 0.10.0(comark@0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
+        version: 0.10.0(comark@0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0))(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))
       es-module-lexer:
         specifier: ^3.0.4
         version: 3.0.4
@@ -557,19 +557,20 @@ packages:
   '@colordx/core@7.3.0':
     resolution: {integrity: sha512-LVzTTPhX7wpy7TkGjouA9zbbCBIw92RGm7ZQqSKFE0oYE3sMx2FGXz90eVpgw7k/+wrrY+qJ86nHXifZWMS5jA==}
 
-  '@comark/nuxt@0.9.0':
-    resolution: {integrity: sha512-/8YwRnhPWXeysco2PSUtyOr/vg0kgYSeHeEUNngnJyurv8O6WlzQJjDnHFYutoO0AtuGFfvkMQTc7tkL8OaKJQ==}
+  '@comark/vue@0.9.1':
+    resolution: {integrity: sha512-/axFOPIkvxm1iEOa9eIgLzJzp5rAz9nM7Bx6vGt5D5LhQrgQ0VqTyPTWOm9NvJlY45alScSC/rLCskVtfNNC5Q==}
     peerDependencies:
-      nuxt: ^4.6.3
-
-  '@comark/vue@0.9.0':
-    resolution: {integrity: sha512-B/PS8AwaXdwW9gMsnqqmClLdYI8/AY0cdpuznHdSsR+ixZH4JActz0c08uVHzSIfhqR03rB1HGLest2dzM2lVg==}
-    peerDependencies:
+      '@nuxt/kit': ^4.6.3
+      '@nuxt/schema': ^4.6.3
       beautiful-mermaid: ^1.1.3
       katex: ^0.19.1
-      shiki: ^4.5.0
+      shiki: ^4.6.0
       vue: ^3.5.43
     peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
+      '@nuxt/schema':
+        optional: true
       beautiful-mermaid:
         optional: true
       katex:
@@ -3547,13 +3548,13 @@ packages:
       vite-doctor:
         optional: true
 
-  comark@0.9.0:
-    resolution: {integrity: sha512-dTFxOwlImNFzKZDjdGh33RNVK+sgvKN9TeO/1trqzxeR2vQeUagFUsdNtc4xGhnd7Gltzfn4qNZEc3UH/zqMJg==}
+  comark@0.9.1:
+    resolution: {integrity: sha512-ChyYrULVddXU50WFHaG5yGEZhnVpXLh7LoHMUuZ8esCtruxhX8ghOpo79As/LBQ64INk7uTzF0QvXDO3qKSRog==}
     peerDependencies:
       beautiful-mermaid: ^1.1.3
       katex: ^0.19.1
       rangi: ^2.2.0
-      shiki: ^4.5.0
+      shiki: ^4.6.0
     peerDependenciesMeta:
       beautiful-mermaid:
         optional: true
@@ -4877,8 +4878,8 @@ packages:
     resolution: {integrity: sha512-ayF7iT+44LXdxJLTrTd3TLQpFDDvPCBxXxbv+pMUSuHA5Q8zyAfwkRP6aHHwNVFBUFWtxAHqwNJxF8vMZLAbVg==}
     engines: {node: '>=18'}
 
-  markdown-exit@2.1.0:
-    resolution: {integrity: sha512-ffGj82OodjwgZ2tZtXBLXvJsMbvgtp2r+RDQgpAuWSk2Zi2zgNfQPyzVQFHAUV6Z/B/uQwqFHHEKNmeogIMsbw==}
+  markdown-exit@2.1.3:
+    resolution: {integrity: sha512-kHd0ffgNzRsjyd8ovxZX1iQsv1tkpRU9F7EGDcrMDxB6IwF5w0IMphqhIfDCSlgTh+NYSFyANaGQHsgHZU7mDw==}
 
   marked@17.0.6:
     resolution: {integrity: sha512-gB0gkNafnonOw0obSTEGZTT86IuhILt2Wfx0mWH/1Au83kybTayroZ/V6nS25mN7u8ASy+5fMhgB3XPNrOZdmA==}
@@ -6995,36 +6996,14 @@ snapshots:
 
   '@colordx/core@7.3.0': {}
 
-  '@comark/nuxt@0.9.0(78d8882cbd5ad9e9fd80ab339e669834)':
+  '@comark/vue@0.9.1(@nuxt/kit@4.6.4(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))))(@nuxt/schema@4.6.4)(beautiful-mermaid@1.1.3)(rangi@2.2.0)(vue@3.5.44(typescript@6.0.3))':
     dependencies:
-      '@comark/vue': 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))
-      '@nuxt/kit': 4.6.4(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
-      comark: 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
-      nuxt: 4.6.4(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7(supports-color@10.2.2)))(@oxc-project/types@0.153.0)(@types/node@26.6.2)(@vercel/functions@3.11.0(ws@8.22.0))(@vue/compiler-sfc@3.5.44)(acorn@8.18.0)(confbox@0.3.1)(db0@0.3.4)(dotenv@17.4.2)(esbuild@0.28.2)(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2))(giget@3.3.1)(ioredis@5.11.1(supports-color@10.2.2))(lightningcss@1.33.0)(mlly@1.8.2)(optionator@0.9.4)(oxc-parser@0.153.0)(rolldown@1.2.15)(rollup-plugin-visualizer@7.1.1(rolldown@1.2.15)(rollup@4.67.5))(rollup@4.67.5)(srvx@1.0.5)(supports-color@10.2.2)(terser@5.51.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue-tsc@3.3.13(typescript@6.0.3))(yaml@2.9.1)
-    transitivePeerDependencies:
-      - '@nuxt/schema'
-      - beautiful-mermaid
-      - confbox
-      - dotenv
-      - giget
-      - jiti
-      - katex
-      - magic-string
-      - mlly
-      - oxc-parser
-      - rangi
-      - rolldown
-      - shiki
-      - unplugin
-      - vue
-
-  '@comark/vue@0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)(vue@3.5.44(typescript@6.0.3))':
-    dependencies:
-      comark: 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
+      comark: 0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)
       vue: 3.5.44(typescript@6.0.3)
     optionalDependencies:
+      '@nuxt/kit': 4.6.4(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
+      '@nuxt/schema': 4.6.4
       beautiful-mermaid: 1.1.3
-      shiki: 4.5.0
     transitivePeerDependencies:
       - rangi
 
@@ -9954,9 +9933,9 @@ snapshots:
 
   colortranslator@5.0.0: {}
 
-  comark-content@0.5.1(beautiful-mermaid@1.1.3)(forges@0.3.2)(rangi@2.2.0)(shiki@4.5.0)(unstorage@1.17.6(@vercel/functions@3.11.0(ws@8.22.0))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))):
+  comark-content@0.5.1(beautiful-mermaid@1.1.3)(forges@0.3.2)(rangi@2.2.0)(unstorage@1.17.6(@vercel/functions@3.11.0(ws@8.22.0))(db0@0.3.4)(ioredis@5.11.1(supports-color@10.2.2))):
     dependencies:
-      comark: 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
+      comark: 0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)
       hookable: 6.1.2
       pathe: 2.0.3
       picomatch: 4.0.7
@@ -9971,23 +9950,22 @@ snapshots:
       - rangi
       - shiki
 
-  comark-linter@0.10.0(comark@0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0))(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2)):
+  comark-linter@0.10.0(comark@0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0))(eslint@10.14.0(jiti@2.7.0)(supports-color@10.2.2)):
     dependencies:
-      comark: 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
+      comark: 0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)
     optionalDependencies:
       eslint: 10.14.0(jiti@2.7.0)(supports-color@10.2.2)
 
-  comark@0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0):
+  comark@0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0):
     dependencies:
       character-entities: 2.0.2
       character-entities-legacy: 3.0.0
       js-yaml: 5.5.0
       linkify-it: 6.1.0
-      markdown-exit: 2.1.0
+      markdown-exit: 2.1.3
     optionalDependencies:
       beautiful-mermaid: 1.1.3
       rangi: 2.2.0
-      shiki: 4.5.0
 
   comma-separated-tokens@2.0.3: {}
 
@@ -11305,7 +11283,7 @@ snapshots:
       type-fest: 4.41.0
       web-worker: 1.5.0
 
-  markdown-exit@2.1.0:
+  markdown-exit@2.1.3:
     dependencies:
       character-entities: 2.0.2
       linkify-it: 6.1.0
@@ -11610,7 +11588,7 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuxt-agent-discovery@0.8.1(9401279e3f5e91394538e74e21237f01):
+  nuxt-agent-discovery@0.8.1(dae1a4b5e2b4ad09a1b93a771fe12e1d):
     dependencies:
       '@nuxt/kit': 4.6.4(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
       defu: 6.1.7
@@ -11621,7 +11599,7 @@ snapshots:
       '@nuxtjs/mcp-toolkit': 0.24.3(@nuxt/schema@4.6.4)(@vue/compiler-sfc@3.5.44)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(h3@1.15.11)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(rollup@4.67.5)(supports-color@10.2.2)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(vue@3.5.44(typescript@6.0.3))(zod@4.6.7)
       '@nuxtjs/robots': 7.0.2(6fa961ca090f9b144e12ebb8d8af3b37)
       '@nuxtjs/sitemap': 9.1.0(860aa993febf90baf3e1f774ed352078)
-      comark: 0.9.0(beautiful-mermaid@1.1.3)(rangi@2.2.0)(shiki@4.5.0)
+      comark: 0.9.1(beautiful-mermaid@1.1.3)(rangi@2.2.0)
       nuxt-llms: 0.3.1(@nuxt/schema@4.6.4)(confbox@0.3.1)(dotenv@17.4.2)(giget@3.3.1)(jiti@2.7.0)(magic-string@1.4.5)(mlly@1.8.2)(oxc-parser@0.153.0)(rolldown@1.2.15)(unplugin@3.7.0(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.67.5)(vite@8.3.5(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1)))
     transitivePeerDependencies:
       - '@nuxt/schema'
