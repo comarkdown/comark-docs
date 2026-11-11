@@ -17,9 +17,11 @@ const navigation = useMainNavigation()
     <template #right>
       <UContentSearchButton
         v-if="header?.search"
-        :collapsed="false"
-        :icon="false"
-        class="text-muted font-normal hidden lg:inline-flex min-w-[150px]"
+        :collapsed="assistantOpen"
+        :icon="assistantOpen ? undefined : false"
+        :variant="assistantOpen ? 'outline' : undefined"
+        :ui="{ leadingIcon: 'size-4' }"
+        :class="['text-muted font-normal hidden lg:inline-flex', assistantOpen ? 'p-2' : 'min-w-[150px]']"
       />
 
       <UButton
