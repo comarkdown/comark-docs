@@ -72,3 +72,13 @@ describe('agent routes', () => {
     expect(response.headers.get('content-type')).toContain('text/markdown')
   })
 })
+
+describe('icons', () => {
+  // The icon of `md` code blocks is the layer's own SVG, not an Iconify collection. @nuxt/icon caches the
+  // JSON error of a missing icon and then answers 200 with it, so the body is what shows it is served.
+  it('serves the comark icon from the server bundle', async () => {
+    const response = await fetchPath('/api/_nuxt_icon/custom.json?icons=comark')
+    const collection = await response.json() as { icons?: Record<string, { body: string }> }
+    expect(collection.icons?.comark?.body).toContain('<path')
+  })
+})
