@@ -65,6 +65,10 @@ export default defineNuxtConfig({
     provider: 'server',
     fallbackToApi: 'client-only',
     serverBundle: { collections: LAYER_ICON_COLLECTIONS },
+    // The layer's own SVGs, used as `i-comark-<file name>`. Registered at build time so the server bundle and
+    // SSR know them: a runtime `addIcon()` only reaches the `@iconify/vue` copy it was imported from, which is
+    // not the one `@nuxt/icon` renders with when a consumer installs two versions.
+    customCollections: [{ prefix: 'comark', dir: resolve('./app/assets/icons') }],
     clientBundle: { scan: true },
   },
   vite: {
