@@ -15,7 +15,7 @@ const plugins = [rangi({ theme: geistTheme })]
 const sourceAsCode = computed(() => ['````md', props.source, '````'].join('\n'))
 
 const tabs = [
-  { id: 'source', label: 'source.md', icon: 'i-custom-comark' },
+  { id: 'source', label: 'source.md', icon: 'i-comark-logo' },
   { id: 'output', label: 'preview', icon: 'i-lucide-eye' },
 ]
 const activeIndex = ref(0)
