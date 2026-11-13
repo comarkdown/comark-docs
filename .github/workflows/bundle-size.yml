@@ -14,6 +14,8 @@ concurrency:
 
 env:
   NUXT_BUNDLE_ANALYZER_VERSION: 0.2.0
+  # The pages of the playground `--urls` renders and measures: the landing page, a plain page and a docs page.
+  NUXT_BUNDLE_ANALYZER_URLS: /,/page,/getting-started/introduction
 
 jobs:
   # Analyzes `main` and the PR side by side, compared and posted by `bundle-size-comment.yml`.
@@ -35,7 +37,7 @@ jobs:
       - uses: ./.github/actions/setup
       # With npx, so the analyzer needs no entry in the lockfile.
       - name: Analyze the playground
-        run: npx --yes "nuxt-bundle-analyzer@$NUXT_BUNDLE_ANALYZER_VERSION" playground --name ${{ matrix.target }} --no-serve
+        run: npx --yes "nuxt-bundle-analyzer@$NUXT_BUNDLE_ANALYZER_VERSION" playground --urls "$NUXT_BUNDLE_ANALYZER_URLS" --name ${{ matrix.target }} --no-serve
         env:
           # The content snapshot confirms its commit with GitHub, so both sides ship one.
           GITHUB_TOKEN: ${{ github.token }}
