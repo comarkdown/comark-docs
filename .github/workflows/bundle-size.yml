@@ -41,6 +41,8 @@ jobs:
         env:
           # The content snapshot confirms its commit with GitHub, so both sides ship one.
           GITHUB_TOKEN: ${{ github.token }}
+          # Prerendered pages read content from GitHub at this ref; the default, `<number>/merge`, is not one.
+          VERCEL_GIT_COMMIT_REF: ${{ matrix.target == 'base' && github.event.pull_request.base.sha || github.sha }}
           # The analysis build peaks around 5.5 GB, above Node's default heap.
           NODE_OPTIONS: --max-old-space-size=8192
           NUXT_TELEMETRY_DISABLED: 1
