@@ -274,9 +274,6 @@ importers:
       js-yaml:
         specifier: ^5.5.0
         version: 5.5.0
-      motion-v:
-        specifier: ^2.12.0
-        version: 2.12.0(@vueuse/core@15.0.0(vue@3.5.44(typescript@6.0.3)))(vue@3.5.44(typescript@6.0.3))
       nuxt-agent-discovery:
         specifier: ^0.8.2
         version: 0.8.2(531bb40ac8e9b723e239c34bdf46eb0e)
@@ -11422,19 +11419,6 @@ snapshots:
   motion-v@2.12.0(@vueuse/core@14.4.0(vue@3.5.44(typescript@6.0.3)))(vue@3.5.44(typescript@6.0.3)):
     dependencies:
       '@vueuse/core': 14.4.0(vue@3.5.44(typescript@6.0.3))
-      framer-motion: 14.11.1
-      hey-listen: 1.0.8
-      motion-dom: 14.11.1
-      motion-utils: 14.7.0
-      vue: 3.5.44(typescript@6.0.3)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-      - remix
-
-  motion-v@2.12.0(@vueuse/core@15.0.0(vue@3.5.44(typescript@6.0.3)))(vue@3.5.44(typescript@6.0.3)):
-    dependencies:
-      '@vueuse/core': 15.0.0(vue@3.5.44(typescript@6.0.3))
       framer-motion: 14.11.1
       hey-listen: 1.0.8
       motion-dom: 14.11.1
