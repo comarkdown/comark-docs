@@ -98,7 +98,7 @@
     "@nuxt/devtools-kit": "4.2.0",
     "@nuxt/eslint-config": "^1.17.0",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.301.2",
-    "@opentelemetry/resources": "^2.12.1",
+    "@opentelemetry/resources": "^3.1.1",
     "@opentelemetry/sdk-trace-base": "^2.12.1",
     "@opentelemetry/sdk-trace-node": "^2.12.1",
     "comark-linter": "^0.12.1",
