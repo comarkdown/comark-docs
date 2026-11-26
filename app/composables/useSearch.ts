@@ -8,14 +8,15 @@ type SearchStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 const status = ref<SearchStatus>('idle')
 
-/** One worker for the page: each commit (first one included) is an `init()` on it. */
-let worker: ReturnType<typeof connect> | undefined
-/** Commit the worker serves (or is loading) and its index build */
-let loaded: { key: string, indexed: Promise<void> } | undefined
+/** The worker of the commit being searched; a switch terminates it and starts the next commit's. */
+let active: ReturnType<typeof start> | undefined
 
-function connect() {
-  const connection = connectContentWorker(new Worker(new URL('../workers/search.ts', import.meta.url), { type: 'module' }))
-  return { connection, client: createContentClient({ fetch: connection.fetch, plugins: [searchClient()] }) }
+function start(key: string, init: SearchWorkerInit) {
+  // A worker serves one commit for its life; `name` is how it learns which.
+  const worker = new Worker(new URL('../workers/search.ts', import.meta.url), { type: 'module', name: JSON.stringify(init) })
+  const connection = connectContentWorker(worker)
+  const client = createContentClient({ fetch: connection.fetch, plugins: [searchClient()] })
+  return { key, connection, client, indexed: client.buildSearchIndex() }
 }
 
 /**
@@ -62,27 +63,25 @@ export function useSearch() {
 
     const key = current.sha ?? 'unpinned' // dev mode only
     const debug = searchDebug()
-    if (loaded?.key !== key) {
+    if (active?.key !== key) {
       if (debug) console.info(`[search] loading sha ${key}`)
-      const init: SearchWorkerInit = { sha: current.sha, debug }
-      worker ??= connect()
-      const { connection, client } = worker
-      loaded = { key, indexed: connection.init(init).then(() => client.buildSearchIndex()) }
+      active?.connection.terminate()
+      active = start(key, { sha: current.sha, debug })
     }
-    const entry = loaded
+    const entry = active
 
     status.value = 'loading'
     const started = performance.now()
     try {
       await entry.indexed
-      if (loaded !== entry) return // a switch occurred
+      if (active !== entry) return // a switch occurred
       status.value = 'ready'
       if (debug) console.info(`[search] ready in ${(performance.now() - started).toFixed(1)}ms`)
     } catch (error) {
-      if (loaded !== entry) return
+      if (active !== entry) return
       // A fresh worker on the next warmup: the connection may be failed for good.
-      worker?.connection.terminate()
-      worker = loaded = undefined
+      entry.connection.terminate()
+      active = undefined
       status.value = 'error'
       console.error('[search] could not load the search database', error)
     }
@@ -94,9 +93,16 @@ export function useSearch() {
   }
 
   async function search(query: string, opts?: SearchOptions): Promise<SearchResult[]> {
-    if (!worker) return []
-    const results = await worker.client.search(query, { limit: 25, snippet: { columns: ['content'] }, ...opts })
-    return prefixSearchResults(results, content.value.routeBase)
+    const entry = active
+    if (!entry) return []
+    try {
+      const results = await entry.client.search(query, { limit: 25, snippet: { columns: ['content'] }, ...opts })
+      return prefixSearchResults(results, content.value.routeBase)
+    } catch (error) {
+      // Rejected because a switch terminated its worker, which isn't a search error.
+      if (active !== entry) return []
+      throw error
+    }
   }
 
   return {

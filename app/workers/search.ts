@@ -1,8 +1,7 @@
 /**
  * Search worker: serves one browser-standalone `comark-content` instance (sqlite-wasm FTS5) to `useSearch()`.
  *
- * Hydrated from one commit's snapshot artifacts.
- * Each `init()` from `useSearch()` swaps in another commit's instance; the worker cleans the previous one's rows.
+ * Hydrated from one commit's snapshot artifacts: `useSearch()` starts one worker per commit.
  */
 import { comarkContent, DEFAULT_CONTENT_NAME } from 'comark-content/runtime'
 import sqliteWasm from 'comark-content/database/sqlite-wasm'
@@ -17,16 +16,14 @@ export interface SearchWorkerInit {
   debug: boolean
 }
 
-// Shared database for the worker's lifetime
-const database = sqliteWasm()
+// Set by `useSearch()` through the Worker's `name`.
+const { sha, debug } = JSON.parse(self.name) as SearchWorkerInit
+setDebug(debug)
 
-serveContentWorker(({ sha, debug }: SearchWorkerInit) => {
-  setDebug(debug)
-  const apiBase = sha ? `/api/content/blob/${sha}` : '/api/content'
-  const content = comarkContent({
-    source: snapshot(`${apiBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`, `${apiBase}/manifest.json`),
-    plugins: [sqliteFullTextSearch({ database })],
-    logger,
-  })
-  return sha ? content.withRef(sha) : content
-})
+const apiBase = sha ? `/api/content/blob/${sha}` : '/api/content'
+
+serveContentWorker(comarkContent({
+  source: snapshot(`${apiBase}/snapshot/${DEFAULT_CONTENT_NAME}.json`, `${apiBase}/manifest.json`),
+  plugins: [sqliteFullTextSearch({ database: sqliteWasm() })],
+  logger,
+}))
