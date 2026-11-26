@@ -93,6 +93,12 @@ describe('search for agents', () => {
     expect(text).toContain(`URL: ${ANCHOR}`)
   })
 
+  it('separates table cells and list items', async () => {
+    const text = await request('/.well-known/search?q=versioned+previews').then((res) => res.text())
+    expect(text).toContain('Mode URL pattern Content Branch /tree/:branch/<page>')
+    expect(text).toContain("this keeps version-history links working). A pull request")
+  })
+
   it('rejects a missing query, other methods, and oversized bodies', async () => {
     expect((await request('/.well-known/search')).status).toBe(400)
     const post = await request('/.well-known/search?q=previews', { method: 'POST' })
