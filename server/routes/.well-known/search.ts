@@ -1,6 +1,9 @@
 import { getAgentSiteUrl } from '#agent-discovery'
 import { joinURL } from 'ufo'
 
+/** A search query, not a document: anything larger is refused before it is buffered. */
+const MAX_QUERY_BODY = 16 * 1024
+
 /**
  * Search for agents (https://blog.cloudflare.com/search-for-agents/): ranked documentation sections as
  * Markdown, for `GET ?q=` and the HTTP `QUERY` method (RFC 10008) with a plain-text or JSON body. Reads
@@ -18,9 +21,15 @@ export default defineEventHandler(async (event) => {
   if (method === 'QUERY') {
     // h3 v1's `readRawBody()` only reads PATCH, POST, PUT, and DELETE bodies.
     const chunks: Buffer[] = []
-    for await (const chunk of event.node.req) chunks.push(chunk as Buffer)
+    let size = 0
+    for await (const chunk of event.node.req) {
+      size += (chunk as Buffer).length
+      if (size > MAX_QUERY_BODY) throw createError({ statusCode: 413, statusMessage: 'Query body too large' })
+      chunks.push(chunk as Buffer)
+    }
     const body = Buffer.concat(chunks).toString('utf8')
-    const isJson = getRequestHeader(event, 'content-type')?.includes('application/json')
+    const mediaType = getRequestHeader(event, 'content-type')?.split(';')[0]!.trim().toLowerCase()
+    const isJson = mediaType === 'application/json'
     try {
       query = isJson ? String(JSON.parse(body).q ?? '') : body
     } catch {

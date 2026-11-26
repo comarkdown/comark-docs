@@ -82,7 +82,7 @@ describe('search for agents', () => {
     [
       'QUERY with a JSON body',
       '/.well-known/search',
-      { method: 'QUERY', headers: { 'content-type': 'application/json' }, body: '{"q":"versioned previews"}' },
+      { method: 'QUERY', headers: { 'content-type': 'Application/JSON; charset=utf-8' }, body: '{"q":"versioned previews"}' },
     ],
   ])('%s returns ranked sections as markdown', async (_, path, init) => {
     const response = await request(path, init)
@@ -93,11 +93,13 @@ describe('search for agents', () => {
     expect(text).toContain(`URL: ${ANCHOR}`)
   })
 
-  it('rejects a missing query and other methods', async () => {
+  it('rejects a missing query, other methods, and oversized bodies', async () => {
     expect((await request('/.well-known/search')).status).toBe(400)
     const post = await request('/.well-known/search?q=previews', { method: 'POST' })
     expect(post.status).toBe(405)
     expect(post.headers.get('allow')).toBe('GET, QUERY')
+    const large = await request('/.well-known/search', { method: 'QUERY', body: 'previews '.repeat(2000) })
+    expect(large.status).toBe(413)
   })
 
   it('is advertised on every page', async () => {
