@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { baseURL, fetchPath, fetchWithFailure, INTRO_PAGE, NOT_FOUND_SLUG, SITE_URL } from './utils'
+import { baseURL, fetchPath, fetchWithFailure, INTRO_PAGE, NOT_FOUND_SLUG, request, SITE_URL } from './utils'
 
 /** Absolute URLs point at the production site: keep the path and query only. */
 function toPath(url: string): string {
@@ -70,6 +70,39 @@ describe('agent routes', () => {
     const { response, failure } = await fetchWithFailure(INTRO_PAGE.path, { accept: 'text/markdown' })
     expect(response.status, failure).toBe(200)
     expect(response.headers.get('content-type')).toContain('text/markdown')
+  })
+})
+
+describe('search for agents', () => {
+  const ANCHOR = `${SITE_URL}/concepts/versioned-previews#`
+
+  it.each([
+    ['GET', '/.well-known/search?q=versioned+previews', {}],
+    ['QUERY with a text body', '/.well-known/search', { method: 'QUERY', body: 'versioned previews' }],
+    [
+      'QUERY with a JSON body',
+      '/.well-known/search',
+      { method: 'QUERY', headers: { 'content-type': 'application/json' }, body: '{"q":"versioned previews"}' },
+    ],
+  ])('%s returns ranked sections as markdown', async (_, path, init) => {
+    const response = await request(path, init)
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toContain('text/markdown')
+    const text = await response.text()
+    expect(text).toMatch(/^# Search results for: "versioned previews"/)
+    expect(text).toContain(`URL: ${ANCHOR}`)
+  })
+
+  it('rejects a missing query and other methods', async () => {
+    expect((await request('/.well-known/search')).status).toBe(400)
+    const post = await request('/.well-known/search?q=previews', { method: 'POST' })
+    expect(post.status).toBe(405)
+    expect(post.headers.get('allow')).toBe('GET, QUERY')
+  })
+
+  it('is advertised on every page', async () => {
+    const html = await fetchPath(INTRO_PAGE.path).then((res) => res.text())
+    expect(html).toContain(`<meta name="agent:endpoint" content="${SITE_URL}/.well-known/search?q={query}">`)
   })
 })
 

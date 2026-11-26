@@ -13,6 +13,7 @@ Content lives as Markdown in your repo and is served **at request time** — par
 - Docs UI built with [Nuxt UI](https://ui.nuxt.com): sidebar navigation, search (`⌘K`), TOC, prev/next links, version history panel.
 - SEO out of the box: sitemap, robots, canonical URLs, OG images (Satori), JSON-LD, RSS.
 - Markdown for agents through [nuxt-agent-discovery](https://github.com/benjamincanac/nuxt-agent-discovery): content negotiation on every documentation page, raw markdown mirrors (`/raw/**`), `llms.txt` / `llms-full.txt`, `sitemap.md`, `/openapi.json`, `/.well-known/api-catalog`, an MCP server (`/mcp`) with its server card, Agent Skills discovery (`/.well-known/skills/`).
+- [Search for agents](https://blog.cloudflare.com/search-for-agents/): `/.well-known/search?q=` (or the HTTP `QUERY` method) returns ranked sections as Markdown, advertised by `agent:*` meta tags on every page.
 
 ## Quick start
 
