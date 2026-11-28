@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NavigationItem } from 'comark-content'
+import { joinURL } from 'ufo'
 import { useRoute } from 'vue-router'
 
 const { seo, docs } = useAppConfig()
@@ -36,8 +37,20 @@ onNuxtReady(() => {
   })
 })
 
+const site = useSiteConfig()
+
 useHead({
-  meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+  meta: [
+    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    // Search for agents (https://blog.cloudflare.com/search-for-agents/), served by server/routes/.well-known/search.ts.
+    {
+      name: 'agent:instructions',
+      content:
+        'Use this search API to find relevant content across this site with keywords or natural-language queries, instead of crawling individual pages. Results are returned in Markdown.',
+    },
+    { name: 'agent:endpoint', content: `${joinURL(site.url, '/.well-known/search')}?q={query}` },
+    { name: 'agent:method', content: 'GET' },
+  ],
   link: [
     { rel: 'icon', href: '/favicon.ico' },
     {

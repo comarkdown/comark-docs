@@ -13,8 +13,9 @@ interface SearchSection {
 // the index survives cold starts, is shared across lambda instances in the region, and stale parser
 // output is unreachable. Colon-free so it can't collide with `<source>:<path>` content keys, the
 // `manifest` key, or the shared `gh:` namespace, and the SWR fallback in `cache.get`
-// (`key.split(':')`) can't map it to a real source.
-const SEARCH_SECTIONS_KEY = 'search-sections'
+// (`key.split(':')`) can't map it to a real source. Versioned because the namespace doesn't change with
+// this file: bump it when the sections it builds change, or a deploy keeps serving the old ones.
+const SEARCH_SECTIONS_KEY = 'search-sections-v2'
 
 /**
  * Drop the cached index — the one case the per-SHA namespace can't cover: in dev the default
@@ -114,10 +115,15 @@ async function collectSearchSections(content: DocsContent): Promise<SearchSectio
   return sections
 }
 
+// Containers whose children are separate cells, rows, or items: their text is joined with a space so
+// `| Mode | URL |` reads `Mode URL`, not `ModeURL`.
+const SPACED_CONTAINERS = new Set(['table', 'thead', 'tbody', 'tfoot', 'tr', 'ul', 'ol'])
+
 function extractText(node: unknown): string {
   if (typeof node === 'string') return node
   if (!Array.isArray(node) || node[0] === null) return ''
-  return node.slice(2).map(extractText).filter(Boolean).join('')
+  const separator = SPACED_CONTAINERS.has(node[0]) ? ' ' : ''
+  return node.slice(2).map(extractText).filter(Boolean).join(separator)
 }
 
 function getTag(node: unknown): string {
