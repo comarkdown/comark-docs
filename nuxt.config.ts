@@ -23,7 +23,6 @@ export default defineNuxtConfig({
     'nuxt-schema-org',
     '@nuxtjs/mcp-toolkit',
     'nuxt-llms',
-    'nuxt-workers',
     'nuxt-agent-discovery',
   ],
   ignore: ['content/**'],
