@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "comark-docs": "workspace:../",
-    "nuxt": "^4.6.4"
+    "nuxt": "^4.7.0"
   },
   "devDependencies": {
     "nuxtseo-devtools-host": "^1.0.2"
